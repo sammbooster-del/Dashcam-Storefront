@@ -1,0 +1,1 @@
+- [Storefront reference fidelity](storefront-reference-fidelity.md) — Match the supplied retail layout closely; keep original branding and assets unless reproduction rights are confirmed.
