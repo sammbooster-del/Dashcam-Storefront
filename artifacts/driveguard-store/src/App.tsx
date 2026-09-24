@@ -231,13 +231,15 @@ function CartSummary({ cart, updateQuantity, removeItem, settings }: { cart: { p
 function CheckoutPage({ cart, updateQuantity, removeItem, clearCart, settings }: { cart: { product: Product; quantity: number }[]; updateQuantity: (id: number, amount: number) => void; removeItem: (id: number) => void; clearCart: () => void; settings: StoreSettings }) {
   const [submittedType, setSubmittedType] = useState<'credit' | 'debit' | null>(null);
   if (submittedType) return <><main className="min-h-[60dvh] bg-[#f7f7f7] py-20"><div className="container-store"><div className="mx-auto max-w-[600px] border border-[#ddd] bg-white p-8 text-center sm:p-12" data-testid="status-demo-success"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#c92525] text-white"><Check size={28} /></div><p className="mt-5 text-[12px] font-bold uppercase tracking-[.14em] text-[#c92525]">Simulated confirmation</p><h1 className="mt-3 text-[34px] font-extrabold tracking-[-.04em]">Demo order complete</h1><p className="mt-4 text-[14px] leading-7 text-[#666]">Your {submittedType} demo order was confirmed. No payment was processed, and no card information was sent or saved.</p><Link href="/" className="red-button mt-7" data-testid="link-success-store">Continue shopping <ArrowRight size={17} /></Link></div></div></main><Footer settings={settings} featured={cart[0]?.product} /></>;
+  const subtotal = cart.reduce((sum, item) => sum + item.product.priceCents * item.quantity, 0);
+  const totalCents = subtotal + (subtotal > 0 && subtotal < settings.shippingThresholdCents ? settings.shippingCents : 0);
   return <main className="bg-[#f7f7f7] py-9 sm:py-14"><div className="container-store">
     <Link href="/" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#666] hover:text-[#c92525]" data-testid="link-continue-shopping"><ChevronLeft size={15} /> Continue shopping</Link>
     <h1 className="mt-5 text-[35px] font-extrabold tracking-[-.04em] sm:text-[43px]">Cart &amp; checkout</h1>
     <p className="mt-2 text-[14px] text-[#666]">Review your items and try the demo checkout.</p>
     <div className="mt-8 grid items-start gap-7 lg:grid-cols-[1fr_.85fr]">
       <CartSummary cart={cart} updateQuantity={updateQuantity} removeItem={removeItem} settings={settings} />
-      <DemoCardCheckout cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} />
+      <DemoCardCheckout cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} totalCents={totalCents} />
     </div>
   </div><Footer settings={settings} /></main>;
 }
