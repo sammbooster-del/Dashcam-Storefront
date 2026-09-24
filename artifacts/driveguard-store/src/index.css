@@ -1,5 +1,7 @@
+@layer theme, base, clerk, components, utilities;
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
+@import '@clerk/themes/shadcn.css';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
 
@@ -106,7 +108,7 @@ button:disabled { cursor: not-allowed; }
 ::selection { background: #c72222; color: white; }
 .container-store { width: min(100% - 48px, 1560px); margin-inline: auto; }
 .hero-road {
-  background-image: linear-gradient(90deg, rgba(9, 12, 16, .89) 0%, rgba(9, 12, 16, .67) 31%, rgba(9, 12, 16, .16) 68%, rgba(9, 12, 16, .07) 100%), url('/images/road-hero.jpg');
+  background-image: linear-gradient(90deg, rgba(9, 12, 16, .89) 0%, rgba(9, 12, 16, .67) 31%, rgba(9, 12, 16, .16) 68%, rgba(9, 12, 16, .07) 100%);
   background-size: cover;
   background-position: center center;
 }
@@ -121,5 +123,5 @@ button:disabled { cursor: not-allowed; }
 .photo-panel { background-image: url('/images/road-hero.jpg'); background-position: 63% center; background-size: cover; }
 @media (max-width: 767px) {
   .container-store { width: min(100% - 32px, 1560px); }
-  .hero-road { background-position: 61% center; background-image: linear-gradient(90deg, rgba(9,12,16,.86), rgba(9,12,16,.38)), url('/images/road-hero.jpg'); }
+  .hero-road { background-position: 61% center; background-image: linear-gradient(90deg, rgba(9,12,16,.86), rgba(9,12,16,.38)); }
 }

@@ -1,1 +1,2 @@
 - [Storefront reference fidelity](storefront-reference-fidelity.md) — Match the supplied retail layout closely; keep original branding and assets unless reproduction rights are confirmed.
+- [Demo order inventory](demo-order-inventory.md) — Simulated purchases do not reserve or reduce physical stock; reconsider only for real checkout.

@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: store
+    description: Public storefront and demo checkout
+  - name: admin
+    description: Protected store management
 paths:
   /healthz:
     get:
@@ -24,6 +28,183 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /storefront:
+    get:
+      operationId: getStorefront
+      tags: [store]
+      responses:
+        "200":
+          description: Published store settings and active products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Storefront"
+  /demo-orders:
+    post:
+      operationId: createDemoOrder
+      tags: [store]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoOrderInput"
+      responses:
+        "201":
+          description: Simulated order, no card details involved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoOrder"
+  /admin/me:
+    get:
+      operationId: getAdminMe
+      tags: [admin]
+      responses:
+        "200":
+          description: Approved admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminIdentity"
+  /admin/overview:
+    get:
+      operationId: getAdminOverview
+      tags: [admin]
+      responses:
+        "200":
+          description: Store activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
+  /admin/products:
+    get:
+      operationId: listAdminProducts
+      tags: [admin]
+      responses:
+        "200":
+          description: All products, including hidden ones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createAdminProduct
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+  /admin/products/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      operationId: updateAdminProduct
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdate"
+      responses:
+        "200":
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteAdminProduct
+      tags: [admin]
+      responses:
+        "204":
+          description: Product removed
+  /admin/settings:
+    get:
+      operationId: getAdminSettings
+      tags: [admin]
+      responses:
+        "200":
+          description: Storefront settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreSettings"
+    put:
+      operationId: updateAdminSettings
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StoreSettingsInput"
+      responses:
+        "200":
+          description: Saved settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreSettings"
+  /admin/orders:
+    get:
+      operationId: listAdminOrders
+      tags: [admin]
+      responses:
+        "200":
+          description: Simulated orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DemoOrder"
+  /admin/orders/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      operationId: updateAdminOrder
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderStatusInput"
+      responses:
+        "200":
+          description: Simulated order updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoOrder"
+    delete:
+      operationId: deleteAdminOrder
+      tags: [admin]
+      responses:
+        "204":
+          description: Simulated order deleted
 components:
   schemas:
     HealthStatus:
@@ -33,4 +214,145 @@ components:
           type: string
       required:
         - status
+    AdminIdentity:
+      type: object
+      required: [isAdmin]
+      properties:
+        isAdmin: { type: boolean }
+    AdminOverview:
+      type: object
+      required: [productCount, activeProductCount, totalOrders, simulatedRevenueCents]
+      properties:
+        productCount: { type: integer }
+        activeProductCount: { type: integer }
+        totalOrders: { type: integer }
+        simulatedRevenueCents: { type: integer }
+    Product:
+      type: object
+      required: [id, slug, name, description, imageUrl, priceCents, stock, category, featured, active]
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string }
+        imageUrl: { type: string }
+        priceCents: { type: integer }
+        stock: { type: integer }
+        category: { type: string, enum: [front, dual] }
+        featured: { type: boolean }
+        active: { type: boolean }
+    ProductInput:
+      type: object
+      additionalProperties: false
+      required: [slug, name, description, imageUrl, priceCents, stock, category, featured, active]
+      properties:
+        slug: { type: string, pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$", maxLength: 100 }
+        name: { type: string, minLength: 1, maxLength: 150 }
+        description: { type: string, maxLength: 3000 }
+        imageUrl: { type: string, maxLength: 2048 }
+        priceCents: { type: integer, minimum: 0, maximum: 100000000 }
+        stock: { type: integer, minimum: 0 }
+        category: { type: string, enum: [front, dual] }
+        featured: { type: boolean }
+        active: { type: boolean }
+    ProductUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        slug: { type: string, pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$", maxLength: 100 }
+        name: { type: string, minLength: 1, maxLength: 150 }
+        description: { type: string, maxLength: 3000 }
+        imageUrl: { type: string, maxLength: 2048 }
+        priceCents: { type: integer, minimum: 0, maximum: 100000000 }
+        stock: { type: integer, minimum: 0 }
+        category: { type: string, enum: [front, dual] }
+        featured: { type: boolean }
+        active: { type: boolean }
+    StoreSettings:
+      type: object
+      required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail]
+      properties:
+        brandName: { type: string }
+        announcement: { type: string }
+        heroTitle: { type: string }
+        heroDescription: { type: string }
+        heroImageUrl: { type: string }
+        trustTitle: { type: string }
+        trustDescription: { type: string }
+        shippingThresholdCents: { type: integer }
+        shippingCents: { type: integer }
+        supportEmail: { type: string }
+    StoreSettingsInput:
+      type: object
+      additionalProperties: false
+      required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail]
+      properties:
+        brandName: { type: string, minLength: 1, maxLength: 80 }
+        announcement: { type: string, maxLength: 180 }
+        heroTitle: { type: string, minLength: 1, maxLength: 130 }
+        heroDescription: { type: string, maxLength: 500 }
+        heroImageUrl: { type: string, maxLength: 2048 }
+        trustTitle: { type: string, maxLength: 130 }
+        trustDescription: { type: string, maxLength: 500 }
+        shippingThresholdCents: { type: integer, minimum: 0, maximum: 100000000 }
+        shippingCents: { type: integer, minimum: 0, maximum: 10000000 }
+        supportEmail: { type: string, maxLength: 254 }
+    Storefront:
+      type: object
+      required: [settings, products]
+      properties:
+        settings:
+          $ref: "#/components/schemas/StoreSettings"
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+    OrderItem:
+      type: object
+      required: [productId, name, unitPriceCents, quantity]
+      properties:
+        productId: { type: integer }
+        name: { type: string }
+        unitPriceCents: { type: integer }
+        quantity: { type: integer }
+    DemoOrder:
+      type: object
+      required: [id, createdAt, status, cardType, subtotalCents, shippingCents, totalCents, items]
+      properties:
+        id: { type: integer }
+        createdAt: { type: string, format: date-time }
+        status: { type: string, enum: [new, fulfilled, cancelled] }
+        cardType: { type: string, enum: [credit, debit] }
+        subtotalCents: { type: integer }
+        shippingCents: { type: integer }
+        totalCents: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+    DemoOrderItemInput:
+      type: object
+      required: [productId, quantity]
+      additionalProperties: false
+      properties:
+        productId: { type: integer }
+        quantity: { type: integer, minimum: 1, maximum: 99 }
+    DemoOrderInput:
+      type: object
+      required: [items, cardType]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/DemoOrderItemInput"
+        cardType: { type: string, enum: [credit, debit] }
+    OrderStatusInput:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [new, fulfilled, cancelled] }
 
