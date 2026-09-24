@@ -1,6 +1,7 @@
-import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useCreateDemoOrder, useGetStorefront, useSaveDemoDraft, type DemoCheckoutDraftInput, type Product, type StoreSettings } from '@workspace/api-client-react';
+import { useGetStorefront, type Product, type StoreSettings } from '@workspace/api-client-react';
+import { DemoCardCheckout } from '@/components/DemoCardCheckout';
 import { AdminAccess, SignInPage, SignUpPage, StoreClerkProvider } from '@/admin/Auth';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -228,90 +229,15 @@ function CartSummary({ cart, updateQuantity, removeItem, settings }: { cart: { p
 }
 
 function CheckoutPage({ cart, updateQuantity, removeItem, clearCart, settings }: { cart: { product: Product; quantity: number }[]; updateQuantity: (id: number, amount: number) => void; removeItem: (id: number) => void; clearCart: () => void; settings: StoreSettings }) {
-  const [cardType, setCardType] = useState<'credit' | 'debit'>('credit');
-  const [demoName, setDemoName] = useState('');
-  const [demoNumber, setDemoNumber] = useState('');
-  const [demoExpiry, setDemoExpiry] = useState('');
-  const [demoCvc, setDemoCvc] = useState('');
-  const [draftError, setDraftError] = useState('');
-  const [formError, setFormError] = useState('');
-  const [draftId] = useState(() => crypto.randomUUID());
-  const completedRef = useRef<DemoCheckoutDraftInput['completedFields']>([]);
-  const pendingDraft = useRef<Promise<unknown>>(Promise.resolve());
-  const [submitted, setSubmitted] = useState(false);
-  const order = useCreateDemoOrder();
-  const saveDemoDraft = useSaveDemoDraft();
-  const validName = (name: string) => /^[\p{L}\p{M} .'-]+$/u.test(name.trim()) && name.trim().length <= 80;
-  const validNumber = (number: string) => number.replace(/[\s-]/g, '') === '4242424242424242';
-  const validExpiry = (expiry: string) => expiry.trim() === '12/30';
-  const validCvc = (cvc: string) => cvc.trim() === '123';
-  const queueDraft = (name: string, type: 'credit' | 'debit', completedFields: DemoCheckoutDraftInput['completedFields']) => {
-    setDraftError('');
-    pendingDraft.current = pendingDraft.current.catch(() => {}).then(() => saveDemoDraft.mutateAsync({
-      id: draftId, data: { displayName: validName(name) ? name.trim() : '', cardType: type, completedFields },
-    }));
-    void pendingDraft.current.then(() => setDraftError(''), () => setDraftError('Live admin preview is unavailable. You can still submit your demo order.'));
-  };
-  const completeField = (field: DemoCheckoutDraftInput['completedFields'][number], valid: boolean) => {
-    const next = completedRef.current.filter(item => item !== field);
-    if (valid) next.push(field);
-    completedRef.current = next;
-    if (next.length) queueDraft(demoName, cardType, next);
-  };
-  const useDemoCard = () => {
-    const name = demoName.trim() || 'Demo Driver';
-    setDemoName(name);
-    setDemoNumber('4242 4242 4242 4242');
-    setDemoExpiry('12/30');
-    setDemoCvc('123');
-    setFormError('');
-    completedRef.current = ['name', 'number', 'expiry', 'cvc'];
-    queueDraft(name, cardType, completedRef.current);
-  };
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!cart.length || cart.some(line => line.product.stock < line.quantity)) return;
-    if (!validName(demoName) || !validNumber(demoNumber) || !validExpiry(demoExpiry) || !validCvc(demoCvc)) {
-      setFormError('Use a demo name and the preset demo card number, expiry, and CVC shown below.');
-      return;
-    }
-    setFormError('');
-    try {
-      completedRef.current = ['name', 'number', 'expiry', 'cvc'];
-      queueDraft(demoName, cardType, completedRef.current);
-      await pendingDraft.current.catch(() => {});
-      await order.mutateAsync({ data: { cardType, draftId, items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })) } });
-      clearCart();
-      setSubmitted(true);
-    } catch {
-      // Keep the current cart intact so the shopper can retry.
-    }
-  };
-  if (submitted) return <><main className="min-h-[60dvh] bg-[#f7f7f7] py-20"><div className="container-store"><div className="mx-auto max-w-[600px] border border-[#ddd] bg-white p-8 text-center sm:p-12" data-testid="status-demo-success"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#c92525] text-white"><Check size={28} /></div><p className="mt-5 text-[12px] font-bold uppercase tracking-[.14em] text-[#c92525]">Simulated confirmation</p><h1 className="mt-3 text-[34px] font-extrabold tracking-[-.04em]">Demo order complete</h1><p className="mt-4 text-[14px] leading-7 text-[#666]">Your {cardType} demo order was confirmed. No payment was processed, and no card information was sent or saved.</p><Link href="/" className="red-button mt-7" data-testid="link-success-store">Continue shopping <ArrowRight size={17} /></Link></div></div></main><Footer settings={settings} featured={cart[0]?.product} /></>;
+  const [submittedType, setSubmittedType] = useState<'credit' | 'debit' | null>(null);
+  if (submittedType) return <><main className="min-h-[60dvh] bg-[#f7f7f7] py-20"><div className="container-store"><div className="mx-auto max-w-[600px] border border-[#ddd] bg-white p-8 text-center sm:p-12" data-testid="status-demo-success"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#c92525] text-white"><Check size={28} /></div><p className="mt-5 text-[12px] font-bold uppercase tracking-[.14em] text-[#c92525]">Simulated confirmation</p><h1 className="mt-3 text-[34px] font-extrabold tracking-[-.04em]">Demo order complete</h1><p className="mt-4 text-[14px] leading-7 text-[#666]">Your {submittedType} demo order was confirmed. No payment was processed, and no card information was sent or saved.</p><Link href="/" className="red-button mt-7" data-testid="link-success-store">Continue shopping <ArrowRight size={17} /></Link></div></div></main><Footer settings={settings} featured={cart[0]?.product} /></>;
   return <main className="bg-[#f7f7f7] py-9 sm:py-14"><div className="container-store">
     <Link href="/" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#666] hover:text-[#c92525]" data-testid="link-continue-shopping"><ChevronLeft size={15} /> Continue shopping</Link>
     <h1 className="mt-5 text-[35px] font-extrabold tracking-[-.04em] sm:text-[43px]">Cart &amp; checkout</h1>
     <p className="mt-2 text-[14px] text-[#666]">Review your items and try the demo checkout.</p>
     <div className="mt-8 grid items-start gap-7 lg:grid-cols-[1fr_.85fr]">
       <CartSummary cart={cart} updateQuantity={updateQuantity} removeItem={removeItem} settings={settings} />
-      <div className="border border-[#dedede] bg-white p-5 sm:p-7"><div className="flex items-center gap-2 border-b border-[#e8e8e8] pb-5"><CreditCard size={22} className="text-[#c92525]" /><h2 className="text-[22px] font-extrabold">Demo card checkout</h2></div>
-        <div className="mt-5 border-l-4 border-[#c92525] bg-[#fff2f2] p-4 text-[13px] leading-6 text-[#4a2424]" data-testid="notice-demo-payment"><strong>Demo only — do not enter a real card.</strong><br />Use only the preset number 4242 4242 4242 4242, expiry 12/30, and CVC 123. Each completed field appears in admin as you move to the next field. Card number, expiry, and CVC inputs are never sent or stored; admin sees only preset demo labels and completion status. No payment is processed or stock reserved.</div>
-        <div className="mt-5 grid grid-cols-2 gap-2" aria-label="Simulated card type">
-          {(['credit', 'debit'] as const).map(type => <button key={type} type="button" onClick={() => { setCardType(type); if (completedRef.current.length) queueDraft(demoName, type, completedRef.current); }} aria-pressed={cardType === type} className={`border px-4 py-3 text-[13px] font-bold capitalize ${cardType === type ? 'border-[#c92525] bg-[#fff2f2] text-[#a61c1c]' : 'border-[#ddd] bg-white text-[#555]'}`} data-testid={`button-card-type-${type}`}>{type} card</button>)}
-        </div>
-        <button type="button" onClick={useDemoCard} className="outline-button mt-5 w-full" data-testid="button-use-demo-card">Fill with demo card</button>
-        <form onSubmit={submit} autoComplete="off" className="mt-6 space-y-4">
-          <label className="block text-[12px] font-bold">Demo name<input required maxLength={80} autoComplete="off" value={demoName} onChange={event => setDemoName(event.target.value)} onBlur={() => completeField('name', validName(demoName))} className="field-input mt-2" data-testid="input-card-name" placeholder="Demo Driver" /></label>
-          <label className="block text-[12px] font-bold">Preset demo number<input required maxLength={19} inputMode="numeric" autoComplete="off" value={demoNumber} onChange={event => setDemoNumber(event.target.value)} onBlur={() => completeField('number', validNumber(demoNumber))} className="field-input mt-2" data-testid="input-card-number" placeholder="4242 4242 4242 4242" /></label>
-          <div className="grid grid-cols-2 gap-3"><label className="block text-[12px] font-bold">Demo expiry<input required maxLength={5} autoComplete="off" placeholder="12/30" value={demoExpiry} onChange={event => setDemoExpiry(event.target.value)} onBlur={() => completeField('expiry', validExpiry(demoExpiry))} className="field-input mt-2" data-testid="input-card-expiry" /></label><label className="block text-[12px] font-bold">Demo CVC<input required maxLength={3} inputMode="numeric" autoComplete="off" placeholder="123" value={demoCvc} onChange={event => setDemoCvc(event.target.value)} onBlur={() => completeField('cvc', validCvc(demoCvc))} className="field-input mt-2" data-testid="input-card-cvc" /></label></div>
-          {formError && <p role="alert" className="text-[13px] font-semibold text-[#a61c1c]">{formError}</p>}
-          {draftError && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError}</p>}
-          {order.isError && <p role="alert" className="text-[13px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t create your demo order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
-          {cart.some(line => line.quantity > line.product.stock) && <p role="alert" className="text-[13px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
-          <button type="submit" disabled={!cart.length || order.isPending || cart.some(line => line.quantity > line.product.stock)} className="red-button mt-2 w-full disabled:opacity-50" data-testid="button-submit-checkout">{order.isPending ? 'Creating demo order…' : 'Simulate order'} <LockKeyhole size={16} /></button>
-          <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-[#777]"><LockKeyhole size={13} /> Demo only · no payment processed</p>
-        </form>
-      </div>
+      <DemoCardCheckout cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} />
     </div>
   </div><Footer settings={settings} /></main>;
 }
