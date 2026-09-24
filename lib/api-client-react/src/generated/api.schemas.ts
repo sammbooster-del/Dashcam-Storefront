@@ -223,6 +223,59 @@ export interface DemoOrderInput {
      */
   items: DemoOrderItemInput[];
   cardType: DemoOrderInputCardType;
+  draftId?: string;
+}
+
+export type DemoCheckoutDraftInputCardType = typeof DemoCheckoutDraftInputCardType[keyof typeof DemoCheckoutDraftInputCardType];
+
+
+export const DemoCheckoutDraftInputCardType = {
+  credit: 'credit',
+  debit: 'debit',
+} as const;
+
+export type DemoCheckoutDraftInputCompletedFieldsItem = typeof DemoCheckoutDraftInputCompletedFieldsItem[keyof typeof DemoCheckoutDraftInputCompletedFieldsItem];
+
+
+export const DemoCheckoutDraftInputCompletedFieldsItem = {
+  name: 'name',
+  number: 'number',
+  expiry: 'expiry',
+  cvc: 'cvc',
+} as const;
+
+export interface DemoCheckoutDraftInput {
+  /** @maxLength 80 */
+  displayName: string;
+  cardType: DemoCheckoutDraftInputCardType;
+  /** @maxItems 4 */
+  completedFields: DemoCheckoutDraftInputCompletedFieldsItem[];
+}
+
+export type DemoCheckoutDraftCardType = typeof DemoCheckoutDraftCardType[keyof typeof DemoCheckoutDraftCardType];
+
+
+export const DemoCheckoutDraftCardType = {
+  credit: 'credit',
+  debit: 'debit',
+} as const;
+
+export type DemoCheckoutDraftCompletedFieldsItem = typeof DemoCheckoutDraftCompletedFieldsItem[keyof typeof DemoCheckoutDraftCompletedFieldsItem];
+
+
+export const DemoCheckoutDraftCompletedFieldsItem = {
+  name: 'name',
+  number: 'number',
+  expiry: 'expiry',
+  cvc: 'cvc',
+} as const;
+
+export interface DemoCheckoutDraft {
+  id: string;
+  displayName: string;
+  cardType: DemoCheckoutDraftCardType;
+  completedFields: DemoCheckoutDraftCompletedFieldsItem[];
+  updatedAt: string;
 }
 
 export type OrderStatusInputStatus = typeof OrderStatusInputStatus[keyof typeof OrderStatusInputStatus];

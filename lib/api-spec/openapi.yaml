@@ -56,6 +56,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoOrder"
+  /demo-drafts/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      operationId: saveDemoDraft
+      tags: [store]
+      summary: Save a live, non-payment demo checkout draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoCheckoutDraftInput"
+      responses:
+        "200":
+          description: Draft saved (no card number, expiry, or CVC values)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoCheckoutDraft"
   /admin/me:
     get:
       operationId: getAdminMe
@@ -176,6 +199,19 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/DemoOrder"
+  /admin/demo-drafts:
+    get:
+      operationId: listAdminDemoDrafts
+      tags: [admin]
+      responses:
+        "200":
+          description: Active demo checkout drafts; card fields are only completion flags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DemoCheckoutDraft"
   /admin/orders/{id}:
     parameters:
       - name: id
@@ -349,6 +385,30 @@ components:
           items:
             $ref: "#/components/schemas/DemoOrderItemInput"
         cardType: { type: string, enum: [credit, debit] }
+        draftId: { type: string, format: uuid }
+    DemoCheckoutDraftInput:
+      type: object
+      required: [displayName, cardType, completedFields]
+      additionalProperties: false
+      properties:
+        displayName: { type: string, maxLength: 80 }
+        cardType: { type: string, enum: [credit, debit] }
+        completedFields:
+          type: array
+          uniqueItems: true
+          maxItems: 4
+          items: { type: string, enum: [name, number, expiry, cvc] }
+    DemoCheckoutDraft:
+      type: object
+      required: [id, displayName, cardType, completedFields, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        displayName: { type: string }
+        cardType: { type: string, enum: [credit, debit] }
+        completedFields:
+          type: array
+          items: { type: string, enum: [name, number, expiry, cvc] }
+        updatedAt: { type: string, format: date-time }
     OrderStatusInput:
       type: object
       required: [status]

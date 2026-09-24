@@ -4,6 +4,7 @@ import {
   getGetAdminOverviewQueryKey,
   getGetAdminSettingsQueryKey,
   getGetStorefrontQueryKey,
+  getListAdminDemoDraftsQueryKey,
   getListAdminOrdersQueryKey,
   getListAdminProductsQueryKey,
   useCreateAdminProduct,
@@ -11,13 +12,14 @@ import {
   useDeleteAdminProduct,
   useGetAdminOverview,
   useGetAdminSettings,
+  useListAdminDemoDrafts,
   useListAdminOrders,
   useListAdminProducts,
   useUpdateAdminOrder,
   useUpdateAdminProduct,
   useUpdateAdminSettings,
 } from '@workspace/api-client-react';
-import type { DemoOrder, Product, ProductInput, StoreSettingsInput } from '@workspace/api-client-react';
+import type { DemoCheckoutDraft, DemoOrder, Product, ProductInput, StoreSettingsInput } from '@workspace/api-client-react';
 import {
   ArrowDownRight, ArrowRight, Boxes, ChevronDown, ChevronRight,
   CircleAlert, ClipboardList, Eye, EyeOff, ImageOff, LayoutDashboard,
@@ -191,6 +193,23 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
   </form>;
 }
 
+function LiveDrafts({ drafts, loading, error }: { drafts: DemoCheckoutDraft[]; loading: boolean; error: boolean }) {
+  return <section className="dg-panel dg-live-drafts" data-testid="panel-admin-live-drafts">
+    <div className="dg-panel-head"><div><h2>Live demo checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>Updates as shoppers finish each field. Only a demo name and field progress are received.</p></div><span className="dg-subtle">{drafts.length} active</span></div>
+    {error ? <div className="dg-draft-empty" role="alert">Could not load live checkouts. They will retry automatically.</div>
+      : loading && !drafts.length ? <div className="dg-draft-empty">Checking for active demos…</div>
+      : drafts.length ? <div className="dg-draft-grid">{drafts.map(draft => <div className="dg-draft-card" key={draft.id} data-testid={`card-admin-draft-${draft.id}`}>
+        <div className="dg-draft-card-head"><strong>{draft.displayName || 'Demo shopper'}</strong><span>{draft.cardType} demo · {new Date(draft.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span></div>
+        <div className="dg-draft-fields">
+          <span className={draft.completedFields.includes('name') ? 'complete' : ''}>Name: {draft.completedFields.includes('name') ? draft.displayName : 'waiting'}</span>
+          <span className={draft.completedFields.includes('number') ? 'complete' : ''}>Demo number: {draft.completedFields.includes('number') ? '•••• 4242' : 'waiting'}</span>
+          <span className={draft.completedFields.includes('expiry') ? 'complete' : ''}>Demo expiry: {draft.completedFields.includes('expiry') ? '12/30' : 'waiting'}</span>
+          <span className={draft.completedFields.includes('cvc') ? 'complete' : ''}>Demo CVC: {draft.completedFields.includes('cvc') ? 'completed (not stored)' : 'waiting'}</span>
+        </div>
+      </div>)}</div> : <div className="dg-draft-empty">No active demo checkouts. A shopper’s progress will appear here after leaving the first field.</div>}
+  </section>;
+}
+
 export default function AdminPage() {
   const queryClient = useQueryClient();
   const [section, setSection] = useState<Section>('overview');
@@ -201,9 +220,10 @@ export default function AdminPage() {
   const [productFilter, setProductFilter] = useState<'all' | 'live' | 'hidden'>('all');
   const [orderFilter, setOrderFilter] = useState<'all' | 'new' | 'fulfilled' | 'cancelled'>('all');
   const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
-  const overview = useGetAdminOverview();
+  const overview = useGetAdminOverview({ query: { queryKey: getGetAdminOverviewQueryKey(), refetchInterval: 3000 } });
   const products = useListAdminProducts();
-  const orders = useListAdminOrders();
+  const orders = useListAdminOrders({ query: { queryKey: getListAdminOrdersQueryKey(), refetchInterval: 2000 } });
+  const drafts = useListAdminDemoDrafts({ query: { queryKey: getListAdminDemoDraftsQueryKey(), refetchInterval: 1500, refetchOnWindowFocus: 'always' } });
   const settings = useGetAdminSettings();
   const createProduct = useCreateAdminProduct();
   const updateProduct = useUpdateAdminProduct();
@@ -220,7 +240,7 @@ export default function AdminPage() {
     await Promise.all(keys.map(queryKey => queryClient.invalidateQueries({ queryKey })));
   };
   const refresh = () => Promise.all([
-    overview.refetch(), products.refetch(), orders.refetch(), settings.refetch(),
+    overview.refetch(), products.refetch(), orders.refetch(), drafts.refetch(), settings.refetch(),
   ]);
   const saveProduct = async (data: ProductInput) => {
     if (editor) await updateProduct.mutateAsync({ id: editor.id, data });
@@ -300,6 +320,7 @@ export default function AdminPage() {
         {loading ? <div className="dg-panel" style={{ padding: 25 }} aria-label="Loading admin data" data-testid="status-admin-loading"><div className="dg-skeleton" style={{ width: '30%', height: 25, marginBottom: 25 }} /><div className="dg-skeleton" style={{ height: 64, marginBottom: 12 }} /><div className="dg-skeleton" style={{ height: 64, marginBottom: 12 }} /><div className="dg-skeleton" style={{ height: 64 }} /></div>
           : failure ? <div className="dg-panel dg-empty" role="alert" data-testid="status-admin-load-error"><CircleAlert size={28} /><strong>We couldn't load {pageTitle.toLowerCase()}.</strong><p>Check your connection and try again. Your changes have not been lost.</p><button type="button" className="dg-secondary" onClick={() => { void refresh(); }} data-testid="button-admin-retry"><RefreshCw size={14} /> Try again</button></div>
           : section === 'overview' ? <>
+            <LiveDrafts drafts={drafts.data ?? []} loading={drafts.isPending} error={drafts.isError} />
             <div className="dg-metrics">
               {([
                 ['Total products', overview.data?.productCount ?? 0, 'Listings in the catalog', Package],
@@ -342,6 +363,7 @@ export default function AdminPage() {
               <div className="dg-count">Showing {visibleProducts.length} product{visibleProducts.length === 1 ? '' : 's'}</div>
             </section>
           </> : section === 'orders' ? <>
+            <LiveDrafts drafts={drafts.data ?? []} loading={drafts.isPending} error={drafts.isError} />
             <div className="dg-toolbar"><div className="dg-filter" aria-label="Filter orders">{(['all', 'new', 'fulfilled', 'cancelled'] as const).map(value => <button type="button" key={value} aria-pressed={orderFilter === value} onClick={() => setOrderFilter(value)} data-testid={`button-admin-order-filter-${value}`}>{value === 'all' ? 'All orders' : value.charAt(0).toUpperCase() + value.slice(1)}</button>)}</div></div>
             <section className="dg-panel"><div className="dg-panel-head"><div><h2>Simulated orders</h2><p>These are demo transactions. No actual payment is processed.</p></div><span className="dg-subtle">{visibleOrders.length} orders</span></div>
               {visibleOrders.length ? <div className="dg-table-wrap"><table className="dg-table"><thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Payment type</th><th>Total</th><th>Status</th><th style={{ textAlign:'right' }}>Actions</th></tr></thead><tbody>

@@ -60,6 +60,17 @@
 .dg-panel-head p { margin:5px 0 0; color:var(--dg-muted); font-size:12px; }
 .dg-panel-head .dg-quiet { color:var(--dg-red); }
 .dg-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:24px; }
+.dg-live-drafts { margin-bottom:24px; }
+.dg-live-drafts h2 { display:flex; align-items:center; gap:10px; }
+.dg-live-drafts .dg-live-dot { display:inline-block; }
+.dg-draft-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr)); gap:12px; padding:16px 23px 22px; }
+.dg-draft-card { padding:14px; border:1px solid var(--dg-line); border-radius:4px; background:#fbfcf8; }
+.dg-draft-card-head { display:flex; justify-content:space-between; gap:10px; align-items:baseline; text-transform:capitalize; }
+.dg-draft-card-head strong { font-size:13px; overflow-wrap:anywhere; }
+.dg-draft-card-head span { font-size:11px; color:var(--dg-muted); white-space:nowrap; }
+.dg-draft-fields { display:grid; gap:7px; margin-top:14px; font-size:12px; color:#818982; }
+.dg-draft-fields span.complete { color:#2c6140; font-weight:700; }
+.dg-draft-empty { padding:23px; color:var(--dg-muted); font-size:12px; }
 .dg-metric { min-height:152px; background:#fff; border:1px solid var(--dg-line); padding:22px 23px; border-radius:4px; display:flex; flex-direction:column; justify-content:space-between; }
 .dg-metric-top { display:flex; justify-content:space-between; color:#667068; font-size:11px; text-transform:uppercase; letter-spacing:.105em; font-weight:800; }
 .dg-metric-top svg { color:var(--dg-red); }

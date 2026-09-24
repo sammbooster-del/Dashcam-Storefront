@@ -19,8 +19,12 @@ import {
   GetAdminOverviewResponse,
   GetAdminSettingsResponse,
   GetStorefrontResponse,
+  ListAdminDemoDraftsResponse,
   ListAdminOrdersResponse,
   ListAdminProductsResponse,
+  SaveDemoDraftBody,
+  SaveDemoDraftParams,
+  SaveDemoDraftResponse,
   UpdateAdminOrderBody,
   UpdateAdminOrderParams,
   UpdateAdminOrderResponse,
@@ -136,6 +140,35 @@ const requireSameOriginWrite: RequestHandler = (req, res, next) => {
 
 const formatOrder = (order: DemoOrder) => ({ ...order, createdAt: order.createdAt.toISOString() });
 
+type DemoDraft = {
+  id: string;
+  displayName: string;
+  cardType: "credit" | "debit";
+  completedFields: ("name" | "number" | "expiry" | "cvc")[];
+  updatedAt: string;
+};
+// Drafts are deliberately transient. No card-number, expiry, or CVC input is
+// accepted by this API; only synthetic field-completion flags are kept.
+const demoDrafts = new Map<string, DemoDraft>();
+const DRAFT_LIFETIME_MS = 15 * 60 * 1000;
+const MAX_DRAFTS = 100;
+
+function pruneDemoDrafts() {
+  const cutoff = Date.now() - DRAFT_LIFETIME_MS;
+  for (const [id, draft] of demoDrafts) {
+    if (Date.parse(draft.updatedAt) < cutoff) demoDrafts.delete(id);
+  }
+  while (demoDrafts.size > MAX_DRAFTS) {
+    const oldest = demoDrafts.keys().next().value;
+    if (oldest) demoDrafts.delete(oldest);
+  }
+}
+
+function hasOnlyFields(value: unknown, allowed: readonly string[]): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value) &&
+    Object.keys(value).every(key => allowed.includes(key));
+}
+
 router.get("/storefront", async (_req, res): Promise<void> => {
   const settings = await ensureStore();
   const products = await db.select().from(storeProductsTable)
@@ -144,9 +177,38 @@ router.get("/storefront", async (_req, res): Promise<void> => {
   res.json(GetStorefrontResponse.parse({ settings, products }));
 });
 
+router.put("/demo-drafts/:id", (req, res): void => {
+  const params = SaveDemoDraftParams.safeParse(req.params);
+  const parsed = SaveDemoDraftBody.safeParse(req.body);
+  if (!params.success || !parsed.success ||
+    !hasOnlyFields(req.body, ["displayName", "cardType", "completedFields"])) {
+    res.status(400).json({ error: "Invalid demo draft" });
+    return;
+  }
+  const displayName = parsed.data.displayName.trim();
+  if (displayName && !/^[\p{L}\p{M} .'-]+$/u.test(displayName)) {
+    res.status(400).json({ error: "Use letters for the demo name; do not enter card details" });
+    return;
+  }
+  pruneDemoDrafts();
+  const draft: DemoDraft = {
+    id: params.data.id,
+    displayName,
+    cardType: parsed.data.cardType,
+    completedFields: parsed.data.completedFields,
+    updatedAt: new Date().toISOString(),
+  };
+  demoDrafts.delete(draft.id);
+  demoDrafts.set(draft.id, draft);
+  pruneDemoDrafts();
+  res.json(SaveDemoDraftResponse.parse(draft));
+});
+
 router.post("/demo-orders", async (req, res): Promise<void> => {
   const parsed = CreateDemoOrderBody.safeParse(req.body);
-  if (!parsed.success) {
+  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "draftId"]) ||
+    !Array.isArray(req.body.items) ||
+    !req.body.items.every((item: unknown) => hasOnlyFields(item, ["productId", "quantity"]))) {
     res.status(400).json({ error: "Invalid demo order" });
     return;
   }
@@ -184,6 +246,7 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
     shippingCents,
     totalCents: subtotalCents + shippingCents,
   }).returning();
+  if (parsed.data.draftId) demoDrafts.delete(parsed.data.draftId);
   res.status(201).json(CreateDemoOrderResponse.parse(formatOrder(order)));
 });
 
@@ -191,6 +254,11 @@ router.use("/admin", requireSameOriginWrite, requireAdmin);
 
 router.get("/admin/me", async (_req, res): Promise<void> => {
   res.json(GetAdminMeResponse.parse({ isAdmin: true }));
+});
+
+router.get("/admin/demo-drafts", async (_req, res): Promise<void> => {
+  pruneDemoDrafts();
+  res.json(ListAdminDemoDraftsResponse.parse([...demoDrafts.values()].reverse()));
 });
 
 router.get("/admin/overview", async (_req, res): Promise<void> => {

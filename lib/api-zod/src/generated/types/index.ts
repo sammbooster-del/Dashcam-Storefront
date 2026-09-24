@@ -8,6 +8,12 @@
 
 export * from './adminIdentity';
 export * from './adminOverview';
+export * from './demoCheckoutDraft';
+export * from './demoCheckoutDraftCardType';
+export * from './demoCheckoutDraftCompletedFieldsItem';
+export * from './demoCheckoutDraftInput';
+export * from './demoCheckoutDraftInputCardType';
+export * from './demoCheckoutDraftInputCompletedFieldsItem';
 export * from './demoOrder';
 export * from './demoOrderCardType';
 export * from './demoOrderInput';

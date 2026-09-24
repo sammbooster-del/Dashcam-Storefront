@@ -56,7 +56,8 @@ export const CreateDemoOrderBody = zod.object({
   "productId": zod.number().int(),
   "quantity": zod.number().int().min(1).max(createDemoOrderBodyItemsItemQuantityMax)
 })).min(1).max(createDemoOrderBodyItemsMax),
-  "cardType": zod.enum(['credit', 'debit'])
+  "cardType": zod.enum(['credit', 'debit']),
+  "draftId": zod.string().uuid().optional()
 })
 
 export const CreateDemoOrderResponse = zod.object({
@@ -73,6 +74,34 @@ export const CreateDemoOrderResponse = zod.object({
   "unitPriceCents": zod.number().int(),
   "quantity": zod.number().int()
 }))
+})
+
+
+/**
+ * @summary Save a live, non-payment demo checkout draft
+ */
+export const SaveDemoDraftParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const saveDemoDraftBodyDisplayNameMax = 80;
+
+export const saveDemoDraftBodyCompletedFieldsMax = 4;
+
+
+
+export const SaveDemoDraftBody = zod.object({
+  "displayName": zod.string().max(saveDemoDraftBodyDisplayNameMax),
+  "cardType": zod.enum(['credit', 'debit']),
+  "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])).max(saveDemoDraftBodyCompletedFieldsMax)
+})
+
+export const SaveDemoDraftResponse = zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "cardType": zod.enum(['credit', 'debit']),
+  "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])),
+  "updatedAt": zod.coerce.date()
 })
 
 
@@ -282,6 +311,16 @@ export const ListAdminOrdersResponseItem = zod.object({
 }))
 })
 export const ListAdminOrdersResponse = zod.array(ListAdminOrdersResponseItem)
+
+
+export const ListAdminDemoDraftsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "cardType": zod.enum(['credit', 'debit']),
+  "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])),
+  "updatedAt": zod.coerce.date()
+})
+export const ListAdminDemoDraftsResponse = zod.array(ListAdminDemoDraftsResponseItem)
 
 
 export const UpdateAdminOrderParams = zod.object({

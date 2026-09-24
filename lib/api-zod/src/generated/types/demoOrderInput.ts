@@ -15,4 +15,5 @@ export interface DemoOrderInput {
      */
   items: DemoOrderItemInput[];
   cardType: DemoOrderInputCardType;
+  draftId?: string;
 }

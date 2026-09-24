@@ -22,6 +22,8 @@ import type {
 import type {
   AdminIdentity,
   AdminOverview,
+  DemoCheckoutDraft,
+  DemoCheckoutDraftInput,
   DemoOrder,
   DemoOrderInput,
   HealthStatus,
@@ -290,6 +292,95 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getCreateDemoOrderMutationOptions(options));
+    }
+
+export const getSaveDemoDraftUrl = (id: string,) => {
+
+
+
+
+  return `/api/demo-drafts/${id}`
+}
+
+/**
+ * @summary Save a live, non-payment demo checkout draft
+ */
+export const saveDemoDraft = async (id: string,
+    demoCheckoutDraftInput: DemoCheckoutDraftInput, options?: Parameters<typeof customFetch>[1]): Promise<DemoCheckoutDraft> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DemoCheckoutDraft>(getSaveDemoDraftUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoCheckoutDraftInput)
+  }
+);}
+
+
+
+
+
+export const getSaveDemoDraftMutationKey = () => ['saveDemoDraft'] as const;
+
+export const getSaveDemoDraftMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveDemoDraft>>, TError,SaveDemoDraftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveDemoDraft>>, TError,SaveDemoDraftMutationVariables, TContext> => {
+
+const mutationKey = getSaveDemoDraftMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveDemoDraft>>, SaveDemoDraftMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  saveDemoDraft(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveDemoDraftMutationResult = NonNullable<Awaited<ReturnType<typeof saveDemoDraft>>>
+    export type SaveDemoDraftMutationBody = BodyType<DemoCheckoutDraftInput>
+    export type SaveDemoDraftMutationError = ErrorType<unknown>
+    export type SaveDemoDraftMutationVariables = {id: string;data: BodyType<DemoCheckoutDraftInput>}
+
+    /**
+ * @summary Save a live, non-payment demo checkout draft
+ */
+export const useSaveDemoDraft = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveDemoDraft>>, TError,SaveDemoDraftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveDemoDraft>>,
+        TError,
+        SaveDemoDraftMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveDemoDraftMutationOptions(options));
     }
 
 export const getGetAdminMeUrl = () => {
@@ -950,6 +1041,77 @@ export function useListAdminOrders<TData = Awaited<ReturnType<typeof listAdminOr
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListAdminOrdersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListAdminDemoDraftsUrl = () => {
+
+
+
+
+  return `/api/admin/demo-drafts`
+}
+
+export const listAdminDemoDrafts = async ( options?: Parameters<typeof customFetch>[1]): Promise<DemoCheckoutDraft[]> => {
+
+  return customFetch<DemoCheckoutDraft[]>(getListAdminDemoDraftsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminDemoDraftsQueryKey = () => {
+    return [
+    `/api/admin/demo-drafts`
+    ] as const;
+    }
+
+
+export const getListAdminDemoDraftsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminDemoDrafts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminDemoDrafts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminDemoDraftsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminDemoDrafts>>> = ({ signal }) => listAdminDemoDrafts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminDemoDrafts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminDemoDraftsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminDemoDrafts>>>
+export type ListAdminDemoDraftsQueryError = ErrorType<unknown>
+
+
+
+export function useListAdminDemoDrafts<TData = Awaited<ReturnType<typeof listAdminDemoDrafts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminDemoDrafts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminDemoDraftsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
