@@ -202,8 +202,8 @@ function LiveDrafts({ drafts, loading, error }: { drafts: DemoCheckoutDraft[]; l
         <div className="dg-draft-card-head"><strong>{draft.displayName || 'Demo shopper'}</strong><span>{draft.cardType} demo · {new Date(draft.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span></div>
         <div className="dg-draft-fields">
           <span className={draft.completedFields.includes('name') ? 'complete' : ''}>Name: {draft.completedFields.includes('name') ? draft.displayName : 'waiting'}</span>
-          <span className={draft.completedFields.includes('number') ? 'complete' : ''}>Demo number: {draft.completedFields.includes('number') ? 'preset entered' : 'waiting'}</span>
-          <span className={draft.completedFields.includes('expiry') ? 'complete' : ''}>Demo expiry: {draft.completedFields.includes('expiry') ? '12/30' : 'waiting'}</span>
+          <span className={draft.completedFields.includes('number') ? 'complete' : ''}>Demo number: {draft.completedFields.includes('number') ? 'format completed (not stored)' : 'waiting'}</span>
+          <span className={draft.completedFields.includes('expiry') ? 'complete' : ''}>Demo expiry: {draft.completedFields.includes('expiry') ? 'format completed (not stored)' : 'waiting'}</span>
           <span className={draft.completedFields.includes('cvc') ? 'complete' : ''}>Demo CVC: {draft.completedFields.includes('cvc') ? 'completed (not stored)' : 'waiting'}</span>
         </div>
       </div>)}</div> : <div className="dg-draft-empty">No active demo checkouts. A shopper’s progress will appear here after leaving the first field.</div>}
