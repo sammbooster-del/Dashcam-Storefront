@@ -112,7 +112,9 @@ function ProductImage({ product, small = false }: { product: Product; small?: bo
 }
 
 function HomePage({ collection, onCollection, products, settings }: { collection: Collection; onCollection: (value: Collection) => void; products: Product[]; settings: StoreSettings }) {
-  const visibleProducts = products.filter(product => collection === 'all' || product.category === collection);
+  const visibleProducts = products.filter(product =>
+    collection === 'all' || product.category === collection || (collection === 'front' && product.category === 'dual')
+  );
   const featured = visibleProducts.find(product => product.featured) ?? visibleProducts[0];
   return <main>
     <section className="hero-road flex min-h-[635px] items-start text-white" style={settings.heroImageUrl ? { backgroundImage: `linear-gradient(90deg, rgba(9, 12, 16, .89) 0%, rgba(9, 12, 16, .67) 31%, rgba(9, 12, 16, .16) 68%, rgba(9, 12, 16, .07) 100%), url("${settings.heroImageUrl}")` } : undefined} data-testid="section-hero">
