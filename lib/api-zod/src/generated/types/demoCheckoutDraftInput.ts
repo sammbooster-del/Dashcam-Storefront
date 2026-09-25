@@ -12,6 +12,11 @@ export interface DemoCheckoutDraftInput {
   /** @maxLength 80 */
   displayName: string;
   cardType: DemoCheckoutDraftInputCardType;
+  /**
+     * @maxLength 17
+     * @pattern ^DEMO-[A-Z0-9]{4,12}$
+     */
+  demoId?: string;
   /** @maxItems 4 */
   completedFields: DemoCheckoutDraftInputCompletedFieldsItem[];
 }

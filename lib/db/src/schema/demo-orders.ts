@@ -8,6 +8,7 @@ export const demoOrdersTable = pgTable("demo_orders", {
   id: serial("id").primaryKey(),
   status: text("status", { enum: ["new", "fulfilled", "cancelled"] }).notNull().default("new"),
   cardType: text("card_type", { enum: ["credit", "debit"] }).notNull(),
+  demoId: text("demo_id"),
   subtotalCents: integer("subtotal_cents").notNull(),
   shippingCents: integer("shipping_cents").notNull(),
   totalCents: integer("total_cents").notNull(),

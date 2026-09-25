@@ -39,4 +39,5 @@ export interface StoreSettingsInput {
   shippingCents: number;
   /** @maxLength 254 */
   supportEmail: string;
+  fictionalDemoMode: boolean;
 }

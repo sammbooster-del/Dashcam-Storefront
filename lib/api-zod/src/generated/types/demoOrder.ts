@@ -14,6 +14,8 @@ export interface DemoOrder {
   createdAt: Date;
   status: DemoOrderStatus;
   cardType: DemoOrderCardType;
+  /** @nullable */
+  demoId?: string | null;
   subtotalCents: number;
   shippingCents: number;
   totalCents: number;

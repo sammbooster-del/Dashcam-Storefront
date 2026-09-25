@@ -12,6 +12,8 @@ export interface DemoCheckoutDraft {
   id: string;
   displayName: string;
   cardType: DemoCheckoutDraftCardType;
+  /** @nullable */
+  demoId?: string | null;
   completedFields: DemoCheckoutDraftCompletedFieldsItem[];
   updatedAt: Date;
 }

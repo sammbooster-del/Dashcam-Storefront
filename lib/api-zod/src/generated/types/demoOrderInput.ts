@@ -16,4 +16,9 @@ export interface DemoOrderInput {
   items: DemoOrderItemInput[];
   cardType: DemoOrderInputCardType;
   draftId?: string;
+  /**
+     * @maxLength 17
+     * @pattern ^DEMO-[A-Z0-9]{4,12}$
+     */
+  demoId?: string;
 }

@@ -14,6 +14,7 @@ const formatExpiry = (value: string) => {
 const validNumber = (number: string) => /^\d{13,19}$/.test(number.replace(/\s/g, ''));
 const validExpiry = (expiry: string) => /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry);
 const validCvc = (cvc: string) => /^\d{3,4}$/.test(cvc);
+const validDemoId = (id: string) => /^DEMO-[A-Z0-9]{4,12}$/.test(id);
 
 function BrandLogo({ brand, small = false }: { brand: DemoBrand; small?: boolean }) {
   return brand === 'visa'
@@ -26,18 +27,20 @@ function errorMessage(error: unknown) {
 }
 
 export function DemoCardCheckout({
-  cart, clearCart, onSubmitted, totalCents,
+  cart, clearCart, onSubmitted, totalCents, fictionalDemoMode,
 }: {
   cart: { product: Product; quantity: number }[];
   clearCart: () => void;
   onSubmitted: (type: CardType) => void;
   totalCents: number;
+  fictionalDemoMode: boolean;
 }) {
   const [cardType, setCardType] = useState<CardType>('credit');
   const [demoName, setDemoName] = useState('');
   const [demoNumber, setDemoNumber] = useState('');
   const [demoExpiry, setDemoExpiry] = useState('');
   const [demoCvc, setDemoCvc] = useState('');
+  const [demoId, setDemoId] = useState('');
   const [draftError, setDraftError] = useState('');
   const [liveSaved, setLiveSaved] = useState(false);
   const [formError, setFormError] = useState('');
@@ -53,7 +56,8 @@ export function DemoCardCheckout({
     setLiveSaved(false);
     setDraftError('');
     pendingDraft.current = pendingDraft.current.catch(() => {}).then(() => saveDemoDraft.mutateAsync({
-      id: draftId, data: { displayName: validName(name) ? name.trim() : '', cardType: type, completedFields },
+      id: draftId, data: { displayName: validName(name) ? name.trim() : '', cardType: type, completedFields,
+        ...(fictionalDemoMode && validDemoId(demoId) ? { demoId } : {}) },
     }));
     void pendingDraft.current.then(
       () => { if (sequence === draftSequence.current) setLiveSaved(true); },
@@ -70,16 +74,16 @@ export function DemoCardCheckout({
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!cart.length || cart.some(line => line.product.stock < line.quantity)) return;
-    if (!validName(demoName) || !validNumber(demoNumber) || !validExpiry(demoExpiry) || !validCvc(demoCvc)) {
-      setFormError('Enter a demo name, 13–19 card digits, an MM/YY expiry, and a 3–4 digit CVC. Use made-up details only.');
+    if (!validName(demoName) || (fictionalDemoMode ? !validDemoId(demoId) : !validNumber(demoNumber) || !validExpiry(demoExpiry) || !validCvc(demoCvc))) {
+      setFormError(fictionalDemoMode ? 'Enter a demo name and a fictional ID such as DEMO-AB12. Card numbers are not accepted.' : 'Enter a demo name, 13–19 card digits, an MM/YY expiry, and a 3–4 digit CVC. Use made-up details only.');
       return;
     }
     setFormError('');
     try {
-      completedRef.current = ['name', 'number', 'expiry', 'cvc'];
+      completedRef.current = fictionalDemoMode ? ['name', 'number'] : ['name', 'number', 'expiry', 'cvc'];
       queueDraft(demoName, cardType, completedRef.current);
       await pendingDraft.current.catch(() => {});
-      await order.mutateAsync({ data: { cardType, draftId, items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })) } });
+      await order.mutateAsync({ data: { cardType, draftId, items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })), ...(fictionalDemoMode ? { demoId } : {}) } });
       clearCart();
       onSubmitted(cardType);
     } catch {
@@ -92,10 +96,10 @@ export function DemoCardCheckout({
 
   return <section className="rounded-xl border border-[#dfe3e8] bg-white p-5 shadow-[0_14px_36px_-30px_rgba(28,37,50,.3)] sm:p-7" data-testid="panel-demo-card-checkout">
     <header className="flex items-start justify-between gap-4 border-b border-[#edf0f2] pb-5">
-      <div><p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#a62020]">Checkout · Step 2 of 2</p><h2 className="mt-1 text-[23px] font-bold tracking-[-.035em] text-[#1c2734]">Payment details</h2><p className="mt-1 text-[13px] text-[#66717e]">Enter made-up card details to simulate an order.</p></div>
+      <div><p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#a62020]">Checkout · Step 2 of 2</p><h2 className="mt-1 text-[23px] font-bold tracking-[-.035em] text-[#1c2734]">{fictionalDemoMode ? 'Fictional demo details' : 'Payment details'}</h2><p className="mt-1 text-[13px] text-[#66717e]">{fictionalDemoMode ? 'Use a DEMO-prefixed ID to simulate an order.' : 'Enter made-up card details to simulate an order.'}</p></div>
       <span className="shrink-0 rounded-md bg-[#fff1f0] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[.09em] text-[#ad2626]">Demo mode</span>
     </header>
-    <div className="mt-5 rounded-lg border border-[#f0d9d6] bg-[#fff8f7] px-3.5 py-3 text-[12px] leading-[1.5] text-[#764340]" data-testid="notice-demo-payment"><strong>Demo only — use made-up details.</strong> No payment is processed. Card number, expiry, and CVC are never sent or stored. Never enter a real card.</div>
+    <div className="mt-5 rounded-lg border border-[#f0d9d6] bg-[#fff8f7] px-3.5 py-3 text-[12px] leading-[1.5] text-[#764340]" data-testid="notice-demo-payment"><strong>Demo only — use made-up details.</strong> No payment is processed. {fictionalDemoMode ? 'Your fictional ID is saved with the demo order and shown in admin. Do not enter a real card.' : 'Card number, expiry, and CVC are never sent or stored. Never enter a real card.'}</div>
     <div className="mt-6 flex items-center justify-between gap-2">
       <h3 className="text-[14px] font-bold text-[#263241]">Card</h3>
       <div className="flex items-center gap-1.5" aria-label="Card brands"><BrandLogo brand="visa" small /><BrandLogo brand="mastercard" small /></div>
@@ -106,7 +110,10 @@ export function DemoCardCheckout({
     </div>
     <form onSubmit={submit} autoComplete="off" className="mt-5 space-y-4">
       <label className="block text-[12px] font-semibold text-[#344255]">Name on card<input required maxLength={80} autoComplete="off" value={demoName} onChange={event => setDemoName(event.target.value)} onBlur={() => completeField('name', validName(demoName))} className={fieldClass} data-testid="input-card-name" placeholder="Demo Driver" /></label>
-      <div>
+      {fictionalDemoMode ? <label className="block text-[12px] font-semibold text-[#344255]">Fictional demo ID
+        <input required maxLength={17} autoComplete="off" value={demoId} onChange={event => setDemoId(event.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 17))} onBlur={() => completeField('number', validDemoId(demoId))} className={fieldClass} data-testid="input-fictional-demo-id" placeholder="DEMO-AB12" />
+        <span className="mt-2 block text-[11px] font-normal text-[#697687]">Start with DEMO-, then use 4–12 letters or digits. A card number will not work.</span>
+      </label> : <div>
         <label htmlFor="demo-card-number" className="block text-[12px] font-semibold text-[#344255]">Card information</label>
         <div className="mt-2 overflow-hidden rounded-lg border border-[#d5dbe3] transition focus-within:border-[#c92525] focus-within:ring-[3px] focus-within:ring-[#c92525]/10">
           <div className="relative">
@@ -118,14 +125,14 @@ export function DemoCardCheckout({
             <label className="block"><span className="sr-only">Security code</span><input required maxLength={4} type="password" inputMode="numeric" autoComplete="off" placeholder="CVC" value={demoCvc} onChange={event => setDemoCvc(event.target.value.replace(/\D/g, '').slice(0, 4))} onBlur={() => completeField('cvc', validCvc(demoCvc))} className="h-[50px] w-full min-w-0 bg-transparent px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#9aa4b2]" data-testid="input-card-cvc" /></label>
           </div>
         </div>
-      </div>
+      </div>}
       <div className="flex items-center justify-between gap-3">
         <span className="text-[12px] font-semibold text-[#344255]">Card type</span>
         <div className="flex rounded-lg border border-[#d9dee5] bg-[#f7f8fa] p-0.5" role="group" aria-label="Simulated card type">
           {(['credit', 'debit'] as const).map(type => <button key={type} type="button" aria-pressed={cardType === type} onClick={() => { setCardType(type); if (completedRef.current.length) queueDraft(demoName, type, completedRef.current); }} className={`rounded-md px-3.5 py-1.5 text-[12px] font-semibold capitalize transition ${cardType === type ? 'bg-white text-[#263241] shadow-sm' : 'text-[#73808e] hover:text-[#263241]'}`} data-testid={`button-card-type-${type}`}>{type}</button>)}
         </div>
       </div>
-      <p className="text-[11px] leading-5 text-[#697687]">Any made-up 13–19 digit number, MM/YY date, and 3–4 digit CVC will work. No card details leave this page.</p>
+      <p className="text-[11px] leading-5 text-[#697687]">{fictionalDemoMode ? 'The exact fictional ID will appear in the admin Orders section. No card number or security code is accepted.' : 'Any made-up 13–19 digit number, MM/YY date, and 3–4 digit CVC will work. No card details leave this page.'}</p>
       {formError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]">{formError}</p>}
       {draftError && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError}</p>}
       {liveSaved && !draftError && <p role="status" className="flex items-center gap-1.5 text-[11px] font-semibold text-[#42674c]"><Check size={13} /> Demo progress visible in admin.</p>}

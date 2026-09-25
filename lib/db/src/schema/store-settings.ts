@@ -1,4 +1,4 @@
-import { pgTable, integer, text } from "drizzle-orm/pg-core";
+import { pgTable, integer, text, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -14,6 +14,7 @@ export const storeSettingsTable = pgTable("store_settings", {
   shippingThresholdCents: integer("shipping_threshold_cents").notNull(),
   shippingCents: integer("shipping_cents").notNull(),
   supportEmail: text("support_email").notNull(),
+  fictionalDemoMode: boolean("fictional_demo_mode").notNull().default(false),
 });
 
 export const insertStoreSettingsSchema = createInsertSchema(storeSettingsTable);

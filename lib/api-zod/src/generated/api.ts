@@ -28,7 +28,8 @@ export const GetStorefrontResponse = zod.object({
   "trustDescription": zod.string(),
   "shippingThresholdCents": zod.number().int(),
   "shippingCents": zod.number().int(),
-  "supportEmail": zod.string()
+  "supportEmail": zod.string(),
+  "fictionalDemoMode": zod.boolean()
 }),
   "products": zod.array(zod.object({
   "id": zod.number().int(),
@@ -49,6 +50,10 @@ export const createDemoOrderBodyItemsItemQuantityMax = 99;
 
 export const createDemoOrderBodyItemsMax = 100;
 
+export const createDemoOrderBodyDemoIdMax = 17;
+
+
+export const createDemoOrderBodyDemoIdRegExp = new RegExp('^DEMO-[A-Z0-9]{4,12}$');
 
 
 export const CreateDemoOrderBody = zod.object({
@@ -57,7 +62,8 @@ export const CreateDemoOrderBody = zod.object({
   "quantity": zod.number().int().min(1).max(createDemoOrderBodyItemsItemQuantityMax)
 })).min(1).max(createDemoOrderBodyItemsMax),
   "cardType": zod.enum(['credit', 'debit']),
-  "draftId": zod.string().uuid().optional()
+  "draftId": zod.string().uuid().optional(),
+  "demoId": zod.string().max(createDemoOrderBodyDemoIdMax).regex(createDemoOrderBodyDemoIdRegExp).optional()
 })
 
 export const CreateDemoOrderResponse = zod.object({
@@ -65,6 +71,7 @@ export const CreateDemoOrderResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
+  "demoId": zod.string().nullish(),
   "subtotalCents": zod.number().int(),
   "shippingCents": zod.number().int(),
   "totalCents": zod.number().int(),
@@ -86,6 +93,10 @@ export const SaveDemoDraftParams = zod.object({
 
 export const saveDemoDraftBodyDisplayNameMax = 80;
 
+export const saveDemoDraftBodyDemoIdMax = 17;
+
+
+export const saveDemoDraftBodyDemoIdRegExp = new RegExp('^DEMO-[A-Z0-9]{4,12}$');
 export const saveDemoDraftBodyCompletedFieldsMax = 4;
 
 
@@ -93,6 +104,7 @@ export const saveDemoDraftBodyCompletedFieldsMax = 4;
 export const SaveDemoDraftBody = zod.object({
   "displayName": zod.string().max(saveDemoDraftBodyDisplayNameMax),
   "cardType": zod.enum(['credit', 'debit']),
+  "demoId": zod.string().max(saveDemoDraftBodyDemoIdMax).regex(saveDemoDraftBodyDemoIdRegExp).optional(),
   "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])).max(saveDemoDraftBodyCompletedFieldsMax)
 })
 
@@ -100,6 +112,7 @@ export const SaveDemoDraftResponse = zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
   "cardType": zod.enum(['credit', 'debit']),
+  "demoId": zod.string().nullish(),
   "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])),
   "updatedAt": zod.coerce.date()
 })
@@ -240,7 +253,8 @@ export const GetAdminSettingsResponse = zod.object({
   "trustDescription": zod.string(),
   "shippingThresholdCents": zod.number().int(),
   "shippingCents": zod.number().int(),
-  "supportEmail": zod.string()
+  "supportEmail": zod.string(),
+  "fictionalDemoMode": zod.boolean()
 })
 
 
@@ -278,7 +292,8 @@ export const UpdateAdminSettingsBody = zod.object({
   "trustDescription": zod.string().max(updateAdminSettingsBodyTrustDescriptionMax),
   "shippingThresholdCents": zod.number().int().min(updateAdminSettingsBodyShippingThresholdCentsMin).max(updateAdminSettingsBodyShippingThresholdCentsMax),
   "shippingCents": zod.number().int().min(updateAdminSettingsBodyShippingCentsMin).max(updateAdminSettingsBodyShippingCentsMax),
-  "supportEmail": zod.string().max(updateAdminSettingsBodySupportEmailMax)
+  "supportEmail": zod.string().max(updateAdminSettingsBodySupportEmailMax),
+  "fictionalDemoMode": zod.boolean()
 })
 
 export const UpdateAdminSettingsResponse = zod.object({
@@ -291,7 +306,8 @@ export const UpdateAdminSettingsResponse = zod.object({
   "trustDescription": zod.string(),
   "shippingThresholdCents": zod.number().int(),
   "shippingCents": zod.number().int(),
-  "supportEmail": zod.string()
+  "supportEmail": zod.string(),
+  "fictionalDemoMode": zod.boolean()
 })
 
 
@@ -300,6 +316,7 @@ export const ListAdminOrdersResponseItem = zod.object({
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
+  "demoId": zod.string().nullish(),
   "subtotalCents": zod.number().int(),
   "shippingCents": zod.number().int(),
   "totalCents": zod.number().int(),
@@ -317,6 +334,7 @@ export const ListAdminDemoDraftsResponseItem = zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
   "cardType": zod.enum(['credit', 'debit']),
+  "demoId": zod.string().nullish(),
   "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])),
   "updatedAt": zod.coerce.date()
 })
@@ -336,6 +354,7 @@ export const UpdateAdminOrderResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
+  "demoId": zod.string().nullish(),
   "subtotalCents": zod.number().int(),
   "shippingCents": zod.number().int(),
   "totalCents": zod.number().int(),

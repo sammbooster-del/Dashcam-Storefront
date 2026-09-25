@@ -15,6 +15,12 @@ Live demo checkout previews may show the shopper's entered demo name and which f
 
 **How to apply:** For future live checkout features, send only non-payment metadata and server-defined demo indicators. Never add arbitrary card-like input to the public or admin API.
 
+An explicitly non-card, DEMO-prefixed identifier may be entered, transmitted, and displayed exactly when the administrator enables fictional demo mode. Do not treat that identifier as a payment credential or loosen its format to accept card-like digits. Switching back to the card-style form must not transmit its typed values.
+
+**Why:** The administrator wants an exact value visible in orders, but arbitrary card-formatted fields can contain real payment information even in a demo. A visibly fictional, server-validated identifier satisfies the demonstration without crossing that boundary.
+
+**How to apply:** Keep the mode server-enforced, reject card-format submissions while fictional mode is on, and never store card number, expiry, or CVC in either mode.
+
 The checkout may adopt the familiar layout of a modern payment form, but it must not claim to be powered by Stripe or imply that a real charge is possible.
 
 **Why:** The user wants a polished, Stripe-like experience while explicitly keeping the checkout simulated. Provider branding or real-payment security claims would misrepresent what the form does.

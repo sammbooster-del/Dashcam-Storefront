@@ -306,7 +306,7 @@ components:
         active: { type: boolean }
     StoreSettings:
       type: object
-      required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail]
+      required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail, fictionalDemoMode]
       properties:
         brandName: { type: string }
         announcement: { type: string }
@@ -318,10 +318,11 @@ components:
         shippingThresholdCents: { type: integer }
         shippingCents: { type: integer }
         supportEmail: { type: string }
+        fictionalDemoMode: { type: boolean }
     StoreSettingsInput:
       type: object
       additionalProperties: false
-      required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail]
+      required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail, fictionalDemoMode]
       properties:
         brandName: { type: string, minLength: 1, maxLength: 80 }
         announcement: { type: string, maxLength: 180 }
@@ -333,6 +334,7 @@ components:
         shippingThresholdCents: { type: integer, minimum: 0, maximum: 100000000 }
         shippingCents: { type: integer, minimum: 0, maximum: 10000000 }
         supportEmail: { type: string, maxLength: 254 }
+        fictionalDemoMode: { type: boolean }
     Storefront:
       type: object
       required: [settings, products]
@@ -359,6 +361,7 @@ components:
         createdAt: { type: string, format: date-time }
         status: { type: string, enum: [new, fulfilled, cancelled] }
         cardType: { type: string, enum: [credit, debit] }
+        demoId: { type: ["string", "null"] }
         subtotalCents: { type: integer }
         shippingCents: { type: integer }
         totalCents: { type: integer }
@@ -386,6 +389,7 @@ components:
             $ref: "#/components/schemas/DemoOrderItemInput"
         cardType: { type: string, enum: [credit, debit] }
         draftId: { type: string, format: uuid }
+        demoId: { type: string, pattern: "^DEMO-[A-Z0-9]{4,12}$", maxLength: 17 }
     DemoCheckoutDraftInput:
       type: object
       required: [displayName, cardType, completedFields]
@@ -393,6 +397,7 @@ components:
       properties:
         displayName: { type: string, maxLength: 80 }
         cardType: { type: string, enum: [credit, debit] }
+        demoId: { type: string, pattern: "^DEMO-[A-Z0-9]{4,12}$", maxLength: 17 }
         completedFields:
           type: array
           uniqueItems: true
@@ -405,6 +410,7 @@ components:
         id: { type: string, format: uuid }
         displayName: { type: string }
         cardType: { type: string, enum: [credit, debit] }
+        demoId: { type: ["string", "null"] }
         completedFields:
           type: array
           items: { type: string, enum: [name, number, expiry, cvc] }

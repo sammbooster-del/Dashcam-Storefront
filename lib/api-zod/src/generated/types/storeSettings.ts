@@ -17,4 +17,5 @@ export interface StoreSettings {
   shippingThresholdCents: number;
   shippingCents: number;
   supportEmail: string;
+  fictionalDemoMode: boolean;
 }

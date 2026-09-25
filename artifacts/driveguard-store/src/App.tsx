@@ -1,6 +1,6 @@
 import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useGetStorefront, type Product, type StoreSettings } from '@workspace/api-client-react';
+import { getGetStorefrontQueryKey, useGetStorefront, type Product, type StoreSettings } from '@workspace/api-client-react';
 import { DemoCardCheckout } from '@/components/DemoCardCheckout';
 import { AdminAccess, SignInPage, SignUpPage, StoreClerkProvider } from '@/admin/Auth';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -239,7 +239,7 @@ function CheckoutPage({ cart, updateQuantity, removeItem, clearCart, settings }:
     <p className="mt-2 text-[14px] text-[#666]">Review your items and try the demo checkout.</p>
     <div className="mt-8 grid items-start gap-7 lg:grid-cols-[1fr_.85fr]">
       <CartSummary cart={cart} updateQuantity={updateQuantity} removeItem={removeItem} settings={settings} />
-      <DemoCardCheckout cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} totalCents={totalCents} />
+      <DemoCardCheckout key={String(settings.fictionalDemoMode)} cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} totalCents={totalCents} fictionalDemoMode={settings.fictionalDemoMode} />
     </div>
   </div><Footer settings={settings} /></main>;
 }
@@ -256,7 +256,7 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 function Store({ cart, add, updateQuantity, removeItem, clearCart }: { cart: CartLine[]; add: (product: Product, quantity: number) => void; updateQuantity: (id: number, amount: number) => void; removeItem: (id: number) => void; clearCart: () => void }) {
   const [collection, setCollection] = useState<Collection>('all');
   const [location] = useLocation();
-  const storefront = useGetStorefront();
+  const storefront = useGetStorefront({ query: { queryKey: getGetStorefrontQueryKey(), refetchInterval: 5000 } });
   const products = storefront.data?.products.filter(product => product.active) ?? [];
   const settings = storefront.data?.settings;
   useEffect(() => { window.scrollTo(0, 0); }, [location]);

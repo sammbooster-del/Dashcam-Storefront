@@ -122,6 +122,7 @@ export interface StoreSettings {
   shippingThresholdCents: number;
   shippingCents: number;
   supportEmail: string;
+  fictionalDemoMode: boolean;
 }
 
 export interface StoreSettingsInput {
@@ -157,6 +158,7 @@ export interface StoreSettingsInput {
   shippingCents: number;
   /** @maxLength 254 */
   supportEmail: string;
+  fictionalDemoMode: boolean;
 }
 
 export interface Storefront {
@@ -193,6 +195,8 @@ export interface DemoOrder {
   createdAt: string;
   status: DemoOrderStatus;
   cardType: DemoOrderCardType;
+  /** @nullable */
+  demoId?: string | null;
   subtotalCents: number;
   shippingCents: number;
   totalCents: number;
@@ -224,6 +228,11 @@ export interface DemoOrderInput {
   items: DemoOrderItemInput[];
   cardType: DemoOrderInputCardType;
   draftId?: string;
+  /**
+     * @maxLength 17
+     * @pattern ^DEMO-[A-Z0-9]{4,12}$
+     */
+  demoId?: string;
 }
 
 export type DemoCheckoutDraftInputCardType = typeof DemoCheckoutDraftInputCardType[keyof typeof DemoCheckoutDraftInputCardType];
@@ -248,6 +257,11 @@ export interface DemoCheckoutDraftInput {
   /** @maxLength 80 */
   displayName: string;
   cardType: DemoCheckoutDraftInputCardType;
+  /**
+     * @maxLength 17
+     * @pattern ^DEMO-[A-Z0-9]{4,12}$
+     */
+  demoId?: string;
   /** @maxItems 4 */
   completedFields: DemoCheckoutDraftInputCompletedFieldsItem[];
 }
@@ -274,6 +288,8 @@ export interface DemoCheckoutDraft {
   id: string;
   displayName: string;
   cardType: DemoCheckoutDraftCardType;
+  /** @nullable */
+  demoId?: string | null;
   completedFields: DemoCheckoutDraftCompletedFieldsItem[];
   updatedAt: string;
 }
