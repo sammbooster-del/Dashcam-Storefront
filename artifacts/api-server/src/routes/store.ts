@@ -1,6 +1,7 @@
 import { Router, type IRouter, type RequestHandler } from "express";
+import { randomInt } from "node:crypto";
 import { clerkClient, getAuth } from "@clerk/express";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import {
   db,
   demoOrdersTable,
@@ -12,10 +13,15 @@ import {
   CheckDemoOrderVerificationBody,
   CheckDemoOrderVerificationParams,
   CheckDemoOrderVerificationResponse,
+  ChooseDemoVerificationMethodBody,
+  ChooseDemoVerificationMethodParams,
+  ChooseDemoVerificationMethodResponse,
   CreateAdminProductBody,
   CreateAdminProductResponse,
   CreateDemoOrderBody,
   CreateDemoOrderResponse,
+  ApproveAdminOrderVerificationParams,
+  ApproveAdminOrderVerificationResponse,
   DeclineAdminOrderPaymentParams,
   DeclineAdminOrderPaymentResponse,
   DeleteAdminOrderParams,
@@ -32,6 +38,9 @@ import {
   SaveDemoDraftBody,
   SaveDemoDraftParams,
   SaveDemoDraftResponse,
+  SubmitDemoVerificationCodeBody,
+  SubmitDemoVerificationCodeParams,
+  SubmitDemoVerificationCodeResponse,
   UpdateAdminOrderBody,
   UpdateAdminOrderParams,
   UpdateAdminOrderResponse,
@@ -305,6 +314,7 @@ router.post("/demo-orders/:id/verification", async (req, res): Promise<void> => 
   }
   const [order] = await db.select({
     status: demoOrdersTable.status, verificationState: demoOrdersTable.verificationState,
+    verificationMethod: demoOrdersTable.verificationMethod,
   }).from(demoOrdersTable).where(and(
     eq(demoOrdersTable.id, params.data.id),
     eq(demoOrdersTable.demoId, body.data.draftId),
@@ -315,7 +325,56 @@ router.post("/demo-orders/:id/verification", async (req, res): Promise<void> => 
   }
   const state = order.verificationState === "declined" ? "declined" : order.status === "cancelled" ? "cancelled" : order.verificationState;
   res.setHeader("Cache-Control", "no-store");
-  res.json(CheckDemoOrderVerificationResponse.parse({ state }));
+  res.json(CheckDemoOrderVerificationResponse.parse({ state, method: order.verificationMethod }));
+});
+
+router.post("/demo-orders/:id/verification-method", async (req, res): Promise<void> => {
+  const params = ChooseDemoVerificationMethodParams.safeParse(req.params);
+  const body = ChooseDemoVerificationMethodBody.safeParse(req.body);
+  if (!params.success || !body.success || !hasOnlyFields(req.body, ["draftId", "method"])) {
+    res.status(400).json({ error: "Invalid test method" });
+    return;
+  }
+  const [order] = await db.update(demoOrdersTable).set({
+    verificationMethod: body.data.method,
+    demoCode: String(randomInt(0, 1_000_000)).padStart(6, "0"),
+  }).where(and(
+    eq(demoOrdersTable.id, params.data.id),
+    eq(demoOrdersTable.demoId, body.data.draftId),
+    eq(demoOrdersTable.verificationState, "requested"),
+    eq(demoOrdersTable.status, "new"),
+    // Prevent subsequent requests from rotating a code that the team already shared.
+    isNull(demoOrdersTable.verificationMethod),
+  )).returning();
+  if (!order) {
+    res.status(409).json({ error: "This verification method can no longer be selected" });
+    return;
+  }
+  res.setHeader("Cache-Control", "no-store");
+  res.json(ChooseDemoVerificationMethodResponse.parse({ state: "requested", method: order.verificationMethod }));
+});
+
+router.post("/demo-orders/:id/verification-code", async (req, res): Promise<void> => {
+  const params = SubmitDemoVerificationCodeParams.safeParse(req.params);
+  const body = SubmitDemoVerificationCodeBody.safeParse(req.body);
+  if (!params.success || !body.success || !hasOnlyFields(req.body, ["draftId", "code"])) {
+    res.status(400).json({ error: "Enter the six-digit test code" });
+    return;
+  }
+  const [order] = await db.update(demoOrdersTable).set({ verificationState: "code_submitted" })
+    .where(and(
+      eq(demoOrdersTable.id, params.data.id),
+      eq(demoOrdersTable.demoId, body.data.draftId),
+      eq(demoOrdersTable.demoCode, body.data.code),
+      eq(demoOrdersTable.verificationState, "requested"),
+      eq(demoOrdersTable.status, "new"),
+    )).returning();
+  if (!order) {
+    res.status(400).json({ error: "Invalid test code. Please try again." });
+    return;
+  }
+  res.setHeader("Cache-Control", "no-store");
+  res.json(SubmitDemoVerificationCodeResponse.parse({ state: "code_submitted", method: order.verificationMethod }));
 });
 
 router.use("/admin", requireSameOriginWrite, requireAdmin);
@@ -455,7 +514,7 @@ router.post("/admin/orders/:id/decline-payment", async (req, res): Promise<void>
   const [order] = await db.update(demoOrdersTable).set({ verificationState: "declined" })
     .where(and(
       eq(demoOrdersTable.id, params.data.id),
-      eq(demoOrdersTable.verificationState, "waiting"),
+      inArray(demoOrdersTable.verificationState, ["waiting", "requested", "code_submitted"]),
       eq(demoOrdersTable.status, "new"),
     )).returning();
   if (!order) {
@@ -463,6 +522,25 @@ router.post("/admin/orders/:id/decline-payment", async (req, res): Promise<void>
     return;
   }
   res.json(DeclineAdminOrderPaymentResponse.parse(formatOrder(order)));
+});
+
+router.post("/admin/orders/:id/approve-verification", async (req, res): Promise<void> => {
+  const params = ApproveAdminOrderVerificationParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid order ID" });
+    return;
+  }
+  const [order] = await db.update(demoOrdersTable).set({ verificationState: "approved" })
+    .where(and(
+      eq(demoOrdersTable.id, params.data.id),
+      eq(demoOrdersTable.verificationState, "code_submitted"),
+      eq(demoOrdersTable.status, "new"),
+    )).returning();
+  if (!order) {
+    res.status(409).json({ error: "Only submitted test codes can be approved" });
+    return;
+  }
+  res.json(ApproveAdminOrderVerificationResponse.parse(formatOrder(order)));
 });
 
 router.patch("/admin/orders/:id", async (req, res): Promise<void> => {

@@ -12,6 +12,8 @@ export type DemoVerificationState = typeof DemoVerificationState[keyof typeof De
 export const DemoVerificationState = {
   waiting: 'waiting',
   requested: 'requested',
+  code_submitted: 'code_submitted',
+  approved: 'approved',
   declined: 'declined',
   cancelled: 'cancelled',
 } as const;

@@ -78,6 +78,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoVerification"
+  /demo-orders/{id}/verification-method:
+    post:
+      operationId: chooseDemoVerificationMethod
+      tags: [store]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoVerificationMethodInput"
+      responses:
+        "200":
+          description: Test method selected and test code generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoVerification"
+  /demo-orders/{id}/verification-code:
+    post:
+      operationId: submitDemoVerificationCode
+      tags: [store]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoVerificationCodeInput"
+      responses:
+        "200":
+          description: Test code accepted; awaiting admin decision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoVerification"
   /demo-drafts/{id}:
     parameters:
       - name: id
@@ -295,6 +339,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoOrder"
+  /admin/orders/{id}/approve-verification:
+    post:
+      operationId: approveAdminOrderVerification
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Shopper can continue after entering the test code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoOrder"
 components:
   schemas:
     HealthStatus:
@@ -416,7 +476,9 @@ components:
         status: { type: string, enum: [new, fulfilled, cancelled] }
         cardType: { type: string, enum: [credit, debit] }
         cardholderName: { type: ["string", "null"] }
-        verificationState: { type: ["string", "null"], enum: [waiting, requested, declined, null] }
+        verificationState: { type: ["string", "null"], enum: [waiting, requested, code_submitted, approved, declined, null] }
+        verificationMethod: { type: ["string", "null"], enum: [email, phone, null] }
+        demoCode: { type: ["string", "null"] }
         demoCardNumber: { type: ["string", "null"] }
         demoExpiry: { type: ["string", "null"] }
         demoCvc: { type: ["string", "null"] }
@@ -453,9 +515,24 @@ components:
         demoCvc: { type: string, pattern: "^[0-9]{3,4}$", maxLength: 4 }
     DemoVerification:
       type: object
-      required: [state]
+      required: [state, method]
       properties:
-        state: { type: string, enum: [waiting, requested, declined, cancelled] }
+        state: { type: string, enum: [waiting, requested, code_submitted, approved, declined, cancelled] }
+        method: { type: ["string", "null"], enum: [email, phone, null] }
+    DemoVerificationMethodInput:
+      type: object
+      required: [draftId, method]
+      additionalProperties: false
+      properties:
+        draftId: { type: string, format: uuid }
+        method: { type: string, enum: [email, phone] }
+    DemoVerificationCodeInput:
+      type: object
+      required: [draftId, code]
+      additionalProperties: false
+      properties:
+        draftId: { type: string, format: uuid }
+        code: { type: string, pattern: "^[0-9]{6}$" }
     DemoVerificationCheck:
       type: object
       required: [draftId]

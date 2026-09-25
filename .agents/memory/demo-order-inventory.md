@@ -20,3 +20,9 @@ The checkout may adopt the familiar layout of a modern payment form, but it must
 **Why:** The user wants a polished, Stripe-like experience while explicitly keeping the checkout simulated. Provider branding or real-payment security claims would misrepresent what the form does.
 
 **How to apply:** Do not claim a charge or reservation happened. Preserve the short no-charge caution even when the shopper-facing layout otherwise looks like a standard checkout. Only introduce payment-provider claims after a real integration is implemented and verified.
+
+The email and phone choices in simulated verification are labels for a test-code workflow, not delivery channels.
+
+**Why:** The user explicitly clarified that no email or text should be sent; their team will obtain the app-generated test code from the admin view and provide it for the simulation.
+
+**How to apply:** Never claim a message was delivered or add real email/SMS delivery to this flow without a new request. Keep the generated test code restricted to admin responses, and keep shoppers' verification pending until the admin chooses an outcome.

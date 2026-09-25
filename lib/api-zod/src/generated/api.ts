@@ -85,7 +85,9 @@ export const CreateDemoOrderResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
+  "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),
@@ -110,7 +112,41 @@ export const CheckDemoOrderVerificationBody = zod.object({
 })
 
 export const CheckDemoOrderVerificationResponse = zod.object({
-  "state": zod.enum(['waiting', 'requested', 'declined', 'cancelled'])
+  "state": zod.enum(['waiting', 'requested', 'code_submitted', 'approved', 'declined', 'cancelled']),
+  "method": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullable()
+})
+
+
+export const ChooseDemoVerificationMethodParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ChooseDemoVerificationMethodBody = zod.object({
+  "draftId": zod.string().uuid(),
+  "method": zod.enum(['email', 'phone'])
+})
+
+export const ChooseDemoVerificationMethodResponse = zod.object({
+  "state": zod.enum(['waiting', 'requested', 'code_submitted', 'approved', 'declined', 'cancelled']),
+  "method": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullable()
+})
+
+
+export const SubmitDemoVerificationCodeParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const submitDemoVerificationCodeBodyCodeRegExp = new RegExp('^[0-9]{6}$');
+
+
+export const SubmitDemoVerificationCodeBody = zod.object({
+  "draftId": zod.string().uuid(),
+  "code": zod.string().regex(submitDemoVerificationCodeBodyCodeRegExp)
+})
+
+export const SubmitDemoVerificationCodeResponse = zod.object({
+  "state": zod.enum(['waiting', 'requested', 'code_submitted', 'approved', 'declined', 'cancelled']),
+  "method": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullable()
 })
 
 
@@ -359,7 +395,9 @@ export const ListAdminOrdersResponseItem = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
+  "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),
@@ -403,7 +441,9 @@ export const UpdateAdminOrderResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
+  "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),
@@ -436,7 +476,9 @@ export const RequestAdminOrderVerificationResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
+  "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),
@@ -462,7 +504,37 @@ export const DeclineAdminOrderPaymentResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
+  "demoCode": zod.string().nullish(),
+  "demoCardNumber": zod.string().nullish(),
+  "demoExpiry": zod.string().nullish(),
+  "demoCvc": zod.string().nullish(),
+  "subtotalCents": zod.number().int(),
+  "shippingCents": zod.number().int(),
+  "totalCents": zod.number().int(),
+  "items": zod.array(zod.object({
+  "productId": zod.number().int(),
+  "name": zod.string(),
+  "unitPriceCents": zod.number().int(),
+  "quantity": zod.number().int()
+}))
+})
+
+
+export const ApproveAdminOrderVerificationParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ApproveAdminOrderVerificationResponse = zod.object({
+  "id": zod.number().int(),
+  "createdAt": zod.coerce.date(),
+  "status": zod.enum(['new', 'fulfilled', 'cancelled']),
+  "cardType": zod.enum(['credit', 'debit']),
+  "cardholderName": zod.string().nullish(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
+  "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),

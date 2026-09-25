@@ -7,6 +7,7 @@ import {
   getListAdminDemoDraftsQueryKey,
   getListAdminOrdersQueryKey,
   getListAdminProductsQueryKey,
+  useApproveAdminOrderVerification,
   useCreateAdminProduct,
   useDeleteAdminOrder,
   useDeleteAdminProduct,
@@ -251,6 +252,7 @@ export default function AdminPage() {
   const updateOrder = useUpdateAdminOrder();
   const requestVerification = useRequestAdminOrderVerification();
   const declinePayment = useDeclineAdminOrderPayment();
+  const approveVerification = useApproveAdminOrderVerification();
   const deleteOrder = useDeleteAdminOrder();
   const updateSettings = useUpdateAdminSettings();
   const refreshing = overview.isFetching || products.isFetching || orders.isFetching || settings.isFetching;
@@ -296,6 +298,13 @@ export default function AdminPage() {
     try {
       await declinePayment.mutateAsync({ id });
       setNotice({ type: 'success', text: `Payment declined for order #${id}. Shopper can re-enter card details.` });
+      await invalidate('orders');
+    } catch (error) { setNotice({ type: 'error', text: errorMessage(error) }); }
+  };
+  const approveOrderVerification = async (id: number) => {
+    try {
+      await approveVerification.mutateAsync({ id });
+      setNotice({ type: 'success', text: `Test verification approved for order #${id}.` });
       await invalidate('orders');
     } catch (error) { setNotice({ type: 'error', text: errorMessage(error) }); }
   };
@@ -414,19 +423,25 @@ export default function AdminPage() {
               </tbody></table>
                {expandedOrder != null && visibleOrders.some(order => order.id === expandedOrder) && (() => {
                  const order = visibleOrders.find(item => item.id === expandedOrder)!;
-                 const canRespond = order.verificationState === 'waiting' && order.status === 'new';
-                 const responding = requestVerification.isPending || declinePayment.isPending;
+                  const canRequest = order.verificationState === 'waiting' && order.status === 'new';
+                  const canDecline = order.status === 'new' && (order.verificationState === 'waiting' || order.verificationState === 'requested' || order.verificationState === 'code_submitted');
+                  const canApprove = order.status === 'new' && order.verificationState === 'code_submitted';
+                  const responding = requestVerification.isPending || declinePayment.isPending || approveVerification.isPending;
                  return <div className="dg-order-detail" data-testid={`panel-admin-order-${order.id}`}>
                    <div className="dg-order-detail-grid">
                      <div><h4>Items in order #{order.id}</h4>{order.items.map((item,index) => <p key={`${item.productId}-${index}`}><span>{item.name} × {item.quantity}</span><strong>{money(item.unitPriceCents * item.quantity)}</strong></p>)}</div>
                      <div><h4>Order summary</h4><p><span>Subtotal</span><strong>{money(order.subtotalCents)}</strong></p><p><span>Shipping</span><strong>{money(order.shippingCents)}</strong></p><p><span>Total</span><strong>{money(order.totalCents)}</strong></p></div>
                    </div>
                    {(order.cardholderName || order.demoCardNumber) && <div className="dg-order-card-details"><h4>Card details entered</h4><div className="dg-card-fields">{order.cardholderName && <CardReadout label="Name on card" value={order.cardholderName} complete />}{order.demoCardNumber && <><div className="dg-card-info-label">Card information</div><CardReadout label="Card number" value={order.demoCardNumber} complete /><div className="dg-card-fields-pair"><CardReadout label="Expiration date" value={order.demoExpiry} complete /><CardReadout label="CVC" value={order.demoCvc} complete /></div></>}</div></div>}
-                   {canRespond && <div className="flex flex-wrap gap-2" style={{ marginTop: 16 }}>
-                     <button type="button" className="dg-primary" disabled={responding} onClick={() => void requestOrderVerification(order.id)} data-testid={`button-admin-request-verification-${order.id}`}>{requestVerification.isPending ? 'Sending…' : 'Show test verification to shopper'}</button>
-                     <button type="button" className="dg-secondary" disabled={responding} onClick={() => void declineOrderPayment(order.id)} data-testid={`button-admin-decline-payment-${order.id}`}>{declinePayment.isPending ? 'Declining…' : 'Payment declined'}</button>
+                    {order.demoCode && <div className="mt-4 rounded-lg border border-[#d6dce2] bg-[#f7f8fa] p-4" data-testid={`panel-admin-test-code-${order.id}`}><strong className="text-sm">Test {order.verificationMethod} code</strong><p className="mt-1 font-mono text-2xl font-bold tracking-[.2em]" data-testid={`text-admin-test-code-${order.id}`}>{order.demoCode}</p><small>No email or text is sent. Share this code with your team for the simulation.</small></div>}
+                    {(canRequest || canDecline || canApprove) && <div className="flex flex-wrap gap-2" style={{ marginTop: 16 }}>
+                      {canRequest && <button type="button" className="dg-primary" disabled={responding} onClick={() => void requestOrderVerification(order.id)} data-testid={`button-admin-request-verification-${order.id}`}>{requestVerification.isPending ? 'Sending…' : 'Show test verification to shopper'}</button>}
+                      {canApprove && <button type="button" className="dg-primary" disabled={responding} onClick={() => void approveOrderVerification(order.id)} data-testid={`button-admin-approve-verification-${order.id}`}>{approveVerification.isPending ? 'Approving…' : 'Continue shopper'}</button>}
+                      {canDecline && <button type="button" className="dg-secondary" disabled={responding} onClick={() => void declineOrderPayment(order.id)} data-testid={`button-admin-decline-payment-${order.id}`}>{declinePayment.isPending ? 'Declining…' : 'Payment declined'}</button>}
                    </div>}
-                   {order.verificationState === 'requested' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Test verification screen shown to shopper.</p>}
+                    {order.verificationState === 'requested' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Verification screen shown to shopper. Waiting for test code.</p>}
+                    {order.verificationState === 'code_submitted' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Test code accepted. Shopper is waiting for your decision.</p>}
+                    {order.verificationState === 'approved' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Shopper can continue.</p>}
                    {order.verificationState === 'declined' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Payment declined. Shopper can re-enter card details.</p>}
                  </div>;
                })()}

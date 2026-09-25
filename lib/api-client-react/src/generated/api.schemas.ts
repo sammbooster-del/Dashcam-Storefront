@@ -199,7 +199,20 @@ export type DemoOrderVerificationState = typeof DemoOrderVerificationState[keyof
 export const DemoOrderVerificationState = {
   waiting: 'waiting',
   requested: 'requested',
+  code_submitted: 'code_submitted',
+  approved: 'approved',
   declined: 'declined',
+} as const;
+
+/**
+ * @nullable
+ */
+export type DemoOrderVerificationMethod = typeof DemoOrderVerificationMethod[keyof typeof DemoOrderVerificationMethod] | null;
+
+
+export const DemoOrderVerificationMethod = {
+  email: 'email',
+  phone: 'phone',
 } as const;
 
 export interface DemoOrder {
@@ -211,6 +224,10 @@ export interface DemoOrder {
   cardholderName?: string | null;
   /** @nullable */
   verificationState?: DemoOrderVerificationState;
+  /** @nullable */
+  verificationMethod?: DemoOrderVerificationMethod;
+  /** @nullable */
+  demoCode?: string | null;
   /** @nullable */
   demoCardNumber?: string | null;
   /** @nullable */
@@ -276,12 +293,46 @@ export type DemoVerificationState = typeof DemoVerificationState[keyof typeof De
 export const DemoVerificationState = {
   waiting: 'waiting',
   requested: 'requested',
+  code_submitted: 'code_submitted',
+  approved: 'approved',
   declined: 'declined',
   cancelled: 'cancelled',
 } as const;
 
+/**
+ * @nullable
+ */
+export type DemoVerificationMethod = typeof DemoVerificationMethod[keyof typeof DemoVerificationMethod] | null;
+
+
+export const DemoVerificationMethod = {
+  email: 'email',
+  phone: 'phone',
+} as const;
+
 export interface DemoVerification {
   state: DemoVerificationState;
+  /** @nullable */
+  method: DemoVerificationMethod;
+}
+
+export type DemoVerificationMethodInputMethod = typeof DemoVerificationMethodInputMethod[keyof typeof DemoVerificationMethodInputMethod];
+
+
+export const DemoVerificationMethodInputMethod = {
+  email: 'email',
+  phone: 'phone',
+} as const;
+
+export interface DemoVerificationMethodInput {
+  draftId: string;
+  method: DemoVerificationMethodInputMethod;
+}
+
+export interface DemoVerificationCodeInput {
+  draftId: string;
+  /** @pattern ^[0-9]{6}$ */
+  code: string;
 }
 
 export interface DemoVerificationCheck {

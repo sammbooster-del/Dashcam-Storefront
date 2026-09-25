@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { checkDemoOrderVerification, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type Product } from '@workspace/api-client-react';
+import { checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type Product } from '@workspace/api-client-react';
 import { ArrowRight, CreditCard, LoaderCircle } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
 
@@ -57,7 +57,11 @@ export function DemoCardCheckout({
   const [draftError, setDraftError] = useState('');
   const [formError, setFormError] = useState('');
   const [pending, setPending] = useState<PendingVerification | null>(restorePending);
-  const [verificationReady, setVerificationReady] = useState(false);
+  const [verificationState, setVerificationState] = useState<'waiting' | 'requested' | 'code_submitted' | 'approved'>('waiting');
+  const [verificationMethod, setVerificationMethod] = useState<'email' | 'phone' | null>(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationBusy, setVerificationBusy] = useState(false);
+  const [verificationError, setVerificationError] = useState('');
   const [pollError, setPollError] = useState('');
   const [draftId] = useState(() => crypto.randomUUID());
   const completedRef = useRef<DemoCheckoutDraftInput['completedFields']>([]);
@@ -66,7 +70,7 @@ export function DemoCardCheckout({
   const order = useCreateDemoOrder();
   const saveDemoDraft = useSaveDemoDraft();
   useEffect(() => {
-    if (!pending || verificationReady) return;
+    if (!pending || verificationState === 'approved') return;
     let active = true;
     let inFlight = false;
     const check = async () => {
@@ -76,16 +80,23 @@ export function DemoCardCheckout({
         const result = await checkDemoOrderVerification(pending.id, { draftId: pending.draftId });
         if (!active) return;
         setPollError('');
-        if (result.state === 'requested') setVerificationReady(true);
+        if (result.state === 'requested' || result.state === 'code_submitted' || result.state === 'approved') {
+          setVerificationState(result.state);
+          if (result.method) setVerificationMethod(result.method);
+        }
         if (result.state === 'cancelled') {
           forgetPending();
           setPending(null);
+          setVerificationState('waiting');
           setFormError('This order was cancelled. Please try again.');
         }
         if (result.state === 'declined') {
           forgetPending();
           setPending(null);
-          setVerificationReady(false);
+          setVerificationState('waiting');
+          setVerificationMethod(null);
+          setVerificationCode('');
+          setVerificationError('');
           setFormError('Payment declined, please enter valid card details.');
         }
       } catch {
@@ -95,7 +106,35 @@ export function DemoCardCheckout({
     void check();
     const interval = window.setInterval(() => void check(), 1500);
     return () => { active = false; window.clearInterval(interval); };
-  }, [pending, verificationReady]);
+  }, [pending, verificationState]);
+
+  const chooseMethod = async (method: 'email' | 'phone') => {
+    if (!pending || verificationBusy) return;
+    setVerificationBusy(true);
+    setVerificationError('');
+    try {
+      const result = await chooseDemoVerificationMethod(pending.id, { draftId: pending.draftId, method });
+      setVerificationMethod(result.method);
+    } catch {
+      setVerificationError('We couldn’t start the test verification. Please try again.');
+    } finally { setVerificationBusy(false); }
+  };
+  const submitCode = async () => {
+    if (!pending || verificationBusy) return;
+    if (!/^\d{6}$/.test(verificationCode)) {
+      setVerificationError('Enter the six-digit test code.');
+      return;
+    }
+    setVerificationBusy(true);
+    setVerificationError('');
+    try {
+      await submitDemoVerificationCode(pending.id, { draftId: pending.draftId, code: verificationCode });
+      setVerificationCode('');
+      setVerificationState('code_submitted');
+    } catch {
+      setVerificationError('Invalid test code. Please try again.');
+    } finally { setVerificationBusy(false); }
+  };
 
   const queueDraft = (name: string, type: CardType, completedFields: DemoCheckoutDraftInput['completedFields'], testDetails?: { demoCardNumber?: string; demoExpiry?: string; demoCvc?: string }) => {
     const sequence = ++draftSequence.current;
@@ -149,6 +188,9 @@ export function DemoCardCheckout({
         const next = { id: placed.id, draftId, last4: demoNumber.replace(/\D/g, '').slice(-4), totalCents: placed.totalCents, cardType };
         try { sessionStorage.setItem(pendingKey, JSON.stringify(next)); } catch { /* In-memory flow still works. */ }
         setPending(next);
+        setVerificationState('waiting');
+        setVerificationMethod(null);
+        setVerificationCode('');
         setDemoNumber('');
         setDemoExpiry('');
         setDemoCvc('');
@@ -164,7 +206,13 @@ export function DemoCardCheckout({
   const firstDigit = demoNumber.charAt(0);
   const displayedBrand: DemoBrand | null = firstDigit === '4' ? 'visa' : firstDigit === '5' ? 'mastercard' : null;
 
-  if (pending && verificationReady) return <TestVerificationScreen orderId={pending.id} cardLast4={pending.last4} totalCents={pending.totalCents} onContinue={() => {
+  if (pending && verificationState !== 'waiting') return <TestVerificationScreen orderId={pending.id} cardLast4={pending.last4} totalCents={pending.totalCents}
+    method={verificationMethod} code={verificationCode}
+    phase={verificationState === 'approved' ? 'approved' : verificationState === 'code_submitted' ? 'waiting' : verificationMethod ? 'enter' : 'choose'}
+    busy={verificationBusy} error={verificationError}
+    onChoose={method => void chooseMethod(method)}
+    onCodeChange={code => { setVerificationCode(code.replace(/\D/g, '').slice(0, 6)); setVerificationError(''); }}
+    onSubmit={() => void submitCode()} onContinue={() => {
     forgetPending();
     setPending(null);
     clearCart();

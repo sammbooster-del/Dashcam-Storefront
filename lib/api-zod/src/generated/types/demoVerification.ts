@@ -5,8 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DemoVerificationMethod } from './demoVerificationMethod';
 import type { DemoVerificationState } from './demoVerificationState';
 
 export interface DemoVerification {
   state: DemoVerificationState;
+  /** @nullable */
+  method: DemoVerificationMethod;
 }
