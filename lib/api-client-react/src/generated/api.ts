@@ -26,6 +26,8 @@ import type {
   DemoCheckoutDraftInput,
   DemoOrder,
   DemoOrderInput,
+  DemoVerification,
+  DemoVerificationCheck,
   HealthStatus,
   OrderStatusInput,
   Product,
@@ -292,6 +294,89 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getCreateDemoOrderMutationOptions(options));
+    }
+
+export const getCheckDemoOrderVerificationUrl = (id: number,) => {
+
+
+
+
+  return `/api/demo-orders/${id}/verification`
+}
+
+export const checkDemoOrderVerification = async (id: number,
+    demoVerificationCheck: DemoVerificationCheck, options?: Parameters<typeof customFetch>[1]): Promise<DemoVerification> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DemoVerification>(getCheckDemoOrderVerificationUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoVerificationCheck)
+  }
+);}
+
+
+
+
+
+export const getCheckDemoOrderVerificationMutationKey = () => ['checkDemoOrderVerification'] as const;
+
+export const getCheckDemoOrderVerificationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkDemoOrderVerification>>, TError,CheckDemoOrderVerificationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkDemoOrderVerification>>, TError,CheckDemoOrderVerificationMutationVariables, TContext> => {
+
+const mutationKey = getCheckDemoOrderVerificationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkDemoOrderVerification>>, CheckDemoOrderVerificationMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  checkDemoOrderVerification(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckDemoOrderVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof checkDemoOrderVerification>>>
+    export type CheckDemoOrderVerificationMutationBody = BodyType<DemoVerificationCheck>
+    export type CheckDemoOrderVerificationMutationError = ErrorType<unknown>
+    export type CheckDemoOrderVerificationMutationVariables = {id: number;data: BodyType<DemoVerificationCheck>}
+
+    export const useCheckDemoOrderVerification = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkDemoOrderVerification>>, TError,CheckDemoOrderVerificationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof checkDemoOrderVerification>>,
+        TError,
+        CheckDemoOrderVerificationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCheckDemoOrderVerificationMutationOptions(options));
     }
 
 export const getSaveDemoDraftUrl = (id: string,) => {
@@ -1273,5 +1358,73 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteAdminOrderMutationOptions(options));
+    }
+
+export const getRequestAdminOrderVerificationUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/orders/${id}/request-verification`
+}
+
+export const requestAdminOrderVerification = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<DemoOrder> => {
+
+  return customFetch<DemoOrder>(getRequestAdminOrderVerificationUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRequestAdminOrderVerificationMutationKey = () => ['requestAdminOrderVerification'] as const;
+
+export const getRequestAdminOrderVerificationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestAdminOrderVerification>>, TError,RequestAdminOrderVerificationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestAdminOrderVerification>>, TError,RequestAdminOrderVerificationMutationVariables, TContext> => {
+
+const mutationKey = getRequestAdminOrderVerificationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestAdminOrderVerification>>, RequestAdminOrderVerificationMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  requestAdminOrderVerification(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestAdminOrderVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof requestAdminOrderVerification>>>
+
+    export type RequestAdminOrderVerificationMutationError = ErrorType<unknown>
+    export type RequestAdminOrderVerificationMutationVariables = {id: number}
+
+    export const useRequestAdminOrderVerification = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestAdminOrderVerification>>, TError,RequestAdminOrderVerificationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestAdminOrderVerification>>,
+        TError,
+        RequestAdminOrderVerificationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRequestAdminOrderVerificationMutationOptions(options));
     }
 

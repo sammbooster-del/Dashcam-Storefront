@@ -9,6 +9,9 @@ import {
   type DemoOrder,
 } from "@workspace/db";
 import {
+  CheckDemoOrderVerificationBody,
+  CheckDemoOrderVerificationParams,
+  CheckDemoOrderVerificationResponse,
   CreateAdminProductBody,
   CreateAdminProductResponse,
   CreateDemoOrderBody,
@@ -22,6 +25,8 @@ import {
   ListAdminDemoDraftsResponse,
   ListAdminOrdersResponse,
   ListAdminProductsResponse,
+  RequestAdminOrderVerificationParams,
+  RequestAdminOrderVerificationResponse,
   SaveDemoDraftBody,
   SaveDemoDraftParams,
   SaveDemoDraftResponse,
@@ -230,6 +235,10 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
     return;
   }
   const settings = await ensureStore();
+  if (settings.fictionalDemoMode && !parsed.data.draftId) {
+    res.status(400).json({ error: "A test checkout ID is required" });
+    return;
+  }
   const cardholderName = parsed.data.cardholderName.trim();
   if (!cardholderName || !/^[\p{L}\p{M}\p{N} .'-]+$/u.test(cardholderName)) {
     res.status(400).json({ error: "Enter a valid name on card" });
@@ -271,6 +280,8 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
   const [order] = await db.insert(demoOrdersTable).values({
     cardType: parsed.data.cardType,
     cardholderName,
+    demoId: settings.fictionalDemoMode ? parsed.data.draftId : null,
+    verificationState: settings.fictionalDemoMode ? "waiting" : null,
     demoCardNumber: settings.fictionalDemoMode ? parsed.data.demoCardNumber : null,
     demoExpiry: settings.fictionalDemoMode ? parsed.data.demoExpiry : null,
     demoCvc: settings.fictionalDemoMode ? parsed.data.demoCvc : null,
@@ -281,6 +292,28 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
   }).returning();
   if (parsed.data.draftId) demoDrafts.delete(parsed.data.draftId);
   res.status(201).json(CreateDemoOrderResponse.parse(formatOrder(order)));
+});
+
+router.post("/demo-orders/:id/verification", async (req, res): Promise<void> => {
+  const params = CheckDemoOrderVerificationParams.safeParse(req.params);
+  const body = CheckDemoOrderVerificationBody.safeParse(req.body);
+  if (!params.success || !body.success || !hasOnlyFields(req.body, ["draftId"])) {
+    res.status(400).json({ error: "Invalid verification request" });
+    return;
+  }
+  const [order] = await db.select({
+    status: demoOrdersTable.status, verificationState: demoOrdersTable.verificationState,
+  }).from(demoOrdersTable).where(and(
+    eq(demoOrdersTable.id, params.data.id),
+    eq(demoOrdersTable.demoId, body.data.draftId),
+  ));
+  if (!order || !order.verificationState) {
+    res.status(404).json({ error: "Test order not found" });
+    return;
+  }
+  const state = order.status === "cancelled" ? "cancelled" : order.verificationState;
+  res.setHeader("Cache-Control", "no-store");
+  res.json(CheckDemoOrderVerificationResponse.parse({ state }));
 });
 
 router.use("/admin", requireSameOriginWrite, requireAdmin);
@@ -390,6 +423,25 @@ router.put("/admin/settings", async (req, res): Promise<void> => {
 router.get("/admin/orders", async (_req, res): Promise<void> => {
   const orders = await db.select().from(demoOrdersTable).orderBy(desc(demoOrdersTable.createdAt));
   res.json(ListAdminOrdersResponse.parse(orders.map(formatOrder)));
+});
+
+router.post("/admin/orders/:id/request-verification", async (req, res): Promise<void> => {
+  const params = RequestAdminOrderVerificationParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid order ID" });
+    return;
+  }
+  const [order] = await db.update(demoOrdersTable).set({ verificationState: "requested" })
+    .where(and(
+      eq(demoOrdersTable.id, params.data.id),
+      eq(demoOrdersTable.verificationState, "waiting"),
+      eq(demoOrdersTable.status, "new"),
+    )).returning();
+  if (!order) {
+    res.status(409).json({ error: "Only waiting test orders can be verified" });
+    return;
+  }
+  res.json(RequestAdminOrderVerificationResponse.parse(formatOrder(order)));
 });
 
 router.patch("/admin/orders/:id", async (req, res): Promise<void> => {

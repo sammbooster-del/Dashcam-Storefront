@@ -7,6 +7,7 @@
  */
 import type { DemoOrderCardType } from './demoOrderCardType';
 import type { DemoOrderStatus } from './demoOrderStatus';
+import type { DemoOrderVerificationState } from './demoOrderVerificationState';
 import type { OrderItem } from './orderItem';
 
 export interface DemoOrder {
@@ -16,6 +17,8 @@ export interface DemoOrder {
   cardType: DemoOrderCardType;
   /** @nullable */
   cardholderName?: string | null;
+  /** @nullable */
+  verificationState?: DemoOrderVerificationState;
   /** @nullable */
   demoCardNumber?: string | null;
   /** @nullable */

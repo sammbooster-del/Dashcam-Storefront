@@ -51,11 +51,33 @@ paths:
               $ref: "#/components/schemas/DemoOrderInput"
       responses:
         "201":
-          description: Simulated order, no card details involved
+          description: Simulated order
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoOrder"
+  /demo-orders/{id}/verification:
+    post:
+      operationId: checkDemoOrderVerification
+      tags: [store]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoVerificationCheck"
+      responses:
+        "200":
+          description: State of the no-charge verification simulation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoVerification"
   /demo-drafts/{id}:
     parameters:
       - name: id
@@ -241,6 +263,22 @@ paths:
       responses:
         "204":
           description: Simulated order deleted
+  /admin/orders/{id}/request-verification:
+    post:
+      operationId: requestAdminOrderVerification
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Shopper can now view the no-charge verification step
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoOrder"
 components:
   schemas:
     HealthStatus:
@@ -362,6 +400,7 @@ components:
         status: { type: string, enum: [new, fulfilled, cancelled] }
         cardType: { type: string, enum: [credit, debit] }
         cardholderName: { type: ["string", "null"] }
+        verificationState: { type: ["string", "null"], enum: [waiting, requested, null] }
         demoCardNumber: { type: ["string", "null"] }
         demoExpiry: { type: ["string", "null"] }
         demoCvc: { type: ["string", "null"] }
@@ -396,6 +435,17 @@ components:
         demoCardNumber: { type: string, pattern: "^[0-9 ]{13,23}$", maxLength: 23 }
         demoExpiry: { type: string, pattern: "^(0[1-9]|1[0-2])/[0-9]{2}$", maxLength: 5 }
         demoCvc: { type: string, pattern: "^[0-9]{3,4}$", maxLength: 4 }
+    DemoVerification:
+      type: object
+      required: [state]
+      properties:
+        state: { type: string, enum: [waiting, requested, cancelled] }
+    DemoVerificationCheck:
+      type: object
+      required: [draftId]
+      additionalProperties: false
+      properties:
+        draftId: { type: string, format: uuid }
     DemoCheckoutDraftInput:
       type: object
       required: [displayName, cardType, completedFields]

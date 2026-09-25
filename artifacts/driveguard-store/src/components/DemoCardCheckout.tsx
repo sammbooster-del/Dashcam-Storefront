@@ -1,9 +1,24 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type Product } from '@workspace/api-client-react';
-import { ArrowRight, CreditCard } from 'lucide-react';
+import { checkDemoOrderVerification, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type Product } from '@workspace/api-client-react';
+import { ArrowRight, CreditCard, LoaderCircle } from 'lucide-react';
+import { TestVerificationScreen } from './TestVerificationScreen';
 
 type DemoBrand = 'visa' | 'mastercard';
 type CardType = 'credit' | 'debit';
+type PendingVerification = { id: number; draftId: string; last4: string; totalCents: number; cardType: CardType };
+const pendingKey = 'driveguard-pending-test-verification';
+function forgetPending() {
+  try { sessionStorage.removeItem(pendingKey); } catch { /* In-memory flow still works. */ }
+}
+function restorePending(): PendingVerification | null {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(pendingKey) || 'null');
+    return saved && Number.isInteger(saved.id) && saved.id > 0 &&
+      typeof saved.draftId === 'string' && /^[0-9a-f-]{36}$/i.test(saved.draftId) &&
+      typeof saved.last4 === 'string' && /^\d{4}$/.test(saved.last4) &&
+      Number.isSafeInteger(saved.totalCents) && (saved.cardType === 'credit' || saved.cardType === 'debit') ? saved : null;
+  } catch { return null; }
+}
 const fieldClass = 'mt-2 block h-[50px] w-full rounded-lg border border-[#d5dbe3] bg-white px-3.5 text-[14px] text-[#17212f] outline-none transition placeholder:text-[#9aa4b2] focus:border-[#c92525] focus:ring-[3px] focus:ring-[#c92525]/10';
 const validName = (name: string) => /^[\p{L}\p{M}\p{N} .'-]+$/u.test(name.trim()) && name.trim().length <= 80;
 const formatNumber = (value: string) => value.replace(/\D/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ');
@@ -41,12 +56,40 @@ export function DemoCardCheckout({
   const [demoCvc, setDemoCvc] = useState('');
   const [draftError, setDraftError] = useState('');
   const [formError, setFormError] = useState('');
+  const [pending, setPending] = useState<PendingVerification | null>(restorePending);
+  const [verificationReady, setVerificationReady] = useState(false);
+  const [pollError, setPollError] = useState('');
   const [draftId] = useState(() => crypto.randomUUID());
   const completedRef = useRef<DemoCheckoutDraftInput['completedFields']>([]);
   const pendingDraft = useRef<Promise<unknown>>(Promise.resolve());
   const draftSequence = useRef(0);
   const order = useCreateDemoOrder();
   const saveDemoDraft = useSaveDemoDraft();
+  useEffect(() => {
+    if (!pending || verificationReady) return;
+    let active = true;
+    let inFlight = false;
+    const check = async () => {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const result = await checkDemoOrderVerification(pending.id, { draftId: pending.draftId });
+        if (!active) return;
+        setPollError('');
+        if (result.state === 'requested') setVerificationReady(true);
+        if (result.state === 'cancelled') {
+          forgetPending();
+          setPending(null);
+          setFormError('This test order was cancelled by an admin. You can try again.');
+        }
+      } catch {
+        if (active) setPollError('Connection interrupted. Still checking for the admin response…');
+      } finally { inFlight = false; }
+    };
+    void check();
+    const interval = window.setInterval(() => void check(), 1500);
+    return () => { active = false; window.clearInterval(interval); };
+  }, [pending, verificationReady]);
 
   const queueDraft = (name: string, type: CardType, completedFields: DemoCheckoutDraftInput['completedFields'], testDetails?: { demoCardNumber?: string; demoExpiry?: string; demoCvc?: string }) => {
     const sequence = ++draftSequence.current;
@@ -59,7 +102,7 @@ export function DemoCardCheckout({
     });
   };
   useEffect(() => {
-    if (!fictionalDemoMode || (!demoName && !demoNumber && !demoExpiry && !demoCvc)) return;
+    if (pending || !fictionalDemoMode || (!demoName && !demoNumber && !demoExpiry && !demoCvc)) return;
     const timeout = window.setTimeout(() => {
       const fields: DemoCheckoutDraftInput['completedFields'] = [
         ...(validName(demoName) ? ['name' as const] : []),
@@ -74,7 +117,7 @@ export function DemoCardCheckout({
       });
     }, 250);
     return () => window.clearTimeout(timeout);
-  }, [fictionalDemoMode, demoName, demoNumber, demoExpiry, demoCvc, cardType]);
+  }, [pending, fictionalDemoMode, demoName, demoNumber, demoExpiry, demoCvc, cardType]);
   const completeField = (field: DemoCheckoutDraftInput['completedFields'][number], valid: boolean) => {
     if (fictionalDemoMode) return;
     const hadCompletedField = completedRef.current.length > 0;
@@ -95,7 +138,16 @@ export function DemoCardCheckout({
       completedRef.current = ['name', 'number', 'expiry', 'cvc'];
       queueDraft(demoName, cardType, completedRef.current, fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : undefined);
       await pendingDraft.current.catch(() => {});
-      await order.mutateAsync({ data: { cardType, cardholderName: demoName.trim(), draftId, items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })), ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}) } });
+      const placed = await order.mutateAsync({ data: { cardType, cardholderName: demoName.trim(), draftId, items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })), ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}) } });
+      if (fictionalDemoMode) {
+        const next = { id: placed.id, draftId, last4: demoNumber.replace(/\D/g, '').slice(-4), totalCents: placed.totalCents, cardType };
+        try { sessionStorage.setItem(pendingKey, JSON.stringify(next)); } catch { /* In-memory flow still works. */ }
+        setPending(next);
+        setDemoNumber('');
+        setDemoExpiry('');
+        setDemoCvc('');
+        return;
+      }
       clearCart();
       onSubmitted(cardType);
     } catch {
@@ -105,6 +157,20 @@ export function DemoCardCheckout({
   const stockError = cart.some(line => line.quantity > line.product.stock);
   const firstDigit = demoNumber.charAt(0);
   const displayedBrand: DemoBrand | null = firstDigit === '4' ? 'visa' : firstDigit === '5' ? 'mastercard' : null;
+
+  if (pending && verificationReady) return <TestVerificationScreen orderId={pending.id} cardLast4={pending.last4} totalCents={pending.totalCents} onContinue={() => {
+    forgetPending();
+    setPending(null);
+    clearCart();
+    onSubmitted(pending.cardType);
+  }} />;
+  if (pending) return <section className="flex min-h-[340px] flex-col items-center justify-center rounded-xl border border-[#dfe3e8] bg-white px-6 py-10 text-center shadow-sm" role="status" data-testid="status-waiting-for-admin">
+    <LoaderCircle size={38} className="animate-spin text-[#c92525]" aria-hidden="true" />
+    <h2 className="mt-5 text-[22px] font-bold text-[#1c2734]">Waiting for test verification</h2>
+    <p className="mt-2 max-w-sm text-[13px] leading-6 text-[#637082]">Order #{pending.id} was saved. An admin can open its test details and show the next screen here. This page will update automatically.</p>
+    <p className="mt-4 text-[11px] text-[#818b97]">Internal test only. No payment will be charged. Do not enter a real card.</p>
+    {pollError && <p className="mt-4 text-[12px] text-[#a61c1c]">{pollError}</p>}
+  </section>;
 
   return <section className="rounded-xl border border-[#dfe3e8] bg-white p-5 shadow-[0_14px_36px_-30px_rgba(28,37,50,.3)] sm:p-7" data-testid="panel-demo-card-checkout">
     <header className="border-b border-[#edf0f2] pb-5">

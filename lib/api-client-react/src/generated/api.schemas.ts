@@ -190,6 +190,17 @@ export const DemoOrderCardType = {
   debit: 'debit',
 } as const;
 
+/**
+ * @nullable
+ */
+export type DemoOrderVerificationState = typeof DemoOrderVerificationState[keyof typeof DemoOrderVerificationState] | null;
+
+
+export const DemoOrderVerificationState = {
+  waiting: 'waiting',
+  requested: 'requested',
+} as const;
+
 export interface DemoOrder {
   id: number;
   createdAt: string;
@@ -197,6 +208,8 @@ export interface DemoOrder {
   cardType: DemoOrderCardType;
   /** @nullable */
   cardholderName?: string | null;
+  /** @nullable */
+  verificationState?: DemoOrderVerificationState;
   /** @nullable */
   demoCardNumber?: string | null;
   /** @nullable */
@@ -254,6 +267,23 @@ export interface DemoOrderInput {
      * @pattern ^[0-9]{3,4}$
      */
   demoCvc?: string;
+}
+
+export type DemoVerificationState = typeof DemoVerificationState[keyof typeof DemoVerificationState];
+
+
+export const DemoVerificationState = {
+  waiting: 'waiting',
+  requested: 'requested',
+  cancelled: 'cancelled',
+} as const;
+
+export interface DemoVerification {
+  state: DemoVerificationState;
+}
+
+export interface DemoVerificationCheck {
+  draftId: string;
 }
 
 export type DemoCheckoutDraftInputCardType = typeof DemoCheckoutDraftInputCardType[keyof typeof DemoCheckoutDraftInputCardType];
