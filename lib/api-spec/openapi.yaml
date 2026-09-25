@@ -279,6 +279,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoOrder"
+  /admin/orders/{id}/decline-payment:
+    post:
+      operationId: declineAdminOrderPayment
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Shopper is returned to the card form with a simulated decline
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoOrder"
 components:
   schemas:
     HealthStatus:
@@ -400,7 +416,7 @@ components:
         status: { type: string, enum: [new, fulfilled, cancelled] }
         cardType: { type: string, enum: [credit, debit] }
         cardholderName: { type: ["string", "null"] }
-        verificationState: { type: ["string", "null"], enum: [waiting, requested, null] }
+        verificationState: { type: ["string", "null"], enum: [waiting, requested, declined, null] }
         demoCardNumber: { type: ["string", "null"] }
         demoExpiry: { type: ["string", "null"] }
         demoCvc: { type: ["string", "null"] }
@@ -439,7 +455,7 @@ components:
       type: object
       required: [state]
       properties:
-        state: { type: string, enum: [waiting, requested, cancelled] }
+        state: { type: string, enum: [waiting, requested, declined, cancelled] }
     DemoVerificationCheck:
       type: object
       required: [draftId]

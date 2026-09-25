@@ -15,4 +15,5 @@ export type DemoOrderVerificationState = typeof DemoOrderVerificationState[keyof
 export const DemoOrderVerificationState = {
   waiting: 'waiting',
   requested: 'requested',
+  declined: 'declined',
 } as const;

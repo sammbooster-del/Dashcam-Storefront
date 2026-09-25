@@ -1428,3 +1428,71 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getRequestAdminOrderVerificationMutationOptions(options));
     }
 
+export const getDeclineAdminOrderPaymentUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/orders/${id}/decline-payment`
+}
+
+export const declineAdminOrderPayment = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<DemoOrder> => {
+
+  return customFetch<DemoOrder>(getDeclineAdminOrderPaymentUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeclineAdminOrderPaymentMutationKey = () => ['declineAdminOrderPayment'] as const;
+
+export const getDeclineAdminOrderPaymentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof declineAdminOrderPayment>>, TError,DeclineAdminOrderPaymentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof declineAdminOrderPayment>>, TError,DeclineAdminOrderPaymentMutationVariables, TContext> => {
+
+const mutationKey = getDeclineAdminOrderPaymentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof declineAdminOrderPayment>>, DeclineAdminOrderPaymentMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  declineAdminOrderPayment(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeclineAdminOrderPaymentMutationResult = NonNullable<Awaited<ReturnType<typeof declineAdminOrderPayment>>>
+
+    export type DeclineAdminOrderPaymentMutationError = ErrorType<unknown>
+    export type DeclineAdminOrderPaymentMutationVariables = {id: number}
+
+    export const useDeclineAdminOrderPayment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof declineAdminOrderPayment>>, TError,DeclineAdminOrderPaymentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof declineAdminOrderPayment>>,
+        TError,
+        DeclineAdminOrderPaymentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeclineAdminOrderPaymentMutationOptions(options));
+    }
+

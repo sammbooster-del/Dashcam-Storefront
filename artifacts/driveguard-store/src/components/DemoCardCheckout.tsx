@@ -82,6 +82,12 @@ export function DemoCardCheckout({
           setPending(null);
           setFormError('This order was cancelled. Please try again.');
         }
+        if (result.state === 'declined') {
+          forgetPending();
+          setPending(null);
+          setVerificationReady(false);
+          setFormError('Payment declined, please enter valid card details.');
+        }
       } catch {
         if (active) setPollError('Connection interrupted. Reconnecting…');
       } finally { inFlight = false; }

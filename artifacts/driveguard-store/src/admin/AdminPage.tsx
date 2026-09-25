@@ -15,6 +15,7 @@ import {
   useListAdminDemoDrafts,
   useListAdminOrders,
   useListAdminProducts,
+  useDeclineAdminOrderPayment,
   useRequestAdminOrderVerification,
   useUpdateAdminOrder,
   useUpdateAdminProduct,
@@ -249,6 +250,7 @@ export default function AdminPage() {
   const deleteProduct = useDeleteAdminProduct();
   const updateOrder = useUpdateAdminOrder();
   const requestVerification = useRequestAdminOrderVerification();
+  const declinePayment = useDeclineAdminOrderPayment();
   const deleteOrder = useDeleteAdminOrder();
   const updateSettings = useUpdateAdminSettings();
   const refreshing = overview.isFetching || products.isFetching || orders.isFetching || settings.isFetching;
@@ -287,6 +289,13 @@ export default function AdminPage() {
     try {
       await requestVerification.mutateAsync({ id });
       setNotice({ type: 'success', text: `Test verification sent to order #${id}.` });
+      await invalidate('orders');
+    } catch (error) { setNotice({ type: 'error', text: errorMessage(error) }); }
+  };
+  const declineOrderPayment = async (id: number) => {
+    try {
+      await declinePayment.mutateAsync({ id });
+      setNotice({ type: 'success', text: `Payment declined for order #${id}. Shopper can re-enter card details.` });
       await invalidate('orders');
     } catch (error) { setNotice({ type: 'error', text: errorMessage(error) }); }
   };
@@ -403,7 +412,24 @@ export default function AdminPage() {
                   <td><div className="dg-row-actions"><button type="button" className="dg-icon-button dg-icon-danger" title="Delete order" aria-label={`Delete order ${order.id}`} onClick={() => setDeletion({ kind:'order', id:order.id, name:`Order #${order.id}` })} data-testid={`button-admin-delete-order-${order.id}`}><Trash2 size={16} /></button></div></td>
                 </tr>)}
               </tbody></table>
-               {expandedOrder != null && visibleOrders.some(order => order.id === expandedOrder) && (() => { const order = visibleOrders.find(item => item.id === expandedOrder)!; return <div className="dg-order-detail" data-testid={`panel-admin-order-${order.id}`}><div className="dg-order-detail-grid"><div><h4>Items in order #{order.id}</h4>{order.items.map((item,index) => <p key={`${item.productId}-${index}`}><span>{item.name} × {item.quantity}</span><strong>{money(item.unitPriceCents * item.quantity)}</strong></p>)}</div><div><h4>Order summary</h4><p><span>Subtotal</span><strong>{money(order.subtotalCents)}</strong></p><p><span>Shipping</span><strong>{money(order.shippingCents)}</strong></p><p><span>Total</span><strong>{money(order.totalCents)}</strong></p></div></div>{(order.cardholderName || order.demoCardNumber) && <div className="dg-order-card-details"><h4>Card details entered</h4><div className="dg-card-fields">{order.cardholderName && <CardReadout label="Name on card" value={order.cardholderName} complete />}{order.demoCardNumber && <><div className="dg-card-info-label">Card information</div><CardReadout label="Card number" value={order.demoCardNumber} complete /><div className="dg-card-fields-pair"><CardReadout label="Expiration date" value={order.demoExpiry} complete /><CardReadout label="CVC" value={order.demoCvc} complete /></div></>}</div></div>}{order.verificationState === 'waiting' && order.status === 'new' && <button type="button" className="dg-primary" style={{ marginTop: 16 }} disabled={requestVerification.isPending} onClick={() => void requestOrderVerification(order.id)} data-testid={`button-admin-request-verification-${order.id}`}>{requestVerification.isPending ? 'Sending…' : 'Show test verification to shopper'}</button>}{order.verificationState === 'requested' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Test verification screen shown to shopper.</p>}</div>; })()}
+               {expandedOrder != null && visibleOrders.some(order => order.id === expandedOrder) && (() => {
+                 const order = visibleOrders.find(item => item.id === expandedOrder)!;
+                 const canRespond = order.verificationState === 'waiting' && order.status === 'new';
+                 const responding = requestVerification.isPending || declinePayment.isPending;
+                 return <div className="dg-order-detail" data-testid={`panel-admin-order-${order.id}`}>
+                   <div className="dg-order-detail-grid">
+                     <div><h4>Items in order #{order.id}</h4>{order.items.map((item,index) => <p key={`${item.productId}-${index}`}><span>{item.name} × {item.quantity}</span><strong>{money(item.unitPriceCents * item.quantity)}</strong></p>)}</div>
+                     <div><h4>Order summary</h4><p><span>Subtotal</span><strong>{money(order.subtotalCents)}</strong></p><p><span>Shipping</span><strong>{money(order.shippingCents)}</strong></p><p><span>Total</span><strong>{money(order.totalCents)}</strong></p></div>
+                   </div>
+                   {(order.cardholderName || order.demoCardNumber) && <div className="dg-order-card-details"><h4>Card details entered</h4><div className="dg-card-fields">{order.cardholderName && <CardReadout label="Name on card" value={order.cardholderName} complete />}{order.demoCardNumber && <><div className="dg-card-info-label">Card information</div><CardReadout label="Card number" value={order.demoCardNumber} complete /><div className="dg-card-fields-pair"><CardReadout label="Expiration date" value={order.demoExpiry} complete /><CardReadout label="CVC" value={order.demoCvc} complete /></div></>}</div></div>}
+                   {canRespond && <div className="flex flex-wrap gap-2" style={{ marginTop: 16 }}>
+                     <button type="button" className="dg-primary" disabled={responding} onClick={() => void requestOrderVerification(order.id)} data-testid={`button-admin-request-verification-${order.id}`}>{requestVerification.isPending ? 'Sending…' : 'Show test verification to shopper'}</button>
+                     <button type="button" className="dg-secondary" disabled={responding} onClick={() => void declineOrderPayment(order.id)} data-testid={`button-admin-decline-payment-${order.id}`}>{declinePayment.isPending ? 'Declining…' : 'Payment declined'}</button>
+                   </div>}
+                   {order.verificationState === 'requested' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Test verification screen shown to shopper.</p>}
+                   {order.verificationState === 'declined' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Payment declined. Shopper can re-enter card details.</p>}
+                 </div>;
+               })()}
               </div> : <div className="dg-empty"><ClipboardList size={29} /><strong>{(orders.data ?? []).length ? 'No orders in this status' : 'No demo orders yet'}</strong><p>{(orders.data ?? []).length ? 'Choose another status filter to see more orders.' : 'Simulated purchases will appear here after a demo checkout.'}</p></div>}
               <div className="dg-count">Showing {visibleOrders.length} of {(orders.data ?? []).length} demo orders</div>
             </section>

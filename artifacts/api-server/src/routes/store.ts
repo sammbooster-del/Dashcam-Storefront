@@ -16,6 +16,8 @@ import {
   CreateAdminProductResponse,
   CreateDemoOrderBody,
   CreateDemoOrderResponse,
+  DeclineAdminOrderPaymentParams,
+  DeclineAdminOrderPaymentResponse,
   DeleteAdminOrderParams,
   DeleteAdminProductParams,
   GetAdminMeResponse,
@@ -311,7 +313,7 @@ router.post("/demo-orders/:id/verification", async (req, res): Promise<void> => 
     res.status(404).json({ error: "Test order not found" });
     return;
   }
-  const state = order.status === "cancelled" ? "cancelled" : order.verificationState;
+  const state = order.verificationState === "declined" ? "declined" : order.status === "cancelled" ? "cancelled" : order.verificationState;
   res.setHeader("Cache-Control", "no-store");
   res.json(CheckDemoOrderVerificationResponse.parse({ state }));
 });
@@ -337,7 +339,7 @@ router.get("/admin/overview", async (_req, res): Promise<void> => {
     productCount: products.length,
     activeProductCount: products.filter(product => product.active).length,
     totalOrders: orders.length,
-    simulatedRevenueCents: orders.filter(order => order.status !== "cancelled").reduce((sum, order) => sum + order.totalCents, 0),
+    simulatedRevenueCents: orders.filter(order => order.status !== "cancelled" && order.verificationState !== "declined").reduce((sum, order) => sum + order.totalCents, 0),
   }));
 });
 
@@ -442,6 +444,25 @@ router.post("/admin/orders/:id/request-verification", async (req, res): Promise<
     return;
   }
   res.json(RequestAdminOrderVerificationResponse.parse(formatOrder(order)));
+});
+
+router.post("/admin/orders/:id/decline-payment", async (req, res): Promise<void> => {
+  const params = DeclineAdminOrderPaymentParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid order ID" });
+    return;
+  }
+  const [order] = await db.update(demoOrdersTable).set({ verificationState: "declined" })
+    .where(and(
+      eq(demoOrdersTable.id, params.data.id),
+      eq(demoOrdersTable.verificationState, "waiting"),
+      eq(demoOrdersTable.status, "new"),
+    )).returning();
+  if (!order) {
+    res.status(409).json({ error: "Only waiting test orders can be declined" });
+    return;
+  }
+  res.json(DeclineAdminOrderPaymentResponse.parse(formatOrder(order)));
 });
 
 router.patch("/admin/orders/:id", async (req, res): Promise<void> => {
