@@ -128,7 +128,7 @@ function ProductEditor({ product, onClose, onSave, pending }: {
           <Field label="Product name" name="product-name" value={draft.name} onChange={value => set('name', value)} required maxLength={150} placeholder="e.g. RoadView 4K Dual" />
           <Field label="URL slug" name="product-slug" value={draft.slug} onChange={value => set('slug', value.toLowerCase().replace(/\s+/g, '-'))} required maxLength={100} placeholder="roadview-4k-dual" hint="Lowercase letters, numbers and hyphens only." />
           <label className="dg-field">Description<textarea name="description" data-testid="input-admin-product-description" value={draft.description} maxLength={3000} onChange={event => set('description', event.target.value)} placeholder="Tell customers what makes this camera useful." /></label>
-          <Field label="Image URL" name="product-image" value={draft.imageUrl} onChange={value => set('imageUrl', value)} maxLength={2048} placeholder="https://..." type="url" hint="Use a direct image link. Leave blank if photography is not ready." />
+          <Field label="Image URL" name="product-image" value={draft.imageUrl} onChange={value => set('imageUrl', value)} maxLength={2048} placeholder="https://... or /images/..." hint="Use a direct image link or an /images/ path. Leave blank if photography is not ready." />
         </div>
         <div className="dg-fields two">
           <MoneyField label="Price" name="product-price" value={draft.price} onChange={value => set('price', value)} max={1000000} />
@@ -190,7 +190,7 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
         <div className="dg-fields">
           <Field label="Hero headline" name="hero-title" value={draft.heroTitle} onChange={value => set('heroTitle', value)} required maxLength={130} />
           <label className="dg-field">Hero description<textarea name="hero-description" data-testid="input-admin-hero-description" maxLength={500} value={draft.heroDescription} onChange={event => set('heroDescription', event.target.value)} /></label>
-          <Field label="Hero image URL" name="hero-image" value={draft.heroImageUrl} onChange={value => set('heroImageUrl', value)} maxLength={2048} type="url" placeholder="https://..." />
+          <Field label="Hero image URL" name="hero-image" value={draft.heroImageUrl} onChange={value => set('heroImageUrl', value)} maxLength={2048} placeholder="https://... or /images/..." />
           <Field label="Trust section title" name="trust-title" value={draft.trustTitle} onChange={value => set('trustTitle', value)} maxLength={130} />
           <label className="dg-field">Trust section description<textarea name="trust-description" data-testid="input-admin-trust-description" maxLength={500} value={draft.trustDescription} onChange={event => set('trustDescription', event.target.value)} /></label>
         </div>
