@@ -1596,6 +1596,74 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getRequestAdminOrderVerificationMutationOptions(options));
     }
 
+export const getConfirmAdminCodeSharedUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/orders/${id}/confirm-code-shared`
+}
+
+export const confirmAdminCodeShared = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<DemoOrder> => {
+
+  return customFetch<DemoOrder>(getConfirmAdminCodeSharedUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getConfirmAdminCodeSharedMutationKey = () => ['confirmAdminCodeShared'] as const;
+
+export const getConfirmAdminCodeSharedMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmAdminCodeShared>>, TError,ConfirmAdminCodeSharedMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmAdminCodeShared>>, TError,ConfirmAdminCodeSharedMutationVariables, TContext> => {
+
+const mutationKey = getConfirmAdminCodeSharedMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmAdminCodeShared>>, ConfirmAdminCodeSharedMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  confirmAdminCodeShared(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmAdminCodeSharedMutationResult = NonNullable<Awaited<ReturnType<typeof confirmAdminCodeShared>>>
+
+    export type ConfirmAdminCodeSharedMutationError = ErrorType<unknown>
+    export type ConfirmAdminCodeSharedMutationVariables = {id: number}
+
+    export const useConfirmAdminCodeShared = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmAdminCodeShared>>, TError,ConfirmAdminCodeSharedMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmAdminCodeShared>>,
+        TError,
+        ConfirmAdminCodeSharedMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConfirmAdminCodeSharedMutationOptions(options));
+    }
+
 export const getDeclineAdminOrderPaymentUrl = (id: number,) => {
 
 

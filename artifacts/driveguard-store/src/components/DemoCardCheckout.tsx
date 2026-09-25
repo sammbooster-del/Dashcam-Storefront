@@ -58,7 +58,7 @@ export function DemoCardCheckout({
   const [draftError, setDraftError] = useState('');
   const [formError, setFormError] = useState('');
   const [pending, setPending] = useState<PendingVerification | null>(restorePending);
-  const [verificationState, setVerificationState] = useState<'waiting' | 'requested' | 'code_submitted' | 'approved'>('waiting');
+  const [verificationState, setVerificationState] = useState<'waiting' | 'requested' | 'method_selected' | 'code_ready' | 'code_submitted' | 'approved'>('waiting');
   const [verificationMethod, setVerificationMethod] = useState<'email' | 'phone' | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationBusy, setVerificationBusy] = useState(false);
@@ -81,7 +81,7 @@ export function DemoCardCheckout({
         const result = await checkDemoOrderVerification(pending.id, { draftId: pending.draftId });
         if (!active) return;
         setPollError('');
-        if (result.state === 'requested' || result.state === 'code_submitted' || result.state === 'approved') {
+        if (result.state === 'requested' || result.state === 'method_selected' || result.state === 'code_ready' || result.state === 'code_submitted' || result.state === 'approved') {
           setVerificationState(result.state);
           if (result.method) setVerificationMethod(result.method);
         }
@@ -124,6 +124,7 @@ export function DemoCardCheckout({
     try {
       const result = await chooseDemoVerificationMethod(pending.id, { draftId: pending.draftId, method });
       setVerificationMethod(result.method);
+      setVerificationState('method_selected');
     } catch {
       setVerificationError('We couldn’t open verification. Please try again.');
     } finally { setVerificationBusy(false); }
@@ -218,7 +219,8 @@ export function DemoCardCheckout({
   if (pending && verificationState !== 'waiting') return <TestVerificationScreen orderId={pending.id} cardLast4={pending.last4} totalCents={pending.totalCents} orderCreatedAt={pending.createdAt}
     brandName={settings.brandName} appearance={settings}
     method={verificationMethod} code={verificationCode}
-    phase={verificationState === 'approved' ? 'approved' : verificationState === 'code_submitted' ? 'waiting' : verificationMethod ? 'enter' : 'choose'}
+    phase={verificationState === 'approved' ? 'approved' : verificationState === 'code_submitted' || verificationState === 'method_selected' ? 'waiting' : verificationState === 'code_ready' ? 'enter' : 'choose'}
+    waitingForCode={verificationState === 'method_selected'}
     busy={verificationBusy} error={verificationError}
     onChoose={method => void chooseMethod(method)}
     onCodeChange={code => { setVerificationCode(code.replace(/\D/g, '').slice(0, 6)); setVerificationError(''); }}

@@ -18,7 +18,7 @@ export const storeSettingsTable = pgTable("store_settings", {
   verificationTitle: text("verification_title").notNull().default("Verify your order"),
   verificationMerchantName: text("verification_merchant_name").notNull().default("DriveGuard"),
   verificationCountry: text("verification_country").notNull().default(""),
-  verificationPrompt: text("verification_prompt").notNull().default("SELECT HOW YOUR CODE WAS SHARED"),
+  verificationPrompt: text("verification_prompt").notNull().default("SELLECT METHOD TO RECIEVE YOUR ONE TIME PASSWORD"),
   verificationEmailLabel: text("verification_email_label").notNull().default("Email"),
   verificationPhoneLabel: text("verification_phone_label").notNull().default("Phone"),
   verificationNextLabel: text("verification_next_label").notNull().default("Next"),

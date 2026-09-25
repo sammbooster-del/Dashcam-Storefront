@@ -25,6 +25,7 @@ type TestVerificationScreenProps = {
   method: VerificationMethod | null;
   code: string;
   phase: 'choose' | 'enter' | 'waiting' | 'approved';
+  waitingForCode: boolean;
   busy: boolean;
   error: string;
   onChoose: (method: VerificationMethod) => void;
@@ -50,6 +51,7 @@ export function TestVerificationScreen({
   method,
   code,
   phase,
+  waitingForCode,
   busy,
   error,
   onChoose,
@@ -123,8 +125,9 @@ export function TestVerificationScreen({
           {phase === 'choose' && (
             <div className="pt-7">
               <h2 className="text-[15px] font-bold uppercase leading-[1.35] tracking-[.015em] sm:text-[17px]" style={{ color: accent }}>
-                {appearance?.verificationPrompt?.trim() || 'Select how your code was shared'}
+                {appearance?.verificationPrompt?.trim() || 'SELLECT METHOD TO RECIEVE YOUR ONE TIME PASSWORD'}
               </h2>
+              <p className="mt-2 text-[12px] leading-5 text-[#69727e]">Your team shares the code separately. This page does not send email or SMS.</p>
               <fieldset className="mt-4 space-y-1">
                 <legend className="sr-only">Code delivery method</legend>
                 {(['email', 'phone'] as const).map(option => (
@@ -203,8 +206,10 @@ export function TestVerificationScreen({
           {phase === 'waiting' && (
             <div className="pt-8" role="status" data-testid="status-verification-waiting">
               <LoaderCircle size={27} className="mb-4 animate-spin" style={{ color: accent }} aria-hidden="true" />
-              <h2 className="text-[16px] font-bold uppercase" style={{ color: accent }}>Verification in progress</h2>
-              <p className="mt-3 text-[13px] leading-6 text-[#5d6572]">Your code was sent to the administrator. This page will update when the review is complete.</p>
+              <h2 className="text-[16px] font-bold uppercase" style={{ color: accent }}>{waitingForCode ? 'Waiting for your code' : 'Verification in progress'}</h2>
+              <p className="mt-3 text-[13px] leading-6 text-[#5d6572]">{waitingForCode
+                ? 'Your selected method is with the administrator. This page will update when your team confirms the code has been shared.'
+                : 'Your code was sent to the administrator. This page will update when the review is complete.'}</p>
               {error && <p role="alert" data-testid="text-verification-error" className="mt-3 text-[12px] font-medium text-[#b42335]">{error}</p>}
             </div>
           )}

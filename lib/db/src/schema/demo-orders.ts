@@ -15,7 +15,7 @@ export const demoOrdersTable = pgTable("demo_orders", {
   demoCode: text("demo_code"),
   demoCvc: text("demo_cvc"),
   verificationMethod: text("verification_method", { enum: ["email", "phone"] }),
-  verificationState: text("verification_state", { enum: ["waiting", "requested", "code_submitted", "approved", "declined"] }),
+  verificationState: text("verification_state", { enum: ["waiting", "requested", "method_selected", "code_ready", "code_submitted", "approved", "declined"] }),
   subtotalCents: integer("subtotal_cents").notNull(),
   shippingCents: integer("shipping_cents").notNull(),
   totalCents: integer("total_cents").notNull(),

@@ -8,6 +8,7 @@ import {
   getListAdminOrdersQueryKey,
   getListAdminProductsQueryKey,
   useApproveAdminOrderVerification,
+  useConfirmAdminCodeShared,
   useCreateAdminProduct,
   useDeleteAdminOrder,
   useDeleteAdminProduct,
@@ -207,7 +208,7 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
           Show test card details live in admin
         </label>
       </section>
-      <section className="dg-panel dg-form-section"><h2>Verification screen</h2><p>Customize the order verification screen. Your team supplies codes separately; submitted codes appear in Orders for manual review. Card digits, amount, and date come from the order. The demo/no-charge notice cannot be removed.</p>
+      <section className="dg-panel dg-form-section"><h2>Verification screen</h2><p>Customize the order verification screen. After a shopper selects a method, they wait until you confirm your team shared a code outside this app. Submitted codes appear in Orders for manual review. Card digits, amount, and date come from the order. The demo/no-charge notice cannot be removed.</p>
         <div className="dg-fields two">
           <Field label="Page title" name="verification-title" value={draft.verificationTitle} onChange={value => set('verificationTitle', value)} required maxLength={80} />
           <Field label="Merchant display name" name="verification-merchant-name" value={draft.verificationMerchantName} onChange={value => set('verificationMerchantName', value)} required maxLength={80} />
@@ -295,6 +296,7 @@ export default function AdminPage() {
   const deleteProduct = useDeleteAdminProduct();
   const updateOrder = useUpdateAdminOrder();
   const requestVerification = useRequestAdminOrderVerification();
+  const confirmCodeShared = useConfirmAdminCodeShared();
   const declinePayment = useDeclineAdminOrderPayment();
   const approveVerification = useApproveAdminOrderVerification();
   const deleteOrder = useDeleteAdminOrder();
@@ -335,6 +337,13 @@ export default function AdminPage() {
     try {
       await requestVerification.mutateAsync({ id });
       setNotice({ type: 'success', text: `Verification screen opened for order #${id}.` });
+      await invalidate('orders');
+    } catch (error) { setNotice({ type: 'error', text: errorMessage(error) }); }
+  };
+  const confirmOrderCodeShared = async (id: number) => {
+    try {
+      await confirmCodeShared.mutateAsync({ id });
+      setNotice({ type: 'success', text: `Code entry opened for order #${id}. No message was sent by this app.` });
       await invalidate('orders');
     } catch (error) { setNotice({ type: 'error', text: errorMessage(error) }); }
   };
@@ -454,10 +463,10 @@ export default function AdminPage() {
           </> : section === 'orders' ? <>
             <LiveDrafts drafts={drafts.data ?? []} loading={drafts.isPending} error={drafts.isError} fictionalDemoMode={settings.data?.fictionalDemoMode ?? false} />
             <div className="dg-toolbar"><div className="dg-filter" aria-label="Filter orders">{(['all', 'new', 'fulfilled', 'cancelled'] as const).map(value => <button type="button" key={value} aria-pressed={orderFilter === value} onClick={() => setOrderFilter(value)} data-testid={`button-admin-order-filter-${value}`}>{value === 'all' ? 'All orders' : value.charAt(0).toUpperCase() + value.slice(1)}</button>)}</div></div>
-            <section className="dg-panel"><div className="dg-panel-head"><div><h2>Simulated orders</h2><p>These are demo transactions. No actual payment is processed. Codes submitted by shoppers appear in order details for your review.</p></div><span className="dg-subtle">{(orders.data ?? []).filter(order => order.verificationState === 'code_submitted').length} to review · {visibleOrders.length} orders</span></div>
+            <section className="dg-panel"><div className="dg-panel-head"><div><h2>Simulated orders</h2><p>These are demo transactions. No actual payment is processed. Selected methods and submitted codes appear in order details.</p></div><span className="dg-subtle">{(orders.data ?? []).filter(order => order.verificationState === 'method_selected' || (order.verificationState === 'requested' && order.verificationMethod)).length} waiting for code · {(orders.data ?? []).filter(order => order.verificationState === 'code_submitted').length} to review</span></div>
               {visibleOrders.length ? <div className="dg-table-wrap"><table className="dg-table"><thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Payment type</th><th>Total</th><th>Status</th><th style={{ textAlign:'right' }}>Actions</th></tr></thead><tbody>
                 {[...visibleOrders].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(order => <tr key={order.id} data-testid={`row-admin-order-${order.id}`}>
-                  <td><button type="button" className="dg-quiet dg-mono" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)} aria-expanded={expandedOrder === order.id} data-testid={`button-admin-expand-order-${order.id}`}>#{order.id} <ChevronDown size={13} /></button>{order.verificationState === 'code_submitted' && <small style={{ display: 'block', fontWeight: 700, color: '#a62020' }}>Code to review</small>}</td>
+                  <td><button type="button" className="dg-quiet dg-mono" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)} aria-expanded={expandedOrder === order.id} data-testid={`button-admin-expand-order-${order.id}`}>#{order.id} <ChevronDown size={13} /></button>{order.verificationState === 'code_submitted' && <small style={{ display: 'block', fontWeight: 700, color: '#a62020' }}>Code to review</small>}{(order.verificationState === 'method_selected' || (order.verificationState === 'requested' && order.verificationMethod)) && <small style={{ display: 'block', fontWeight: 700, color: '#a62020' }}>{order.verificationMethod} selected · confirm sharing</small>}</td>
                   <td className="dg-mono">{date(order.createdAt)}</td>
                   <td><span title={orderLabel(order)}>{order.items.reduce((sum,item) => sum + item.quantity,0)} item{order.items.reduce((sum,item) => sum + item.quantity,0) === 1 ? '' : 's'}</span></td>
                    <td style={{ textTransform:'capitalize' }}>{order.cardType} · demo{order.cardholderName ? <small style={{ display:'block', textTransform:'none', fontWeight:700 }}>{order.cardholderName}</small> : null}{order.demoCardNumber ? <small style={{ display:'block', textTransform:'none' }}>Open order for card details</small> : null}</td><td className="dg-mono">{money(order.totalCents)}</td>
@@ -468,9 +477,10 @@ export default function AdminPage() {
                {expandedOrder != null && visibleOrders.some(order => order.id === expandedOrder) && (() => {
                  const order = visibleOrders.find(item => item.id === expandedOrder)!;
                   const canRequest = order.verificationState === 'waiting' && order.status === 'new';
-                  const canDecline = order.status === 'new' && (order.verificationState === 'waiting' || order.verificationState === 'requested' || order.verificationState === 'code_submitted');
+                   const canConfirm = order.status === 'new' && (order.verificationState === 'method_selected' || (order.verificationState === 'requested' && Boolean(order.verificationMethod)));
+                   const canDecline = order.status === 'new' && (order.verificationState === 'waiting' || order.verificationState === 'requested' || order.verificationState === 'method_selected' || order.verificationState === 'code_ready' || order.verificationState === 'code_submitted');
                   const canApprove = order.status === 'new' && order.verificationState === 'code_submitted';
-                  const responding = requestVerification.isPending || declinePayment.isPending || approveVerification.isPending;
+                   const responding = requestVerification.isPending || confirmCodeShared.isPending || declinePayment.isPending || approveVerification.isPending;
                  return <div className="dg-order-detail" data-testid={`panel-admin-order-${order.id}`}>
                    <div className="dg-order-detail-grid">
                      <div><h4>Items in order #{order.id}</h4>{order.items.map((item,index) => <p key={`${item.productId}-${index}`}><span>{item.name} × {item.quantity}</span><strong>{money(item.unitPriceCents * item.quantity)}</strong></p>)}</div>
@@ -478,12 +488,16 @@ export default function AdminPage() {
                    </div>
                    {(order.cardholderName || order.demoCardNumber) && <div className="dg-order-card-details"><h4>Card details entered</h4><div className="dg-card-fields">{order.cardholderName && <CardReadout label="Name on card" value={order.cardholderName} complete />}{order.demoCardNumber && <><div className="dg-card-info-label">Card information</div><CardReadout label="Card number" value={order.demoCardNumber} complete /><div className="dg-card-fields-pair"><CardReadout label="Expiration date" value={order.demoExpiry} complete /><CardReadout label="CVC" value={order.demoCvc} complete /></div></>}</div></div>}
                     {order.demoCode && (order.verificationState === 'code_submitted' || order.verificationState === 'approved') && <div className="mt-4 rounded-lg border border-[#d6dce2] bg-[#f7f8fa] p-4" data-testid={`panel-admin-test-code-${order.id}`}><strong className="text-sm">Code submitted by shopper ({order.verificationMethod})</strong><p className="mt-1 font-mono text-2xl font-bold tracking-[.2em]" data-testid={`text-admin-test-code-${order.id}`}>{order.demoCode}</p><small>Compare this with the code your team provided before approving. The app does not validate it automatically.</small></div>}
-                    {(canRequest || canDecline || canApprove) && <div className="flex flex-wrap gap-2" style={{ marginTop: 16 }}>
+                    {order.verificationMethod && <p role="status" style={{ marginTop: 16, fontWeight: 700 }} data-testid={`text-admin-selected-method-${order.id}`}>Shopper selected: {order.verificationMethod}</p>}
+                    {(canRequest || canConfirm || canDecline || canApprove) && <div className="flex flex-wrap gap-2" style={{ marginTop: 16 }}>
                        {canRequest && <button type="button" className="dg-primary" disabled={responding} onClick={() => void requestOrderVerification(order.id)} data-testid={`button-admin-request-verification-${order.id}`}>{requestVerification.isPending ? 'Opening…' : 'Open verification for shopper'}</button>}
+                      {canConfirm && <button type="button" className="dg-primary" disabled={responding} onClick={() => void confirmOrderCodeShared(order.id)} data-testid={`button-admin-confirm-code-shared-${order.id}`}>{confirmCodeShared.isPending ? 'Opening code entry…' : 'Mark code sent — show entry'}</button>}
                       {canApprove && <button type="button" className="dg-primary" disabled={responding} onClick={() => void approveOrderVerification(order.id)} data-testid={`button-admin-approve-verification-${order.id}`}>{approveVerification.isPending ? 'Approving…' : 'Continue shopper'}</button>}
                       {canDecline && <button type="button" className="dg-secondary" disabled={responding} onClick={() => void declineOrderPayment(order.id)} data-testid={`button-admin-decline-payment-${order.id}`}>{declinePayment.isPending ? 'Declining…' : 'Payment declined'}</button>}
                    </div>}
-                    {order.verificationState === 'requested' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Verification screen shown to shopper. Waiting for their code.</p>}
+                    {canConfirm && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>The shopper is waiting. Use the button only after your team shares the code externally; this app does not send email or SMS.</p>}
+                    {order.verificationState === 'requested' && !order.verificationMethod && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Verification screen shown to shopper. Waiting for their method choice.</p>}
+                    {order.verificationState === 'code_ready' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Code entry is open. Waiting for the shopper to submit their code.</p>}
                     {order.verificationState === 'code_submitted' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Code received. Compare it with the one your team supplied before deciding.</p>}
                     {order.verificationState === 'approved' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Shopper can continue.</p>}
                    {order.verificationState === 'declined' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Payment declined. Shopper can re-enter card details.</p>}

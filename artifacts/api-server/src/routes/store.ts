@@ -1,6 +1,6 @@
 import { Router, type IRouter, type RequestHandler } from "express";
 import { clerkClient, getAuth } from "@clerk/express";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import {
   db,
   demoOrdersTable,
@@ -15,6 +15,8 @@ import {
   ChooseDemoVerificationMethodBody,
   ChooseDemoVerificationMethodParams,
   ChooseDemoVerificationMethodResponse,
+  ConfirmAdminCodeSharedParams,
+  ConfirmAdminCodeSharedResponse,
   CreateAdminProductBody,
   CreateAdminProductResponse,
   CreateDemoOrderBody,
@@ -68,7 +70,7 @@ const defaultSettings = {
   verificationTitle: "Verify your order",
   verificationMerchantName: "DriveGuard",
   verificationCountry: "",
-  verificationPrompt: "SELECT HOW YOUR CODE WAS SHARED",
+  verificationPrompt: "SELLECT METHOD TO RECIEVE YOUR ONE TIME PASSWORD",
   verificationEmailLabel: "Email",
   verificationPhoneLabel: "Phone",
   verificationNextLabel: "Next",
@@ -101,6 +103,8 @@ async function ensureStore() {
       .where(and(eq(storeSettingsTable.id, 1), eq(storeSettingsTable.verificationTitle, "Verify test checkout")));
     await db.update(storeSettingsTable).set({ verificationPrompt: defaultSettings.verificationPrompt })
       .where(and(eq(storeSettingsTable.id, 1), eq(storeSettingsTable.verificationPrompt, "SELECT A METHOD FOR YOUR TEST CODE")));
+    await db.update(storeSettingsTable).set({ verificationPrompt: defaultSettings.verificationPrompt })
+      .where(and(eq(storeSettingsTable.id, 1), eq(storeSettingsTable.verificationPrompt, "SELECT HOW YOUR CODE WAS SHARED")));
     legacyCopyUpdated = true;
   }
   const [settings] = await db.select().from(storeSettingsTable).where(eq(storeSettingsTable.id, 1));
@@ -340,7 +344,8 @@ router.post("/demo-orders/:id/verification", async (req, res): Promise<void> => 
     res.status(404).json({ error: "Test order not found" });
     return;
   }
-  const state = order.verificationState === "declined" ? "declined" : order.status === "cancelled" ? "cancelled" : order.verificationState;
+  const state = order.verificationState === "declined" ? "declined" : order.status === "cancelled" ? "cancelled"
+    : order.verificationState === "requested" && order.verificationMethod ? "method_selected" : order.verificationState;
   res.setHeader("Cache-Control", "no-store");
   res.json(CheckDemoOrderVerificationResponse.parse({ state, method: order.verificationMethod }));
 });
@@ -354,6 +359,7 @@ router.post("/demo-orders/:id/verification-method", async (req, res): Promise<vo
   }
   const [order] = await db.update(demoOrdersTable).set({
     verificationMethod: body.data.method,
+    verificationState: "method_selected",
     demoCode: null,
   }).where(and(
     eq(demoOrdersTable.id, params.data.id),
@@ -368,7 +374,7 @@ router.post("/demo-orders/:id/verification-method", async (req, res): Promise<vo
     return;
   }
   res.setHeader("Cache-Control", "no-store");
-  res.json(ChooseDemoVerificationMethodResponse.parse({ state: "requested", method: order.verificationMethod }));
+  res.json(ChooseDemoVerificationMethodResponse.parse({ state: "method_selected", method: order.verificationMethod }));
 });
 
 router.post("/demo-orders/:id/verification-code", async (req, res): Promise<void> => {
@@ -382,7 +388,7 @@ router.post("/demo-orders/:id/verification-code", async (req, res): Promise<void
     .where(and(
       eq(demoOrdersTable.id, params.data.id),
       eq(demoOrdersTable.demoId, body.data.draftId),
-      eq(demoOrdersTable.verificationState, "requested"),
+      eq(demoOrdersTable.verificationState, "code_ready"),
       eq(demoOrdersTable.status, "new"),
     )).returning();
   if (!order) {
@@ -521,6 +527,26 @@ router.post("/admin/orders/:id/request-verification", async (req, res): Promise<
   res.json(RequestAdminOrderVerificationResponse.parse(formatOrder(order)));
 });
 
+router.post("/admin/orders/:id/confirm-code-shared", async (req, res): Promise<void> => {
+  const params = ConfirmAdminCodeSharedParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid order ID" });
+    return;
+  }
+  const [order] = await db.update(demoOrdersTable).set({ verificationState: "code_ready" })
+    .where(and(
+      eq(demoOrdersTable.id, params.data.id),
+      inArray(demoOrdersTable.verificationState, ["method_selected", "requested"]),
+      isNotNull(demoOrdersTable.verificationMethod),
+      eq(demoOrdersTable.status, "new"),
+    )).returning();
+  if (!order) {
+    res.status(409).json({ error: "A method must be selected before code entry can open" });
+    return;
+  }
+  res.json(ConfirmAdminCodeSharedResponse.parse(formatOrder(order)));
+});
+
 router.post("/admin/orders/:id/decline-payment", async (req, res): Promise<void> => {
   const params = DeclineAdminOrderPaymentParams.safeParse(req.params);
   if (!params.success) {
@@ -530,7 +556,7 @@ router.post("/admin/orders/:id/decline-payment", async (req, res): Promise<void>
   const [order] = await db.update(demoOrdersTable).set({ verificationState: "declined" })
     .where(and(
       eq(demoOrdersTable.id, params.data.id),
-      inArray(demoOrdersTable.verificationState, ["waiting", "requested", "code_submitted"]),
+      inArray(demoOrdersTable.verificationState, ["waiting", "requested", "method_selected", "code_ready", "code_submitted"]),
       eq(demoOrdersTable.status, "new"),
     )).returning();
   if (!order) {

@@ -323,6 +323,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoOrder"
+  /admin/orders/{id}/confirm-code-shared:
+    post:
+      operationId: confirmAdminCodeShared
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Admin confirms the team shared a code externally; shopper can now enter it
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoOrder"
   /admin/orders/{id}/decline-payment:
     post:
       operationId: declineAdminOrderPayment
@@ -494,7 +510,7 @@ components:
         status: { type: string, enum: [new, fulfilled, cancelled] }
         cardType: { type: string, enum: [credit, debit] }
         cardholderName: { type: ["string", "null"] }
-        verificationState: { type: ["string", "null"], enum: [waiting, requested, code_submitted, approved, declined, null] }
+        verificationState: { type: ["string", "null"], enum: [waiting, requested, method_selected, code_ready, code_submitted, approved, declined, null] }
         verificationMethod: { type: ["string", "null"], enum: [email, phone, null] }
         demoCode: { type: ["string", "null"] }
         demoCardNumber: { type: ["string", "null"] }
@@ -535,7 +551,7 @@ components:
       type: object
       required: [state, method]
       properties:
-        state: { type: string, enum: [waiting, requested, code_submitted, approved, declined, cancelled] }
+        state: { type: string, enum: [waiting, requested, method_selected, code_ready, code_submitted, approved, declined, cancelled] }
         method: { type: ["string", "null"], enum: [email, phone, null] }
     DemoVerificationMethodInput:
       type: object

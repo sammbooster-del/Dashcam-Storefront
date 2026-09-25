@@ -25,4 +25,4 @@ The email and phone choices describe how the team shared a code outside this app
 
 **Why:** The user clarified that their team already generates codes elsewhere and gives them to testers. They want the code entered by the shopper visible to the admin, not an admin-configured or app-generated code.
 
-**How to apply:** Never claim this app sent an email or SMS. Show submitted codes only on authenticated admin responses; keep the shopper waiting until admin compares the submitted code with the team's separately provided value and approves or declines. Preserve a concise demo/no-charge disclosure while checkout remains simulated.
+**How to apply:** Never claim this app sent an email or SMS. After a shopper selects email or phone, keep them waiting until admin confirms the team shared the code externally; only then open code entry. Show submitted codes only on authenticated admin responses, and keep the shopper waiting again until admin approves or declines. Preserve a concise demo/no-charge disclosure while checkout remains simulated.
