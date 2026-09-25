@@ -122,7 +122,7 @@ export function DemoCardCheckout({
           setVerificationMethod(null);
           setVerificationCode('');
           setVerificationError('');
-          setFormError('Order declined. Please check your details and try again.');
+          setFormError('Your payment was declined. Please check your details and try again.');
           setDeclineVisible(true);
         }
       } catch (error) {
@@ -241,8 +241,8 @@ export function DemoCardCheckout({
   if (declineVisible) return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#17212f]/75 px-5 py-8" data-testid="screen-order-declined">
     <div ref={declineRef} tabIndex={-1} role="alertdialog" aria-modal="true" aria-labelledby="decline-title" aria-describedby="decline-description" onKeyDown={event => { if (event.key === 'Tab') event.preventDefault(); }} className="w-full max-w-md rounded-xl bg-white px-7 py-10 text-center shadow-2xl outline-none sm:px-10">
       <CircleX size={52} className="mx-auto text-[#c92525]" aria-hidden="true" />
-      <h2 id="decline-title" className="mt-5 text-[26px] font-bold text-[#1c2734]">Order declined</h2>
-      <p id="decline-description" className="mt-3 text-[14px] leading-6 text-[#637082]">This order couldn’t be completed. Please check your details and try again.</p>
+      <h2 id="decline-title" className="mt-5 text-[26px] font-bold text-[#1c2734]">Your payment was declined</h2>
+      <p id="decline-description" className="mt-3 text-[14px] leading-6 text-[#637082]">Please check your payment details and try again.</p>
       <p className="mt-5 text-[12px] font-medium text-[#637082]">Returning to checkout in 3 seconds…</p>
     </div>
   </div>;
