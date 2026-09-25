@@ -7,7 +7,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
-import { ArrowRight, Check, ChevronDown, ChevronLeft, CreditCard, Headphones, LockKeyhole, Menu, Minus, Package, Plus, Search, ShieldCheck, ShoppingBag, Trash2, Truck, UserRound, Video, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, ChevronLeft, CreditCard, Headphones, LockKeyhole, Menu, Minus, Package, Plus, Search, ShieldCheck, ShoppingBag, Trash2, Truck, Video, X } from 'lucide-react';
 import { Link, Route, Router as WouterRouter, Switch, useLocation } from 'wouter';
 
 type CartLine = { productId: number; quantity: number };
@@ -35,7 +35,6 @@ function Logo({ brandName }: { brandName: string }) {
 
 function Header({ cartCount, onCollection, products, settings }: { cartCount: number; onCollection: (value: Collection) => void; products: Product[]; settings: StoreSettings }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [, navigate] = useLocation();
@@ -80,10 +79,6 @@ function Header({ cartCount, onCollection, products, settings }: { cartCount: nu
       </form>
       <div className="ml-auto flex shrink-0 items-center gap-4 lg:gap-7">
         <a href="#support" className="hidden items-center gap-2 text-[13px] font-semibold hover:text-[#c92525] lg:flex" data-testid="link-header-support"><Headphones size={20} strokeWidth={1.7} /> Support</a>
-        <div className="relative hidden lg:block">
-          <button type="button" onClick={() => setAccountOpen(!accountOpen)} className="flex items-center gap-2 text-[13px] font-semibold hover:text-[#c92525]" data-testid="button-account-menu" aria-expanded={accountOpen}><UserRound size={21} strokeWidth={1.7} /> Account</button>
-          {accountOpen && <div className="absolute right-0 top-9 z-50 w-64 border border-[#ddd] bg-white p-4 text-[13px] leading-5 shadow-lg" data-testid="status-account-demo"><strong>{settings.brandName}</strong><p className="mt-2 text-[#666]">Manage products, orders and store settings.</p><Link href="/admin" onClick={() => setAccountOpen(false)} className="mt-3 inline-block font-bold text-[#c92525]">Open admin</Link></div>}
-        </div>
         <Link href="/checkout" className="relative flex items-center gap-2 text-[13px] font-semibold hover:text-[#c92525]" data-testid="link-cart"><ShoppingBag size={22} strokeWidth={1.8} /><span className="hidden sm:inline">Cart</span>{cartCount > 0 && <span className="absolute -right-2 -top-3 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#c92525] px-1 text-[10px] font-bold text-white" data-testid="text-cart-count">{cartCount}</span>}</Link>
         <button type="button" className="p-1 md:hidden" onClick={() => setMobileOpen(!mobileOpen)} data-testid="button-mobile-menu" aria-label={mobileOpen ? 'Close menu' : 'Open menu'}>{mobileOpen ? <X size={24} /> : <Menu size={24} />}</button>
       </div>
@@ -100,7 +95,7 @@ function Header({ cartCount, onCollection, products, settings }: { cartCount: nu
     {mobileOpen && <div className="border-t border-[#eee] bg-white px-4 pb-5 md:hidden">
       <form onSubmit={submitSearch} className="mt-4 flex"><input type="search" value={search} onChange={event => { setSearch(event.target.value); setSearchOpen(Boolean(event.target.value.trim())); }} placeholder="Search the store" aria-label="Search catalog" className="field-input" data-testid="input-mobile-search" /><button type="submit" className="grid w-12 shrink-0 place-items-center bg-[#c92525] text-white" data-testid="button-mobile-search" aria-label="Search"><Search size={19} /></button></form>
       {search.trim() && <div className="border border-[#eee] p-3 text-sm" data-testid="mobile-search-results">{matches.length ? matches.map(product => <Link key={product.id} href={`/product/${product.slug}`} onClick={() => setMobileOpen(false)} className="block py-2">{product.name} — {money(product.priceCents)}</Link>) : <span data-testid="text-mobile-search-empty">No products match “{search}”.</span>}</div>}
-       <div className="mt-4 grid gap-1 text-sm font-semibold">{([['all', 'Shop all cameras'], ['front', 'Front cameras'], ['dual', 'Dual-channel cameras']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => selectCollection(value)} className="border-b border-[#eee] py-3 text-left" data-testid={`button-mobile-nav-${value}`}>{label}</button>)}{featured && <Link href={`/product/${featured.slug}`} onClick={() => setMobileOpen(false)} className="py-3" data-testid="link-mobile-featured">Featured camera</Link>}<Link href="/admin" onClick={() => setMobileOpen(false)} className="py-3">Store admin</Link></div>
+       <div className="mt-4 grid gap-1 text-sm font-semibold">{([['all', 'Shop all cameras'], ['front', 'Front cameras'], ['dual', 'Dual-channel cameras']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => selectCollection(value)} className="border-b border-[#eee] py-3 text-left" data-testid={`button-mobile-nav-${value}`}>{label}</button>)}{featured && <Link href={`/product/${featured.slug}`} onClick={() => setMobileOpen(false)} className="py-3" data-testid="link-mobile-featured">Featured camera</Link>}</div>
     </div>}
   </header>;
 }
@@ -235,7 +230,7 @@ function CheckoutPage({ cart, updateQuantity, removeItem, clearCart, settings }:
   return <main className="bg-[#f7f7f7] py-9 sm:py-14"><div className="container-store">
     <Link href="/" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#666] hover:text-[#c92525]" data-testid="link-continue-shopping"><ChevronLeft size={15} /> Continue shopping</Link>
     <h1 className="mt-5 text-[35px] font-extrabold tracking-[-.04em] sm:text-[43px]">Cart &amp; checkout</h1>
-    <p className="mt-2 text-[14px] text-[#666]">Review your items and enter your card details.</p>
+    <p className="mt-2 text-[14px] text-[#666]">Check your items and enter your card details.</p>
     <div className="mt-8 grid items-start gap-7 lg:grid-cols-[1fr_.85fr]">
       <CartSummary cart={cart} updateQuantity={updateQuantity} removeItem={removeItem} settings={settings} />
       <DemoCardCheckout key={String(settings.fictionalDemoMode)} cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} totalCents={totalCents} fictionalDemoMode={settings.fictionalDemoMode} settings={settings} />
@@ -244,7 +239,7 @@ function CheckoutPage({ cart, updateQuantity, removeItem, clearCart, settings }:
 }
 
 function Footer({ settings, featured }: { settings: StoreSettings; featured?: Product }) {
-  return <footer id="support" className="bg-[#252525] py-11 text-white"><div className="container-store grid gap-9 sm:grid-cols-[1.2fr_1fr_1fr]"><div><div className="text-[24px] font-extrabold tracking-[-.06em]">{settings.brandName}</div><p className="mt-3 max-w-[320px] text-[13px] leading-6 text-[#bbb]">{settings.trustDescription}</p>{settings.supportEmail && <a className="mt-3 inline-block text-[13px] text-[#ddd] hover:text-white" href={`mailto:${settings.supportEmail}`}>{settings.supportEmail}</a>}</div><div><h2 className="text-[13px] font-bold">Explore</h2><div className="mt-3 grid gap-2 text-[13px] text-[#bbb]"><Link href="/" data-testid="link-footer-home" className="hover:text-white">Shop cameras</Link>{featured && <Link href={`/product/${featured.slug}`} data-testid="link-footer-product" className="hover:text-white">{featured.name}</Link>}<Link href="/checkout" data-testid="link-footer-checkout" className="hover:text-white">Cart &amp; checkout</Link><Link href="/admin" className="hover:text-white">Store admin</Link></div></div><div><h2 className="text-[13px] font-bold">Support</h2><p className="mt-3 text-[13px] leading-6 text-[#bbb]">Questions about your order? Get in touch with our team.</p>{settings.supportEmail && <a className="mt-2 inline-block text-[13px] text-[#ddd] hover:text-white" href={`mailto:${settings.supportEmail}`}>Contact support</a>}</div></div><div className="container-store mt-9 border-t border-[#555] pt-5 text-[11px] text-[#aaa]">© {settings.brandName}.</div></footer>;
+  return <footer id="support" className="bg-[#252525] py-11 text-white"><div className="container-store grid gap-9 sm:grid-cols-[1.2fr_1fr_1fr]"><div><div className="text-[24px] font-extrabold tracking-[-.06em]">{settings.brandName}</div><p className="mt-3 max-w-[320px] text-[13px] leading-6 text-[#bbb]">{settings.trustDescription}</p>{settings.supportEmail && <a className="mt-3 inline-block text-[13px] text-[#ddd] hover:text-white" href={`mailto:${settings.supportEmail}`}>{settings.supportEmail}</a>}</div><div><h2 className="text-[13px] font-bold">Explore</h2><div className="mt-3 grid gap-2 text-[13px] text-[#bbb]"><Link href="/" data-testid="link-footer-home" className="hover:text-white">Shop cameras</Link>{featured && <Link href={`/product/${featured.slug}`} data-testid="link-footer-product" className="hover:text-white">{featured.name}</Link>}<Link href="/checkout" data-testid="link-footer-checkout" className="hover:text-white">Cart &amp; checkout</Link></div></div><div><h2 className="text-[13px] font-bold">Support</h2><p className="mt-3 text-[13px] leading-6 text-[#bbb]">Questions about your order? Get in touch with our team.</p>{settings.supportEmail && <a className="mt-2 inline-block text-[13px] text-[#ddd] hover:text-white" href={`mailto:${settings.supportEmail}`}>Contact support</a>}</div></div><div className="container-store mt-9 border-t border-[#555] pt-5 text-[11px] text-[#aaa]">© {settings.brandName}.</div></footer>;
 }
 
 function RoutedErrorBoundary({ children }: { children: ReactNode }) {

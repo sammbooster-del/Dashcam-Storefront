@@ -106,7 +106,7 @@ export function DemoCardCheckout({
           forgetPending();
           setPending(null);
           setVerificationState('waiting');
-          setFormError('This test order is no longer available. Please try again.');
+          setFormError('This order is no longer available. Please try again.');
         } else {
           setPollError('Connection interrupted. Reconnecting…');
         }
@@ -276,7 +276,7 @@ export function DemoCardCheckout({
       {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
       {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
       <button type="submit" disabled={!cart.length || order.isPending || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-submit-checkout"><span>{order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} /></span></button>
-      <p className="text-center text-[11px] leading-5 text-[#818b97]">Internal use only. Do not enter a real payment card. No charge will be made.</p>
+      <p className="text-center text-[11px] leading-5 text-[#818b97]">Do not enter a real payment card. No charge will be made.</p>
     </form>
   </section>;
 }

