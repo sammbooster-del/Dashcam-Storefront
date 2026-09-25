@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type Product, type StoreSettings } from '@workspace/api-client-react';
-import { ArrowRight, CreditCard, LoaderCircle } from 'lucide-react';
+import { ArrowRight, CircleX, CreditCard, LoaderCircle } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
 
 type DemoBrand = 'visa' | 'mastercard';
@@ -64,12 +64,20 @@ export function DemoCardCheckout({
   const [verificationBusy, setVerificationBusy] = useState(false);
   const [verificationError, setVerificationError] = useState('');
   const [pollError, setPollError] = useState('');
+  const [declineVisible, setDeclineVisible] = useState(false);
   const [draftId] = useState(() => crypto.randomUUID());
+  const declineRef = useRef<HTMLDivElement>(null);
   const completedRef = useRef<DemoCheckoutDraftInput['completedFields']>([]);
   const pendingDraft = useRef<Promise<unknown>>(Promise.resolve());
   const draftSequence = useRef(0);
   const order = useCreateDemoOrder();
   const saveDemoDraft = useSaveDemoDraft();
+  useEffect(() => {
+    if (!declineVisible) return;
+    declineRef.current?.focus();
+    const timeout = window.setTimeout(() => setDeclineVisible(false), 3000);
+    return () => window.clearTimeout(timeout);
+  }, [declineVisible]);
   useEffect(() => {
     if (!pending || verificationState === 'approved') return;
     let active = true;
@@ -98,7 +106,8 @@ export function DemoCardCheckout({
           setVerificationMethod(null);
           setVerificationCode('');
           setVerificationError('');
-          setFormError('Payment declined, please enter valid card details.');
+          setFormError('Order declined. Please check your details and try again.');
+          setDeclineVisible(true);
         }
       } catch (error) {
         if (!active) return;
@@ -216,6 +225,14 @@ export function DemoCardCheckout({
   const firstDigit = demoNumber.charAt(0);
   const displayedBrand: DemoBrand | null = firstDigit === '4' ? 'visa' : firstDigit === '5' ? 'mastercard' : null;
 
+  if (declineVisible) return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#17212f]/75 px-5 py-8" data-testid="screen-order-declined">
+    <div ref={declineRef} tabIndex={-1} role="alertdialog" aria-modal="true" aria-labelledby="decline-title" aria-describedby="decline-description" onKeyDown={event => { if (event.key === 'Tab') event.preventDefault(); }} className="w-full max-w-md rounded-xl bg-white px-7 py-10 text-center shadow-2xl outline-none sm:px-10">
+      <CircleX size={52} className="mx-auto text-[#c92525]" aria-hidden="true" />
+      <h2 id="decline-title" className="mt-5 text-[26px] font-bold text-[#1c2734]">Order declined</h2>
+      <p id="decline-description" className="mt-3 text-[14px] leading-6 text-[#637082]">This order couldn’t be completed. Please check your details and try again.</p>
+      <p className="mt-5 text-[12px] font-medium text-[#637082]">Returning to checkout in 3 seconds…</p>
+    </div>
+  </div>;
   if (pending && verificationState !== 'waiting') return <TestVerificationScreen orderId={pending.id} cardLast4={pending.last4} totalCents={pending.totalCents} orderCreatedAt={pending.createdAt}
     brandName={settings.brandName} appearance={settings}
     method={verificationMethod} code={verificationCode}
