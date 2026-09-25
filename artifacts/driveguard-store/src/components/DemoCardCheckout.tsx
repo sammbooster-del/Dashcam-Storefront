@@ -125,13 +125,13 @@ export function DemoCardCheckout({
       const result = await chooseDemoVerificationMethod(pending.id, { draftId: pending.draftId, method });
       setVerificationMethod(result.method);
     } catch {
-      setVerificationError('We couldn’t start the test verification. Please try again.');
+      setVerificationError('We couldn’t open verification. Please try again.');
     } finally { setVerificationBusy(false); }
   };
   const submitCode = async () => {
     if (!pending || verificationBusy) return;
     if (!/^\d{6}$/.test(verificationCode)) {
-      setVerificationError('Enter the six-digit test code.');
+      setVerificationError('Enter the six-digit code.');
       return;
     }
     setVerificationBusy(true);
@@ -141,7 +141,7 @@ export function DemoCardCheckout({
       setVerificationCode('');
       setVerificationState('code_submitted');
     } catch {
-      setVerificationError('Invalid test code. Please try again.');
+      setVerificationError('Could not submit your code. Please try again.');
     } finally { setVerificationBusy(false); }
   };
 

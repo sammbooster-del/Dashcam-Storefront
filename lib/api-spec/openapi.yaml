@@ -95,7 +95,7 @@ paths:
               $ref: "#/components/schemas/DemoVerificationMethodInput"
       responses:
         "200":
-          description: Test method selected and test code generated
+          description: Code delivery method selected; the code is supplied separately by the team
           content:
             application/json:
               schema:
@@ -117,7 +117,7 @@ paths:
               $ref: "#/components/schemas/DemoVerificationCodeInput"
       responses:
         "200":
-          description: Test code accepted; awaiting admin decision
+          description: Shopper code received for manual admin review
           content:
             application/json:
               schema:

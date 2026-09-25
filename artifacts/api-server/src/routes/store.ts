@@ -1,5 +1,4 @@
 import { Router, type IRouter, type RequestHandler } from "express";
-import { randomInt } from "node:crypto";
 import { clerkClient, getAuth } from "@clerk/express";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import {
@@ -66,10 +65,10 @@ const defaultSettings = {
   shippingCents: 1200,
   supportEmail: "",
   fictionalDemoMode: true,
-  verificationTitle: "Verify test checkout",
+  verificationTitle: "Verify your order",
   verificationMerchantName: "DriveGuard",
   verificationCountry: "",
-  verificationPrompt: "SELECT A METHOD FOR YOUR TEST CODE",
+  verificationPrompt: "SELECT HOW YOUR CODE WAS SHARED",
   verificationEmailLabel: "Email",
   verificationPhoneLabel: "Phone",
   verificationNextLabel: "Next",
@@ -77,6 +76,7 @@ const defaultSettings = {
   verificationButtonColor: "#e59119",
 };
 
+let legacyCopyUpdated = false;
 async function ensureStore() {
   const [created] = await db.insert(storeSettingsTable)
     .values(defaultSettings)
@@ -94,6 +94,14 @@ async function ensureStore() {
       featured: true,
       active: true,
     }).onConflictDoNothing();
+  }
+  if (!legacyCopyUpdated) {
+    // Preserve customized copy; only replace values from the previous defaults.
+    await db.update(storeSettingsTable).set({ verificationTitle: defaultSettings.verificationTitle })
+      .where(and(eq(storeSettingsTable.id, 1), eq(storeSettingsTable.verificationTitle, "Verify test checkout")));
+    await db.update(storeSettingsTable).set({ verificationPrompt: defaultSettings.verificationPrompt })
+      .where(and(eq(storeSettingsTable.id, 1), eq(storeSettingsTable.verificationPrompt, "SELECT A METHOD FOR YOUR TEST CODE")));
+    legacyCopyUpdated = true;
   }
   const [settings] = await db.select().from(storeSettingsTable).where(eq(storeSettingsTable.id, 1));
   if (!settings) throw new Error("Store settings are unavailable");
@@ -346,13 +354,13 @@ router.post("/demo-orders/:id/verification-method", async (req, res): Promise<vo
   }
   const [order] = await db.update(demoOrdersTable).set({
     verificationMethod: body.data.method,
-    demoCode: String(randomInt(0, 1_000_000)).padStart(6, "0"),
+    demoCode: null,
   }).where(and(
     eq(demoOrdersTable.id, params.data.id),
     eq(demoOrdersTable.demoId, body.data.draftId),
     eq(demoOrdersTable.verificationState, "requested"),
     eq(demoOrdersTable.status, "new"),
-    // Prevent subsequent requests from rotating a code that the team already shared.
+    // A method can only be selected once for this order.
     isNull(demoOrdersTable.verificationMethod),
   )).returning();
   if (!order) {
@@ -367,19 +375,18 @@ router.post("/demo-orders/:id/verification-code", async (req, res): Promise<void
   const params = SubmitDemoVerificationCodeParams.safeParse(req.params);
   const body = SubmitDemoVerificationCodeBody.safeParse(req.body);
   if (!params.success || !body.success || !hasOnlyFields(req.body, ["draftId", "code"])) {
-    res.status(400).json({ error: "Enter the six-digit test code" });
+    res.status(400).json({ error: "Enter the six-digit code" });
     return;
   }
-  const [order] = await db.update(demoOrdersTable).set({ verificationState: "code_submitted" })
+  const [order] = await db.update(demoOrdersTable).set({ verificationState: "code_submitted", demoCode: body.data.code })
     .where(and(
       eq(demoOrdersTable.id, params.data.id),
       eq(demoOrdersTable.demoId, body.data.draftId),
-      eq(demoOrdersTable.demoCode, body.data.code),
       eq(demoOrdersTable.verificationState, "requested"),
       eq(demoOrdersTable.status, "new"),
     )).returning();
   if (!order) {
-    res.status(400).json({ error: "Invalid test code. Please try again." });
+    res.status(409).json({ error: "This order is no longer accepting codes." });
     return;
   }
   res.setHeader("Cache-Control", "no-store");

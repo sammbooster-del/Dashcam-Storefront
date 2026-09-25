@@ -21,8 +21,8 @@ The checkout may adopt the familiar layout of a modern payment form, but it must
 
 **How to apply:** Do not claim a charge or reservation happened. Preserve the short no-charge caution even when the shopper-facing layout otherwise looks like a standard checkout. Only introduce payment-provider claims after a real integration is implemented and verified.
 
-The email and phone choices in simulated verification are labels for a test-code workflow, not delivery channels.
+The email and phone choices describe how the team shared a code outside this app. They are not delivery channels operated by the app. The app receives the shopper's submitted code for manual admin review, rather than generating or validating it against an app-issued code.
 
-**Why:** The user explicitly clarified that no email or text should be sent; their team will obtain the app-generated test code from the admin view and provide it for the simulation.
+**Why:** The user clarified that their team already generates codes elsewhere and gives them to testers. They want the code entered by the shopper visible to the admin, not an admin-configured or app-generated code.
 
-**How to apply:** Never claim a message was delivered or add real email/SMS delivery to this flow without a new request. Keep the generated test code restricted to admin responses, and keep shoppers' verification pending until the admin chooses an outcome.
+**How to apply:** Never claim this app sent an email or SMS. Show submitted codes only on authenticated admin responses; keep the shopper waiting until admin compares the submitted code with the team's separately provided value and approves or declines. Preserve a concise demo/no-charge disclosure while checkout remains simulated.

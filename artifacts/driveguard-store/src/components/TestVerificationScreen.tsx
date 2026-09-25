@@ -33,7 +33,7 @@ type TestVerificationScreenProps = {
   onContinue: () => void;
 };
 
-const disclosure = 'Internal demonstration only. No email or SMS is sent, and no payment is charged.';
+const disclosure = 'Demo checkout. This page does not send a code or charge a payment card.';
 function contrastText(hex: string) {
   const channels = [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16) / 255);
   const [red, green, blue] = channels.map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
@@ -89,7 +89,7 @@ export function TestVerificationScreen({
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-[620px] flex-col bg-white px-5 pb-6 pt-7 sm:px-9 md:my-8 md:min-h-[calc(100dvh-4rem)] md:border md:border-[#e5e7eb] md:px-10 md:shadow-[0_12px_38px_rgba(27,36,51,.06)]">
         <header>
           <h1 id="test-verification-title" className="text-[22px] font-medium leading-tight tracking-[-.035em] sm:text-[24px]">
-            {appearance?.verificationTitle?.trim() || 'Verify test order'}
+            {appearance?.verificationTitle?.trim() || 'Verify your order'}
           </h1>
           <div className="mt-7 grid grid-cols-2 items-center gap-3 border-b border-[#e6e8ec] pb-7 sm:mt-9 sm:pb-9">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -98,13 +98,13 @@ export function TestVerificationScreen({
               </span>
               <div className="min-w-0">
                 <p className="truncate text-[16px] font-bold leading-tight tracking-[-.04em]">{brandName}</p>
-                <p className="text-[10px] leading-tight text-[#737d89]">Test verification</p>
+                <p className="text-[10px] leading-tight text-[#737d89]">Order verification</p>
               </div>
             </div>
             <div className="flex justify-end">
               <div className="border-l border-[#e6e8ec] pl-3 text-right sm:pl-6">
                 <span className="inline-block rounded-[3px] border border-[#d8cfa7] bg-[#fff8df] px-2 py-0.5 text-[11px] font-extrabold tracking-[.14em] text-[#705715]">DEMO</span>
-                <p className="mt-1 text-[10px] leading-tight text-[#737d89]">No real transaction</p>
+                <p className="mt-1 text-[10px] leading-tight text-[#737d89]">No charge</p>
               </div>
             </div>
           </div>
@@ -113,7 +113,7 @@ export function TestVerificationScreen({
         <main className="flex-1 pt-6">
           <div className="divide-y divide-[#dfe2e7] border-y border-[#dfe2e7] text-[13px] leading-5 sm:text-[14px]">
             <div className="flex gap-2 py-2"><span className="w-[112px] shrink-0 font-semibold sm:w-[145px]">Merchant name</span><span className="min-w-0 break-words" data-testid="text-verification-merchant">{merchant}</span></div>
-            <div className="flex gap-2 py-2"><span className="w-[112px] shrink-0 font-semibold sm:w-[145px]">Test card</span><span data-testid="text-verification-card">•••• •••• •••• {last4}</span></div>
+            <div className="flex gap-2 py-2"><span className="w-[112px] shrink-0 font-semibold sm:w-[145px]">Card ending in</span><span data-testid="text-verification-card">•••• •••• •••• {last4}</span></div>
             {country && <div className="flex gap-2 py-2"><span className="w-[112px] shrink-0 font-semibold sm:w-[145px]">Country</span><span data-testid="text-verification-country">{country}</span></div>}
             <div className="flex gap-2 py-2"><span className="w-[112px] shrink-0 font-semibold sm:w-[145px]">Order amount</span><span data-testid="text-verification-total">{amount} USD</span></div>
             {orderDate && <div className="flex gap-2 py-2"><span className="w-[112px] shrink-0 font-semibold sm:w-[145px]">Order date</span><span data-testid="text-verification-date">{orderDate}</span></div>}
@@ -123,10 +123,10 @@ export function TestVerificationScreen({
           {phase === 'choose' && (
             <div className="pt-7">
               <h2 className="text-[15px] font-bold uppercase leading-[1.35] tracking-[.015em] sm:text-[17px]" style={{ color: accent }}>
-                {appearance?.verificationPrompt?.trim() || 'Select a test verification method'}
+                {appearance?.verificationPrompt?.trim() || 'Select how your code was shared'}
               </h2>
               <fieldset className="mt-4 space-y-1">
-                <legend className="sr-only">Test verification method</legend>
+                <legend className="sr-only">Code delivery method</legend>
                 {(['email', 'phone'] as const).map(option => (
                   <label
                     key={option}
@@ -146,8 +146,8 @@ export function TestVerificationScreen({
                       style={{ accentColor: accent }}
                     />
                     <span>{option === 'email'
-                      ? (appearance?.verificationEmailLabel?.trim() || 'Email (test path)')
-                      : (appearance?.verificationPhoneLabel?.trim() || 'Phone (test path)')}</span>
+                      ? (appearance?.verificationEmailLabel?.trim() || 'Email')
+                      : (appearance?.verificationPhoneLabel?.trim() || 'Phone')}</span>
                   </label>
                 ))}
               </fieldset>
@@ -169,10 +169,10 @@ export function TestVerificationScreen({
 
           {phase === 'enter' && (
             <div className="pt-7">
-              <h2 className="text-[16px] font-bold uppercase leading-[1.35]" style={{ color: accent }}>Enter your test code</h2>
-              <p className="mt-3 text-[13px] leading-5 text-[#5d6572]">Enter the six-digit code for the {method === 'phone' ? 'phone' : 'email'} test path. No message is sent.</p>
+              <h2 className="text-[16px] font-bold uppercase leading-[1.35]" style={{ color: accent }}>Enter your code</h2>
+              <p className="mt-3 text-[13px] leading-5 text-[#5d6572]">Enter the six-digit code your team shared by {method === 'phone' ? 'phone' : 'email'}. This page does not send one.</p>
               <form className="mt-6" onSubmit={event => { event.preventDefault(); if (!busy && /^\d{6}$/.test(code)) onSubmit(); }}>
-                <label htmlFor="test-verification-code" className="mb-2 block text-[13px] font-semibold">Six-digit test code</label>
+                <label htmlFor="test-verification-code" className="mb-2 block text-[13px] font-semibold">Six-digit code</label>
                 <input
                   id="test-verification-code"
                   data-testid="input-test-verification-code"
@@ -190,10 +190,10 @@ export function TestVerificationScreen({
                   className="h-12 w-full rounded-[4px] border border-[#cbd0d7] bg-white px-4 font-mono text-[21px] tracking-[.3em] outline-none focus:border-[#54448b] disabled:opacity-50"
                 />
                 {error && <p id="test-verification-error" role="alert" data-testid="text-verification-error" className="mt-2 text-[12px] font-medium text-[#b42335]">{error}</p>}
-                <p id="test-verification-note" className="mt-2 text-[12px] leading-5 text-[#69727e]">Simulation only. Nothing is delivered to an email address or phone number.</p>
+                <p id="test-verification-note" className="mt-2 text-[12px] leading-5 text-[#69727e]">Your submitted code will be reviewed by the administrator.</p>
                 <div className="mt-5 flex justify-end">
                   <button type="submit" disabled={busy || !/^\d{6}$/.test(code)} data-testid="button-test-verification-submit" className={buttonClass} style={buttonStyle}>
-                    {busy ? <><LoaderCircle size={15} className="mr-2 animate-spin" aria-hidden="true" /> Checking…</> : 'Submit test code'}
+                    {busy ? <><LoaderCircle size={15} className="mr-2 animate-spin" aria-hidden="true" /> Submitting…</> : 'Submit code'}
                   </button>
                 </div>
               </form>
@@ -204,7 +204,7 @@ export function TestVerificationScreen({
             <div className="pt-8" role="status" data-testid="status-verification-waiting">
               <LoaderCircle size={27} className="mb-4 animate-spin" style={{ color: accent }} aria-hidden="true" />
               <h2 className="text-[16px] font-bold uppercase" style={{ color: accent }}>Verification in progress</h2>
-              <p className="mt-3 text-[13px] leading-6 text-[#5d6572]">Your test code was submitted. This page will update when the review is complete.</p>
+              <p className="mt-3 text-[13px] leading-6 text-[#5d6572]">Your code was sent to the administrator. This page will update when the review is complete.</p>
               {error && <p role="alert" data-testid="text-verification-error" className="mt-3 text-[12px] font-medium text-[#b42335]">{error}</p>}
             </div>
           )}
@@ -213,8 +213,8 @@ export function TestVerificationScreen({
             <div className="pt-8" data-testid="status-verification-approved">
               <CheckCircle2 size={29} className="mb-4 text-[#36815c]" aria-hidden="true" />
               <h2 className="text-[16px] font-bold uppercase text-[#28734f]">Verification complete</h2>
-              <p className="mt-3 text-[13px] leading-6 text-[#5d6572]">Your simulated verification is complete. You can continue to your order confirmation.</p>
-              <div className="mt-5 flex items-center gap-2 border-l-[3px] border-[#36815c] bg-[#eff6f1] px-3 py-3 text-[12px] font-semibold text-[#28734f]"><Check size={15} aria-hidden="true" /> Approved for this test order</div>
+              <p className="mt-3 text-[13px] leading-6 text-[#5d6572]">Your code was approved. You can continue to your order confirmation.</p>
+              <div className="mt-5 flex items-center gap-2 border-l-[3px] border-[#36815c] bg-[#eff6f1] px-3 py-3 text-[12px] font-semibold text-[#28734f]"><Check size={15} aria-hidden="true" /> Approved for this order</div>
               <div className="mt-5 flex justify-end">
                 <button type="button" onClick={onContinue} disabled={busy} data-testid="button-test-verification-next" className={buttonClass} style={buttonStyle}>
                   {busy ? 'Continuing…' : 'Continue to confirmation'}

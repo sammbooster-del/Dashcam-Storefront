@@ -207,7 +207,7 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
           Show test card details live in admin
         </label>
       </section>
-      <section className="dg-panel dg-form-section"><h2>Verification screen</h2><p>Customize the DriveGuard test screen inspired by your reference. Card digits, amount, and date always come from the order. The no-message and no-charge notice cannot be removed.</p>
+      <section className="dg-panel dg-form-section"><h2>Verification screen</h2><p>Customize the order verification screen. Your team supplies codes separately; submitted codes appear in Orders for manual review. Card digits, amount, and date come from the order. The demo/no-charge notice cannot be removed.</p>
         <div className="dg-fields two">
           <Field label="Page title" name="verification-title" value={draft.verificationTitle} onChange={value => set('verificationTitle', value)} required maxLength={80} />
           <Field label="Merchant display name" name="verification-merchant-name" value={draft.verificationMerchantName} onChange={value => set('verificationMerchantName', value)} required maxLength={80} />
@@ -235,13 +235,13 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
         <div style={{ background: '#fff', border: '1px solid #d6dce2', padding: 18, color: '#1c2835' }}>
           <strong>{draft.verificationTitle}</strong>
           <p style={{ margin: '14px 0 10px' }}>Merchant Name : {draft.verificationMerchantName}</p>
-          <p>Card Number : XXXX XXXX XXXX 6637</p>
+          <p>Card ending in : •••• •••• •••• 6637 (example)</p>
           {draft.verificationCountry && <p>Country : {draft.verificationCountry}</p>}
-          <p>Purchase Amount : $329.00</p>
+          <p>Order amount : $329.00 (example)</p>
           <p style={{ color: draft.verificationAccentColor, fontWeight: 800, marginTop: 18 }}>{draft.verificationPrompt}</p>
           <p>○ {draft.verificationEmailLabel}<br />○ {draft.verificationPhoneLabel}</p>
           <span style={{ background: draft.verificationButtonColor, color: '#fff', padding: '7px 14px', borderRadius: 7, display: 'inline-block' }}>{draft.verificationNextLabel}</span>
-          <p style={{ marginTop: 18, fontSize: 12 }}>Demo only. No email or SMS is sent. No payment is charged.</p>
+          <p style={{ marginTop: 18, fontSize: 12 }}>Demo checkout. This page does not send a code or charge a payment card.</p>
         </div>
       </div>
     </aside>
@@ -454,10 +454,10 @@ export default function AdminPage() {
           </> : section === 'orders' ? <>
             <LiveDrafts drafts={drafts.data ?? []} loading={drafts.isPending} error={drafts.isError} fictionalDemoMode={settings.data?.fictionalDemoMode ?? false} />
             <div className="dg-toolbar"><div className="dg-filter" aria-label="Filter orders">{(['all', 'new', 'fulfilled', 'cancelled'] as const).map(value => <button type="button" key={value} aria-pressed={orderFilter === value} onClick={() => setOrderFilter(value)} data-testid={`button-admin-order-filter-${value}`}>{value === 'all' ? 'All orders' : value.charAt(0).toUpperCase() + value.slice(1)}</button>)}</div></div>
-            <section className="dg-panel"><div className="dg-panel-head"><div><h2>Simulated orders</h2><p>These are demo transactions. No actual payment is processed.</p></div><span className="dg-subtle">{visibleOrders.length} orders</span></div>
+            <section className="dg-panel"><div className="dg-panel-head"><div><h2>Simulated orders</h2><p>These are demo transactions. No actual payment is processed. Codes submitted by shoppers appear in order details for your review.</p></div><span className="dg-subtle">{(orders.data ?? []).filter(order => order.verificationState === 'code_submitted').length} to review · {visibleOrders.length} orders</span></div>
               {visibleOrders.length ? <div className="dg-table-wrap"><table className="dg-table"><thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Payment type</th><th>Total</th><th>Status</th><th style={{ textAlign:'right' }}>Actions</th></tr></thead><tbody>
                 {[...visibleOrders].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(order => <tr key={order.id} data-testid={`row-admin-order-${order.id}`}>
-                  <td><button type="button" className="dg-quiet dg-mono" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)} aria-expanded={expandedOrder === order.id} data-testid={`button-admin-expand-order-${order.id}`}>#{order.id} <ChevronDown size={13} /></button></td>
+                  <td><button type="button" className="dg-quiet dg-mono" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)} aria-expanded={expandedOrder === order.id} data-testid={`button-admin-expand-order-${order.id}`}>#{order.id} <ChevronDown size={13} /></button>{order.verificationState === 'code_submitted' && <small style={{ display: 'block', fontWeight: 700, color: '#a62020' }}>Code to review</small>}</td>
                   <td className="dg-mono">{date(order.createdAt)}</td>
                   <td><span title={orderLabel(order)}>{order.items.reduce((sum,item) => sum + item.quantity,0)} item{order.items.reduce((sum,item) => sum + item.quantity,0) === 1 ? '' : 's'}</span></td>
                    <td style={{ textTransform:'capitalize' }}>{order.cardType} · demo{order.cardholderName ? <small style={{ display:'block', textTransform:'none', fontWeight:700 }}>{order.cardholderName}</small> : null}{order.demoCardNumber ? <small style={{ display:'block', textTransform:'none' }}>Open order for card details</small> : null}</td><td className="dg-mono">{money(order.totalCents)}</td>
@@ -477,14 +477,14 @@ export default function AdminPage() {
                      <div><h4>Order summary</h4><p><span>Subtotal</span><strong>{money(order.subtotalCents)}</strong></p><p><span>Shipping</span><strong>{money(order.shippingCents)}</strong></p><p><span>Total</span><strong>{money(order.totalCents)}</strong></p></div>
                    </div>
                    {(order.cardholderName || order.demoCardNumber) && <div className="dg-order-card-details"><h4>Card details entered</h4><div className="dg-card-fields">{order.cardholderName && <CardReadout label="Name on card" value={order.cardholderName} complete />}{order.demoCardNumber && <><div className="dg-card-info-label">Card information</div><CardReadout label="Card number" value={order.demoCardNumber} complete /><div className="dg-card-fields-pair"><CardReadout label="Expiration date" value={order.demoExpiry} complete /><CardReadout label="CVC" value={order.demoCvc} complete /></div></>}</div></div>}
-                    {order.demoCode && <div className="mt-4 rounded-lg border border-[#d6dce2] bg-[#f7f8fa] p-4" data-testid={`panel-admin-test-code-${order.id}`}><strong className="text-sm">Test {order.verificationMethod} code</strong><p className="mt-1 font-mono text-2xl font-bold tracking-[.2em]" data-testid={`text-admin-test-code-${order.id}`}>{order.demoCode}</p><small>No email or text is sent. Share this code with your team for the simulation.</small></div>}
+                    {order.demoCode && (order.verificationState === 'code_submitted' || order.verificationState === 'approved') && <div className="mt-4 rounded-lg border border-[#d6dce2] bg-[#f7f8fa] p-4" data-testid={`panel-admin-test-code-${order.id}`}><strong className="text-sm">Code submitted by shopper ({order.verificationMethod})</strong><p className="mt-1 font-mono text-2xl font-bold tracking-[.2em]" data-testid={`text-admin-test-code-${order.id}`}>{order.demoCode}</p><small>Compare this with the code your team provided before approving. The app does not validate it automatically.</small></div>}
                     {(canRequest || canDecline || canApprove) && <div className="flex flex-wrap gap-2" style={{ marginTop: 16 }}>
-                       {canRequest && <button type="button" className="dg-primary" disabled={responding} onClick={() => void requestOrderVerification(order.id)} data-testid={`button-admin-request-verification-${order.id}`}>{requestVerification.isPending ? 'Opening…' : 'Show test verification to shopper'}</button>}
+                       {canRequest && <button type="button" className="dg-primary" disabled={responding} onClick={() => void requestOrderVerification(order.id)} data-testid={`button-admin-request-verification-${order.id}`}>{requestVerification.isPending ? 'Opening…' : 'Open verification for shopper'}</button>}
                       {canApprove && <button type="button" className="dg-primary" disabled={responding} onClick={() => void approveOrderVerification(order.id)} data-testid={`button-admin-approve-verification-${order.id}`}>{approveVerification.isPending ? 'Approving…' : 'Continue shopper'}</button>}
                       {canDecline && <button type="button" className="dg-secondary" disabled={responding} onClick={() => void declineOrderPayment(order.id)} data-testid={`button-admin-decline-payment-${order.id}`}>{declinePayment.isPending ? 'Declining…' : 'Payment declined'}</button>}
                    </div>}
-                    {order.verificationState === 'requested' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Verification screen shown to shopper. Waiting for test code.</p>}
-                    {order.verificationState === 'code_submitted' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Test code accepted. Shopper is waiting for your decision.</p>}
+                    {order.verificationState === 'requested' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Verification screen shown to shopper. Waiting for their code.</p>}
+                    {order.verificationState === 'code_submitted' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Code received. Compare it with the one your team supplied before deciding.</p>}
                     {order.verificationState === 'approved' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Shopper can continue.</p>}
                    {order.verificationState === 'declined' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Payment declined. Shopper can re-enter card details.</p>}
                  </div>;
