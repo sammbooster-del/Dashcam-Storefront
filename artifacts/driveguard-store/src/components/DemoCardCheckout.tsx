@@ -80,10 +80,10 @@ export function DemoCardCheckout({
         if (result.state === 'cancelled') {
           forgetPending();
           setPending(null);
-          setFormError('This test order was cancelled by an admin. You can try again.');
+          setFormError('This order was cancelled. Please try again.');
         }
       } catch {
-        if (active) setPollError('Connection interrupted. Still checking for the admin response…');
+        if (active) setPollError('Connection interrupted. Reconnecting…');
       } finally { inFlight = false; }
     };
     void check();
@@ -166,9 +166,8 @@ export function DemoCardCheckout({
   }} />;
   if (pending) return <section className="flex min-h-[340px] flex-col items-center justify-center rounded-xl border border-[#dfe3e8] bg-white px-6 py-10 text-center shadow-sm" role="status" data-testid="status-waiting-for-admin">
     <LoaderCircle size={38} className="animate-spin text-[#c92525]" aria-hidden="true" />
-    <h2 className="mt-5 text-[22px] font-bold text-[#1c2734]">Waiting for test verification</h2>
-    <p className="mt-2 max-w-sm text-[13px] leading-6 text-[#637082]">Order #{pending.id} was saved. An admin can open its test details and show the next screen here. This page will update automatically.</p>
-    <p className="mt-4 text-[11px] text-[#818b97]">Internal test only. No payment will be charged. Do not enter a real card.</p>
+    <h2 className="mt-5 text-[22px] font-bold text-[#1c2734]">Processing your order</h2>
+    <p className="mt-2 max-w-sm text-[13px] leading-6 text-[#637082]">Please wait a moment. This page will update automatically.</p>
     {pollError && <p className="mt-4 text-[12px] text-[#a61c1c]">{pollError}</p>}
   </section>;
 
