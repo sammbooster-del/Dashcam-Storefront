@@ -146,11 +146,13 @@ type DemoDraft = {
   displayName: string;
   cardType: "credit" | "debit";
   demoId: string | null;
+  demoExpiry: string | null;
+  demoCode: string | null;
   completedFields: ("name" | "number" | "expiry" | "cvc")[];
   updatedAt: string;
 };
-// Drafts are deliberately transient. No card-number, expiry, or CVC input is
-// accepted by this API; only synthetic field-completion flags are kept.
+// Drafts are deliberately transient. Only DEMO-prefixed identifiers/codes
+// may be previewed; ordinary card-number and CVC input never reaches this API.
 const demoDrafts = new Map<string, DemoDraft>();
 const DRAFT_LIFETIME_MS = 15 * 60 * 1000;
 const MAX_DRAFTS = 100;
@@ -183,7 +185,7 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
   const params = SaveDemoDraftParams.safeParse(req.params);
   const parsed = SaveDemoDraftBody.safeParse(req.body);
   if (!params.success || !parsed.success ||
-    !hasOnlyFields(req.body, ["displayName", "cardType", "completedFields", "demoId"])) {
+    !hasOnlyFields(req.body, ["displayName", "cardType", "completedFields", "demoId", "demoExpiry", "demoCode"])) {
     res.status(400).json({ error: "Invalid demo draft" });
     return;
   }
@@ -193,9 +195,12 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
     return;
   }
   const settings = await ensureStore();
-  if ((!settings.fictionalDemoMode && parsed.data.demoId !== undefined) ||
-    (settings.fictionalDemoMode && parsed.data.completedFields.includes("number") && !parsed.data.demoId) ||
-    (settings.fictionalDemoMode && parsed.data.completedFields.some(field => field === "expiry" || field === "cvc"))) {
+  if ((!settings.fictionalDemoMode && [parsed.data.demoId, parsed.data.demoExpiry, parsed.data.demoCode].some(value => value !== undefined)) ||
+    (settings.fictionalDemoMode && (
+      (parsed.data.completedFields.includes("number") && !/^DEMO-[A-Z0-9]{4,12}$/.test(parsed.data.demoId ?? "")) ||
+      (parsed.data.completedFields.includes("expiry") && !/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(parsed.data.demoExpiry ?? "")) ||
+      (parsed.data.completedFields.includes("cvc") && !/^DEMO-[A-Z0-9]{3,4}$/.test(parsed.data.demoCode ?? ""))
+    ))) {
     res.status(400).json({ error: "Invalid fictional demo details" });
     return;
   }
@@ -205,6 +210,8 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
     displayName,
     cardType: parsed.data.cardType,
     demoId: settings.fictionalDemoMode ? parsed.data.demoId ?? null : null,
+    demoExpiry: settings.fictionalDemoMode ? parsed.data.demoExpiry ?? null : null,
+    demoCode: settings.fictionalDemoMode ? parsed.data.demoCode ?? null : null,
     completedFields: parsed.data.completedFields,
     updatedAt: new Date().toISOString(),
   };
@@ -216,14 +223,16 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
 
 router.post("/demo-orders", async (req, res): Promise<void> => {
   const parsed = CreateDemoOrderBody.safeParse(req.body);
-  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "draftId", "demoId"]) ||
+  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "draftId", "demoId", "demoExpiry", "demoCode"]) ||
     !Array.isArray(req.body.items) ||
     !req.body.items.every((item: unknown) => hasOnlyFields(item, ["productId", "quantity"]))) {
     res.status(400).json({ error: "Invalid demo order" });
     return;
   }
   const settings = await ensureStore();
-  if (settings.fictionalDemoMode ? !parsed.data.demoId : parsed.data.demoId !== undefined) {
+  if (settings.fictionalDemoMode
+    ? !parsed.data.demoId || !parsed.data.demoExpiry || !parsed.data.demoCode
+    : [parsed.data.demoId, parsed.data.demoExpiry, parsed.data.demoCode].some(value => value !== undefined)) {
     res.status(400).json({ error: "Checkout mode changed. Refresh the page and try again." });
     return;
   }
@@ -256,6 +265,8 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
   const [order] = await db.insert(demoOrdersTable).values({
     cardType: parsed.data.cardType,
     demoId: settings.fictionalDemoMode ? parsed.data.demoId : null,
+    demoExpiry: settings.fictionalDemoMode ? parsed.data.demoExpiry : null,
+    demoCode: settings.fictionalDemoMode ? parsed.data.demoCode : null,
     items,
     subtotalCents,
     shippingCents,

@@ -197,6 +197,10 @@ export interface DemoOrder {
   cardType: DemoOrderCardType;
   /** @nullable */
   demoId?: string | null;
+  /** @nullable */
+  demoExpiry?: string | null;
+  /** @nullable */
+  demoCode?: string | null;
   subtotalCents: number;
   shippingCents: number;
   totalCents: number;
@@ -233,6 +237,16 @@ export interface DemoOrderInput {
      * @pattern ^DEMO-[A-Z0-9]{4,12}$
      */
   demoId?: string;
+  /**
+     * @maxLength 5
+     * @pattern ^(0[1-9]|1[0-2])/[0-9]{2}$
+     */
+  demoExpiry?: string;
+  /**
+     * @maxLength 9
+     * @pattern ^DEMO-[A-Z0-9]{3,4}$
+     */
+  demoCode?: string;
 }
 
 export type DemoCheckoutDraftInputCardType = typeof DemoCheckoutDraftInputCardType[keyof typeof DemoCheckoutDraftInputCardType];
@@ -259,9 +273,19 @@ export interface DemoCheckoutDraftInput {
   cardType: DemoCheckoutDraftInputCardType;
   /**
      * @maxLength 17
-     * @pattern ^DEMO-[A-Z0-9]{4,12}$
+     * @pattern ^DEMO-[A-Z0-9]{1,12}$
      */
   demoId?: string;
+  /**
+     * @maxLength 5
+     * @pattern ^(?:[0-1]|0[1-9]|1[0-2]|(?:0[1-9]|1[0-2])/[0-9]{0,2})$
+     */
+  demoExpiry?: string;
+  /**
+     * @maxLength 9
+     * @pattern ^DEMO-[A-Z0-9]{1,4}$
+     */
+  demoCode?: string;
   /** @maxItems 4 */
   completedFields: DemoCheckoutDraftInputCompletedFieldsItem[];
 }
@@ -290,6 +314,10 @@ export interface DemoCheckoutDraft {
   cardType: DemoCheckoutDraftCardType;
   /** @nullable */
   demoId?: string | null;
+  /** @nullable */
+  demoExpiry?: string | null;
+  /** @nullable */
+  demoCode?: string | null;
   completedFields: DemoCheckoutDraftCompletedFieldsItem[];
   updatedAt: string;
 }

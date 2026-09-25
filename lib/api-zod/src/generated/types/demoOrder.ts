@@ -16,6 +16,10 @@ export interface DemoOrder {
   cardType: DemoOrderCardType;
   /** @nullable */
   demoId?: string | null;
+  /** @nullable */
+  demoExpiry?: string | null;
+  /** @nullable */
+  demoCode?: string | null;
   subtotalCents: number;
   shippingCents: number;
   totalCents: number;

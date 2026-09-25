@@ -180,10 +180,10 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
         </div>
         <div style={{ marginTop: 16 }}><Field label="Support email" name="support-email" value={draft.supportEmail} onChange={value => set('supportEmail', value)} type="email" maxLength={254} placeholder="help@yourstore.com" /></div>
       </section>
-      <section className="dg-panel dg-form-section"><h2>Fictional demo card</h2><p>When enabled, checkout rejects card-formatted numbers and uses a DEMO-prefixed ID instead. That exact fictional ID appears in Orders. When disabled, card-style values are never sent to admin.</p>
+      <section className="dg-panel dg-form-section"><h2>Live fictional demo card</h2><p>When enabled, checkout accepts only DEMO-prefixed fictional number and code values. Their exact values and demo expiry update live in Orders as they are typed. When disabled, card-style values are never sent to admin.</p>
         <label className="dg-field" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <input type="checkbox" checked={draft.fictionalDemoMode} onChange={event => set('fictionalDemoMode', event.target.checked)} data-testid="toggle-admin-fictional-demo-mode" />
-          Accept fictional demo IDs only
+          Show fictional demo fields live
         </label>
       </section>
       <div className="dg-form-footer"><span data-testid="status-admin-settings-saved">{saved ? 'Changes saved.' : 'Review your changes before saving.'}</span><button className="dg-primary" type="submit" disabled={pending} data-testid="button-admin-save-settings">{pending ? 'Saving…' : 'Save store settings'} <ArrowRight size={15} /></button></div>
@@ -203,18 +203,23 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
 
 function LiveDrafts({ drafts, loading, error, fictionalDemoMode }: { drafts: DemoCheckoutDraft[]; loading: boolean; error: boolean; fictionalDemoMode: boolean }) {
   return <section className="dg-panel dg-live-drafts" data-testid="panel-admin-live-drafts">
-    <div className="dg-panel-head"><div><h2>Live demo checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>Updates as shoppers finish each field. Only a demo name and field progress are received.</p></div><span className="dg-subtle">{drafts.length} active</span></div>
+    <div className="dg-panel-head"><div><h2>Live demo checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>{fictionalDemoMode ? 'Fictional demo fields update as they are typed. Real card details are not accepted.' : 'Updates as shoppers finish each field. Only a demo name and field progress are received.'}</p></div><span className="dg-subtle">{drafts.length} active</span></div>
     {error ? <div className="dg-draft-empty" role="alert">Could not load live checkouts. They will retry automatically.</div>
       : loading && !drafts.length ? <div className="dg-draft-empty">Checking for active demos…</div>
       : drafts.length ? <div className="dg-draft-grid">{drafts.map(draft => <div className="dg-draft-card" key={draft.id} data-testid={`card-admin-draft-${draft.id}`}>
         <div className="dg-draft-card-head"><strong>{draft.displayName || 'Demo shopper'}</strong><span>{draft.cardType} demo · {new Date(draft.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span></div>
         <div className="dg-draft-fields">
           <span className={draft.completedFields.includes('name') ? 'complete' : ''}>Name: {draft.completedFields.includes('name') ? draft.displayName : 'waiting'}</span>
-          <span className={draft.completedFields.includes('number') ? 'complete' : ''}>{draft.demoId ? `Fictional demo ID: ${draft.demoId}` : fictionalDemoMode ? 'Fictional demo ID: waiting' : `Demo number: ${draft.completedFields.includes('number') ? 'format completed (not stored)' : 'waiting'}`}</span>
-          {!fictionalDemoMode && <><span className={draft.completedFields.includes('expiry') ? 'complete' : ''}>Demo expiry: {draft.completedFields.includes('expiry') ? 'format completed (not stored)' : 'waiting'}</span>
-          <span className={draft.completedFields.includes('cvc') ? 'complete' : ''}>Demo CVC: {draft.completedFields.includes('cvc') ? 'completed (not stored)' : 'waiting'}</span></>}
+           <span className={draft.completedFields.includes('number') ? 'complete' : ''}>{draft.demoId ? `Fictional number: ${draft.demoId}` : fictionalDemoMode ? 'Fictional number: waiting' : `Demo number: ${draft.completedFields.includes('number') ? 'format completed (not stored)' : 'waiting'}`}</span>
+           {fictionalDemoMode ? <>
+             <span className={draft.completedFields.includes('expiry') ? 'complete' : ''}>Demo expiry: {draft.demoExpiry ?? 'waiting'}</span>
+             <span className={draft.completedFields.includes('cvc') ? 'complete' : ''}>Fictional code: {draft.demoCode ?? 'waiting'}</span>
+           </> : <>
+             <span className={draft.completedFields.includes('expiry') ? 'complete' : ''}>Demo expiry: {draft.completedFields.includes('expiry') ? 'format completed (not stored)' : 'waiting'}</span>
+             <span className={draft.completedFields.includes('cvc') ? 'complete' : ''}>Demo CVC: {draft.completedFields.includes('cvc') ? 'completed (not stored)' : 'waiting'}</span>
+           </>}
         </div>
-      </div>)}</div> : <div className="dg-draft-empty">No active demo checkouts. A shopper’s progress will appear here after leaving the first field.</div>}
+       </div>)}</div> : <div className="dg-draft-empty">No active demo checkouts. A shopper’s {fictionalDemoMode ? 'fictional values will appear here as they type.' : 'progress will appear here after leaving the first field.'}</div>}
   </section>;
 }
 
@@ -379,7 +384,7 @@ export default function AdminPage() {
                   <td><button type="button" className="dg-quiet dg-mono" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)} aria-expanded={expandedOrder === order.id} data-testid={`button-admin-expand-order-${order.id}`}>#{order.id} <ChevronDown size={13} /></button></td>
                   <td className="dg-mono">{date(order.createdAt)}</td>
                   <td><span title={orderLabel(order)}>{order.items.reduce((sum,item) => sum + item.quantity,0)} item{order.items.reduce((sum,item) => sum + item.quantity,0) === 1 ? '' : 's'}</span></td>
-                  <td style={{ textTransform:'capitalize' }}>{order.cardType} · demo{order.demoId ? <small style={{ display:'block', textTransform:'none' }}>{order.demoId}</small> : null}</td><td className="dg-mono">{money(order.totalCents)}</td>
+                  <td style={{ textTransform:'capitalize' }}>{order.cardType} · demo{order.demoId ? <small style={{ display:'block', textTransform:'none', overflowWrap:'anywhere' }}>Number: {order.demoId}<br />Expiry: {order.demoExpiry}<br />Code: {order.demoCode}</small> : null}</td><td className="dg-mono">{money(order.totalCents)}</td>
                   <td><select className="dg-status-select" aria-label={`Status for order ${order.id}`} value={order.status} disabled={updateOrder.isPending} onChange={event => void changeOrderStatus(order.id, event.target.value as DemoOrder['status'])} data-testid={`select-admin-order-status-${order.id}`}><option value="new">New</option><option value="fulfilled">Fulfilled</option><option value="cancelled">Cancelled</option></select></td>
                   <td><div className="dg-row-actions"><button type="button" className="dg-icon-button dg-icon-danger" title="Delete order" aria-label={`Delete order ${order.id}`} onClick={() => setDeletion({ kind:'order', id:order.id, name:`Order #${order.id}` })} data-testid={`button-admin-delete-order-${order.id}`}><Trash2 size={16} /></button></div></td>
                 </tr>)}

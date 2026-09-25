@@ -14,9 +14,19 @@ export interface DemoCheckoutDraftInput {
   cardType: DemoCheckoutDraftInputCardType;
   /**
      * @maxLength 17
-     * @pattern ^DEMO-[A-Z0-9]{4,12}$
+     * @pattern ^DEMO-[A-Z0-9]{1,12}$
      */
   demoId?: string;
+  /**
+     * @maxLength 5
+     * @pattern ^(?:[0-1]|0[1-9]|1[0-2]|(?:0[1-9]|1[0-2])/[0-9]{0,2})$
+     */
+  demoExpiry?: string;
+  /**
+     * @maxLength 9
+     * @pattern ^DEMO-[A-Z0-9]{1,4}$
+     */
+  demoCode?: string;
   /** @maxItems 4 */
   completedFields: DemoCheckoutDraftInputCompletedFieldsItem[];
 }

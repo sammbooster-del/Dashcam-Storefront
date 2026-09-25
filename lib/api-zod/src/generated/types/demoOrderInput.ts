@@ -21,4 +21,14 @@ export interface DemoOrderInput {
      * @pattern ^DEMO-[A-Z0-9]{4,12}$
      */
   demoId?: string;
+  /**
+     * @maxLength 5
+     * @pattern ^(0[1-9]|1[0-2])/[0-9]{2}$
+     */
+  demoExpiry?: string;
+  /**
+     * @maxLength 9
+     * @pattern ^DEMO-[A-Z0-9]{3,4}$
+     */
+  demoCode?: string;
 }
