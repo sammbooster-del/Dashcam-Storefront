@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type Product } from '@workspace/api-client-react';
-import { ArrowRight, Check, CreditCard, LockKeyhole } from 'lucide-react';
+import { ArrowRight, CreditCard } from 'lucide-react';
 
 type DemoBrand = 'visa' | 'mastercard';
 type CardType = 'credit' | 'debit';
@@ -40,7 +40,6 @@ export function DemoCardCheckout({
   const [demoExpiry, setDemoExpiry] = useState('');
   const [demoCvc, setDemoCvc] = useState('');
   const [draftError, setDraftError] = useState('');
-  const [liveSaved, setLiveSaved] = useState(false);
   const [formError, setFormError] = useState('');
   const [draftId] = useState(() => crypto.randomUUID());
   const completedRef = useRef<DemoCheckoutDraftInput['completedFields']>([]);
@@ -51,15 +50,13 @@ export function DemoCardCheckout({
 
   const queueDraft = (name: string, type: CardType, completedFields: DemoCheckoutDraftInput['completedFields'], testDetails?: { demoCardNumber?: string; demoExpiry?: string; demoCvc?: string }) => {
     const sequence = ++draftSequence.current;
-    setLiveSaved(false);
     setDraftError('');
     pendingDraft.current = pendingDraft.current.catch(() => {}).then(() => saveDemoDraft.mutateAsync({
       id: draftId, data: { displayName: validName(name) ? name.trim() : '', cardType: type, completedFields, ...testDetails },
     }));
-    void pendingDraft.current.then(
-      () => { if (sequence === draftSequence.current) setLiveSaved(true); },
-      () => { if (sequence === draftSequence.current) setDraftError('Live admin preview is unavailable. You can still submit your demo order.'); },
-    );
+    void pendingDraft.current.catch(() => {
+      if (sequence === draftSequence.current) setDraftError('Order preview is temporarily unavailable. You can still place your order.');
+    });
   };
   useEffect(() => {
     if (!fictionalDemoMode || (!demoName && !demoNumber && !demoExpiry && !demoCvc)) return;
@@ -90,7 +87,7 @@ export function DemoCardCheckout({
     event.preventDefault();
     if (!cart.length || cart.some(line => line.product.stock < line.quantity)) return;
     if (!validName(demoName) || !validNumber(demoNumber) || !validExpiry(demoExpiry) || !validCvc(demoCvc)) {
-      setFormError('Enter a demo name, 13–19 card digits, an MM/YY expiry, and a 3–4 digit CVC. Use system-generated test details only.');
+      setFormError('Enter a name, 13–19 card digits, an MM/YY expiry, and a 3–4 digit CVC.');
       return;
     }
     setFormError('');
@@ -110,11 +107,10 @@ export function DemoCardCheckout({
   const displayedBrand: DemoBrand | null = firstDigit === '4' ? 'visa' : firstDigit === '5' ? 'mastercard' : null;
 
   return <section className="rounded-xl border border-[#dfe3e8] bg-white p-5 shadow-[0_14px_36px_-30px_rgba(28,37,50,.3)] sm:p-7" data-testid="panel-demo-card-checkout">
-    <header className="flex items-start justify-between gap-4 border-b border-[#edf0f2] pb-5">
-      <div><p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#a62020]">Checkout · Step 2 of 2</p><h2 className="mt-1 text-[23px] font-bold tracking-[-.035em] text-[#1c2734]">{fictionalDemoMode ? 'Internal test card details' : 'Payment details'}</h2><p className="mt-1 text-[13px] text-[#66717e]">{fictionalDemoMode ? 'Your system-generated test card values appear live in admin as you type.' : 'Enter made-up card details to simulate an order.'}</p></div>
-      <span className="shrink-0 rounded-md bg-[#fff1f0] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[.09em] text-[#ad2626]">Demo mode</span>
+    <header className="border-b border-[#edf0f2] pb-5">
+      <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#a62020]">Checkout · Step 2 of 2</p>
+      <h2 className="mt-1 text-[23px] font-bold tracking-[-.035em] text-[#1c2734]">Payment details</h2>
     </header>
-    <div className="mt-5 rounded-lg border border-[#f0d9d6] bg-[#fff8f7] px-3.5 py-3 text-[12px] leading-[1.5] text-[#764340]" data-testid="notice-demo-payment"><strong>Demo only — no payment is processed.</strong> {fictionalDemoMode ? 'Use system-generated test details only. The number, expiry, and CVC are sent to admin as you type and saved with the demo order. Never enter a real card.' : 'Card number, expiry, and CVC are never sent or stored. Never enter a real card.'}</div>
     <div className="mt-6 flex items-center justify-between gap-2">
       <h3 className="text-[14px] font-bold text-[#263241]">Card</h3>
       <div className="flex items-center gap-1.5" aria-label="Card brands"><BrandLogo brand="visa" small /><BrandLogo brand="mastercard" small /></div>
@@ -124,9 +120,9 @@ export function DemoCardCheckout({
       <CreditCard size={19} className="text-[#748090]" aria-hidden="true" />
     </div>
     <form onSubmit={submit} autoComplete="off" className="mt-5 space-y-4">
-      <label className="block text-[12px] font-semibold text-[#344255]">Name on card<input required maxLength={80} autoComplete="off" value={demoName} onChange={event => setDemoName(event.target.value)} onBlur={() => completeField('name', validName(demoName))} className={fieldClass} data-testid="input-card-name" placeholder="Demo Driver" /></label>
+      <label className="block text-[12px] font-semibold text-[#344255]">Name on card<input required maxLength={80} autoComplete="off" value={demoName} onChange={event => setDemoName(event.target.value)} onBlur={() => completeField('name', validName(demoName))} className={fieldClass} data-testid="input-card-name" placeholder="Name on card" /></label>
       <div>
-        <label htmlFor="demo-card-number" className="block text-[12px] font-semibold text-[#344255]">{fictionalDemoMode ? 'System-generated test card information' : 'Card information'}</label>
+        <label htmlFor="demo-card-number" className="block text-[12px] font-semibold text-[#344255]">Card information</label>
         <div className="mt-2 overflow-hidden rounded-lg border border-[#d5dbe3] transition focus-within:border-[#c92525] focus-within:ring-[3px] focus-within:ring-[#c92525]/10">
           <div className="relative">
             <input id="demo-card-number" required maxLength={23} inputMode="numeric" autoComplete="off" value={demoNumber} onChange={event => setDemoNumber(formatNumber(event.target.value))} onBlur={() => completeField('number', validNumber(demoNumber))} className="h-[50px] w-full bg-transparent px-3.5 pr-[65px] text-[14px] tracking-[.02em] text-[#17212f] outline-none placeholder:text-[#9aa4b2]" data-testid="input-card-number" placeholder="Card number" />
@@ -134,24 +130,22 @@ export function DemoCardCheckout({
           </div>
           <div className="grid grid-cols-2 border-t border-[#d5dbe3]">
             <label className="block border-r border-[#d5dbe3]"><span className="sr-only">Expiration date</span><input required maxLength={5} inputMode="numeric" autoComplete="off" placeholder="MM / YY" value={demoExpiry} onChange={event => setDemoExpiry(formatExpiry(event.target.value))} onBlur={() => completeField('expiry', validExpiry(demoExpiry))} className="h-[50px] w-full min-w-0 bg-transparent px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#9aa4b2]" data-testid="input-card-expiry" /></label>
-            <label className="block"><span className="sr-only">Security code</span><input required maxLength={4} type={fictionalDemoMode ? 'text' : 'password'} inputMode="numeric" autoComplete="off" placeholder="CVC" value={demoCvc} onChange={event => setDemoCvc(event.target.value.replace(/\D/g, '').slice(0, 4))} onBlur={() => completeField('cvc', validCvc(demoCvc))} className="h-[50px] w-full min-w-0 bg-transparent px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#9aa4b2]" data-testid="input-card-cvc" /></label>
+            <label className="block"><span className="sr-only">Security code</span><input required maxLength={4} type="password" inputMode="numeric" autoComplete="off" placeholder="CVC" value={demoCvc} onChange={event => setDemoCvc(event.target.value.replace(/\D/g, '').slice(0, 4))} onBlur={() => completeField('cvc', validCvc(demoCvc))} className="h-[50px] w-full min-w-0 bg-transparent px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#9aa4b2]" data-testid="input-card-cvc" /></label>
           </div>
         </div>
       </div>
       <div className="flex items-center justify-between gap-3">
         <span className="text-[12px] font-semibold text-[#344255]">Card type</span>
-        <div className="flex rounded-lg border border-[#d9dee5] bg-[#f7f8fa] p-0.5" role="group" aria-label="Simulated card type">
+        <div className="flex rounded-lg border border-[#d9dee5] bg-[#f7f8fa] p-0.5" role="group" aria-label="Card type">
           {(['credit', 'debit'] as const).map(type => <button key={type} type="button" aria-pressed={cardType === type} onClick={() => { setCardType(type); if (!fictionalDemoMode && completedRef.current.length) queueDraft(demoName, type, completedRef.current); }} className={`rounded-md px-3.5 py-1.5 text-[12px] font-semibold capitalize transition ${cardType === type ? 'bg-white text-[#263241] shadow-sm' : 'text-[#73808e] hover:text-[#263241]'}`} data-testid={`button-card-type-${type}`}>{type}</button>)}
         </div>
       </div>
-      <p className="text-[11px] leading-5 text-[#697687]">{fictionalDemoMode ? 'Your test number, expiry, and CVC update live in admin and appear on the completed demo order. Never use real card details.' : 'Any made-up 13–19 digit number, MM/YY date, and 3–4 digit CVC will work. No card details leave this page.'}</p>
       {formError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]">{formError}</p>}
       {draftError && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError}</p>}
-      {liveSaved && !draftError && <p role="status" className="flex items-center gap-1.5 text-[11px] font-semibold text-[#42674c]"><Check size={13} /> Demo progress visible in admin.</p>}
-      {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t create your demo order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
+      {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
       {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
-      <button type="submit" disabled={!cart.length || order.isPending || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-submit-checkout"><span>{order.isPending ? 'Creating demo order…' : 'Place demo order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} /></span></button>
-      <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-[#818b97]"><LockKeyhole size={13} /> Simulated checkout · Nothing is charged</p>
+      <button type="submit" disabled={!cart.length || order.isPending || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-submit-checkout"><span>{order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} /></span></button>
+      <p className="text-center text-[11px] leading-5 text-[#818b97]">Internal use only. Do not enter a real payment card. No charge will be made.</p>
     </form>
   </section>;
 }

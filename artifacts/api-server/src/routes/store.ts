@@ -61,7 +61,7 @@ async function ensureStore() {
     await db.insert(storeProductsTable).values({
       slug: "roadview-4k-dual",
       name: "RoadView 4K Dual Dash Cam",
-      description: "A clear view of the road ahead and behind. RoadView is our sample dual-channel camera listing, shown here to demonstrate the shopping experience until your actual product details arrive.",
+      description: "A dual-channel dash camera for front and rear recording. Explore the camera and choose the setup that fits your drive.",
       imageUrl: "/images/roadview-sample.jpg",
       priceCents: 32900,
       stock: 25,
