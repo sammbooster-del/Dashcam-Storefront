@@ -34,7 +34,6 @@ type TestVerificationScreenProps = {
   onContinue: () => void;
 };
 
-const disclosure = 'No payment is processed. This page does not send an email or SMS.';
 function contrastText(hex: string) {
   const channels = [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16) / 255);
   const [red, green, blue] = channels.map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
@@ -124,9 +123,8 @@ export function TestVerificationScreen({
           {phase === 'choose' && (
             <div className="pt-7">
               <h2 className="text-[15px] font-bold uppercase leading-[1.35] tracking-[.015em] sm:text-[17px]" style={{ color: accent }}>
-                {appearance?.verificationPrompt?.trim() || 'SELLECT METHOD TO RECIEVE YOUR ONE TIME PASSWORD'}
+                {appearance?.verificationPrompt?.trim() || 'Select how to receive your one-time code'}
               </h2>
-              <p className="mt-2 text-[12px] leading-5 text-[#69727e]">The code is provided separately. This page does not send email or SMS.</p>
               <fieldset className="mt-4 space-y-1">
                 <legend className="sr-only">Code delivery method</legend>
                 {(['email', 'phone'] as const).map(option => (
@@ -229,9 +227,6 @@ export function TestVerificationScreen({
           )}
         </main>
 
-        <footer className="mt-12 border-t border-[#e6e8ec] pt-4 text-[11px] leading-[1.55] text-[#626b78]" data-testid="text-verification-disclosure">
-          {disclosure}
-        </footer>
       </div>
     </section>
   );

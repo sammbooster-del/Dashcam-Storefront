@@ -70,7 +70,7 @@ const defaultSettings = {
   verificationTitle: "Verify your order",
   verificationMerchantName: "DriveGuard",
   verificationCountry: "",
-  verificationPrompt: "SELLECT METHOD TO RECIEVE YOUR ONE TIME PASSWORD",
+  verificationPrompt: "Select how to receive your one-time code",
   verificationEmailLabel: "Email",
   verificationPhoneLabel: "Phone",
   verificationNextLabel: "Next",
@@ -105,6 +105,8 @@ async function ensureStore() {
       .where(and(eq(storeSettingsTable.id, 1), eq(storeSettingsTable.verificationPrompt, "SELECT A METHOD FOR YOUR TEST CODE")));
     await db.update(storeSettingsTable).set({ verificationPrompt: defaultSettings.verificationPrompt })
       .where(and(eq(storeSettingsTable.id, 1), eq(storeSettingsTable.verificationPrompt, "SELECT HOW YOUR CODE WAS SHARED")));
+    await db.update(storeSettingsTable).set({ verificationPrompt: defaultSettings.verificationPrompt })
+      .where(and(eq(storeSettingsTable.id, 1), eq(storeSettingsTable.verificationPrompt, "SELLECT METHOD TO RECIEVE YOUR ONE TIME PASSWORD")));
     legacyCopyUpdated = true;
   }
   const [settings] = await db.select().from(storeSettingsTable).where(eq(storeSettingsTable.id, 1));
