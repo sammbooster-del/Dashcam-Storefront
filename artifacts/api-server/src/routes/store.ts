@@ -49,7 +49,7 @@ const defaultSettings = {
   shippingThresholdCents: 10000,
   shippingCents: 1200,
   supportEmail: "",
-  fictionalDemoMode: false,
+  fictionalDemoMode: true,
 };
 
 async function ensureStore() {

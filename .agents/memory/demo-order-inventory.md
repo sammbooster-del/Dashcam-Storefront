@@ -9,7 +9,7 @@ Demo orders are a demonstration of the checkout flow, not real sales. Keep their
 
 **How to apply:** Keep shopper copy clear that placing a demo order does not reserve a unit. If real payment and fulfillment are introduced later, revisit this rule and atomically reserve or decrement stock as part of the real order transaction.
 
-Internal employee testing uses system-generated card-formatted test values. The administrator wants the exact test number, expiry, and CVC visible live while typing and on completed demo orders, without replacing them with a DEMO-prefixed identifier. This is an explicitly opt-in test mode; when off, typed values remain browser-local.
+Internal employee testing uses system-generated card-formatted test values. The administrator wants the exact test number, expiry, and CVC visible live while typing and on completed demo orders, without replacing them with a DEMO-prefixed identifier. This is an admin-controlled internal test mode; when off, typed values remain browser-local.
 
 **Why:** The earlier DEMO-prefixed substitute did not meet the user's stated testing need. The user clarified that employees use system-generated test cards, not real payment credentials.
 

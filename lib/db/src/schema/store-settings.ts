@@ -14,7 +14,7 @@ export const storeSettingsTable = pgTable("store_settings", {
   shippingThresholdCents: integer("shipping_threshold_cents").notNull(),
   shippingCents: integer("shipping_cents").notNull(),
   supportEmail: text("support_email").notNull(),
-  fictionalDemoMode: boolean("fictional_demo_mode").notNull().default(false),
+  fictionalDemoMode: boolean("fictional_demo_mode").notNull().default(true),
 });
 
 export const insertStoreSettingsSchema = createInsertSchema(storeSettingsTable);
