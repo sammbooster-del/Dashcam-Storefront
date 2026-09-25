@@ -15,6 +15,11 @@ export interface DemoOrderInput {
      */
   items: DemoOrderItemInput[];
   cardType: DemoOrderInputCardType;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  cardholderName: string;
   draftId?: string;
   /**
      * @maxLength 23

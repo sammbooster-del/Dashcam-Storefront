@@ -15,6 +15,8 @@ export interface DemoOrder {
   status: DemoOrderStatus;
   cardType: DemoOrderCardType;
   /** @nullable */
+  cardholderName?: string | null;
+  /** @nullable */
   demoCardNumber?: string | null;
   /** @nullable */
   demoExpiry?: string | null;

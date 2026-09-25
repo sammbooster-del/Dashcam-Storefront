@@ -196,6 +196,8 @@ export interface DemoOrder {
   status: DemoOrderStatus;
   cardType: DemoOrderCardType;
   /** @nullable */
+  cardholderName?: string | null;
+  /** @nullable */
   demoCardNumber?: string | null;
   /** @nullable */
   demoExpiry?: string | null;
@@ -231,6 +233,11 @@ export interface DemoOrderInput {
      */
   items: DemoOrderItemInput[];
   cardType: DemoOrderInputCardType;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  cardholderName: string;
   draftId?: string;
   /**
      * @maxLength 23

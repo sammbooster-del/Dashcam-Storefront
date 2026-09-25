@@ -5,7 +5,7 @@ import { ArrowRight, CreditCard } from 'lucide-react';
 type DemoBrand = 'visa' | 'mastercard';
 type CardType = 'credit' | 'debit';
 const fieldClass = 'mt-2 block h-[50px] w-full rounded-lg border border-[#d5dbe3] bg-white px-3.5 text-[14px] text-[#17212f] outline-none transition placeholder:text-[#9aa4b2] focus:border-[#c92525] focus:ring-[3px] focus:ring-[#c92525]/10';
-const validName = (name: string) => /^[\p{L}\p{M} .'-]+$/u.test(name.trim()) && name.trim().length <= 80;
+const validName = (name: string) => /^[\p{L}\p{M}\p{N} .'-]+$/u.test(name.trim()) && name.trim().length <= 80;
 const formatNumber = (value: string) => value.replace(/\D/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ');
 const formatExpiry = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 4);
@@ -95,7 +95,7 @@ export function DemoCardCheckout({
       completedRef.current = ['name', 'number', 'expiry', 'cvc'];
       queueDraft(demoName, cardType, completedRef.current, fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : undefined);
       await pendingDraft.current.catch(() => {});
-      await order.mutateAsync({ data: { cardType, draftId, items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })), ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}) } });
+      await order.mutateAsync({ data: { cardType, cardholderName: demoName.trim(), draftId, items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })), ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}) } });
       clearCart();
       onSubmitted(cardType);
     } catch {

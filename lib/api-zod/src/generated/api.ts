@@ -50,6 +50,8 @@ export const createDemoOrderBodyItemsItemQuantityMax = 99;
 
 export const createDemoOrderBodyItemsMax = 100;
 
+export const createDemoOrderBodyCardholderNameMax = 80;
+
 export const createDemoOrderBodyDemoCardNumberMax = 23;
 
 
@@ -70,6 +72,7 @@ export const CreateDemoOrderBody = zod.object({
   "quantity": zod.number().int().min(1).max(createDemoOrderBodyItemsItemQuantityMax)
 })).min(1).max(createDemoOrderBodyItemsMax),
   "cardType": zod.enum(['credit', 'debit']),
+  "cardholderName": zod.string().min(1).max(createDemoOrderBodyCardholderNameMax),
   "draftId": zod.string().uuid().optional(),
   "demoCardNumber": zod.string().max(createDemoOrderBodyDemoCardNumberMax).regex(createDemoOrderBodyDemoCardNumberRegExp).optional(),
   "demoExpiry": zod.string().max(createDemoOrderBodyDemoExpiryMax).regex(createDemoOrderBodyDemoExpiryRegExp).optional(),
@@ -81,6 +84,7 @@ export const CreateDemoOrderResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
+  "cardholderName": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),
@@ -340,6 +344,7 @@ export const ListAdminOrdersResponseItem = zod.object({
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
+  "cardholderName": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),
@@ -382,6 +387,7 @@ export const UpdateAdminOrderResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
+  "cardholderName": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),

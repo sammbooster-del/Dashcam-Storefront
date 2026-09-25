@@ -190,8 +190,8 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
     return;
   }
   const displayName = parsed.data.displayName.trim();
-  if (displayName && !/^[\p{L}\p{M} .'-]+$/u.test(displayName)) {
-    res.status(400).json({ error: "Use letters for the demo name; do not enter card details" });
+  if (displayName && !/^[\p{L}\p{M}\p{N} .'-]+$/u.test(displayName)) {
+    res.status(400).json({ error: "Use a valid name; do not enter card details" });
     return;
   }
   const settings = await ensureStore();
@@ -223,13 +223,18 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
 
 router.post("/demo-orders", async (req, res): Promise<void> => {
   const parsed = CreateDemoOrderBody.safeParse(req.body);
-  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "draftId", "demoCardNumber", "demoExpiry", "demoCvc"]) ||
+  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "cardholderName", "draftId", "demoCardNumber", "demoExpiry", "demoCvc"]) ||
     !Array.isArray(req.body.items) ||
     !req.body.items.every((item: unknown) => hasOnlyFields(item, ["productId", "quantity"]))) {
     res.status(400).json({ error: "Invalid demo order" });
     return;
   }
   const settings = await ensureStore();
+  const cardholderName = parsed.data.cardholderName.trim();
+  if (!cardholderName || !/^[\p{L}\p{M}\p{N} .'-]+$/u.test(cardholderName)) {
+    res.status(400).json({ error: "Enter a valid name on card" });
+    return;
+  }
   if (settings.fictionalDemoMode
     ? !parsed.data.demoCardNumber || !/^\d{13,19}$/.test(parsed.data.demoCardNumber.replace(/ /g, "")) ||
       !parsed.data.demoExpiry || !parsed.data.demoCvc
@@ -265,6 +270,7 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
   }
   const [order] = await db.insert(demoOrdersTable).values({
     cardType: parsed.data.cardType,
+    cardholderName,
     demoCardNumber: settings.fictionalDemoMode ? parsed.data.demoCardNumber : null,
     demoExpiry: settings.fictionalDemoMode ? parsed.data.demoExpiry : null,
     demoCvc: settings.fictionalDemoMode ? parsed.data.demoCvc : null,
