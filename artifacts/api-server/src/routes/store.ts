@@ -612,6 +612,7 @@ router.delete("/admin/orders/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Order not found" });
     return;
   }
+  if (order.demoId) demoDrafts.delete(order.demoId);
   res.sendStatus(204);
 });
 

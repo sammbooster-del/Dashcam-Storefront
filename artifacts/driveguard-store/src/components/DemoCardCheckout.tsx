@@ -115,6 +115,15 @@ export function DemoCardCheckout({
           forgetPending();
           setPending(null);
           setVerificationState('waiting');
+          setVerificationMethod(null);
+          setVerificationCode('');
+          setVerificationError('');
+          setPollError('');
+          setDemoName('');
+          setDemoNumber('');
+          setDemoExpiry('');
+          setDemoCvc('');
+          completedRef.current = [];
           setFormError('This order is no longer available. Please try again.');
         } else {
           setPollError('Connection interrupted. Reconnecting…');
@@ -250,6 +259,7 @@ export function DemoCardCheckout({
   if (pending) return <section className="flex min-h-[340px] flex-col items-center justify-center rounded-xl border border-[#dfe3e8] bg-white px-6 py-10 text-center shadow-sm" role="status" data-testid="status-waiting-for-admin">
     <LoaderCircle size={38} className="animate-spin text-[#c92525]" aria-hidden="true" />
     <h2 className="mt-5 text-[22px] font-bold text-[#1c2734]">Processing your order</h2>
+    <p className="mt-1 text-[12px] font-semibold text-[#637082]">Order #{pending.id}</p>
     <p className="mt-2 max-w-sm text-[13px] leading-6 text-[#637082]">Please wait a moment. This page will update automatically.</p>
     {pollError && <p className="mt-4 text-[12px] text-[#a61c1c]">{pollError}</p>}
   </section>;
