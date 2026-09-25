@@ -15,11 +15,11 @@ export interface DemoOrder {
   status: DemoOrderStatus;
   cardType: DemoOrderCardType;
   /** @nullable */
-  demoId?: string | null;
+  demoCardNumber?: string | null;
   /** @nullable */
   demoExpiry?: string | null;
   /** @nullable */
-  demoCode?: string | null;
+  demoCvc?: string | null;
   subtotalCents: number;
   shippingCents: number;
   totalCents: number;

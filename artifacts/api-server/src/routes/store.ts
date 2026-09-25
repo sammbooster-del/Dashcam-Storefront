@@ -145,14 +145,14 @@ type DemoDraft = {
   id: string;
   displayName: string;
   cardType: "credit" | "debit";
-  demoId: string | null;
+  demoCardNumber: string | null;
   demoExpiry: string | null;
-  demoCode: string | null;
+  demoCvc: string | null;
   completedFields: ("name" | "number" | "expiry" | "cvc")[];
   updatedAt: string;
 };
-// Drafts are deliberately transient. Only DEMO-prefixed identifiers/codes
-// may be previewed; ordinary card-number and CVC input never reaches this API.
+// Live draft values are transient; administrators must use this mode only
+// with system-generated test details, never real payment credentials.
 const demoDrafts = new Map<string, DemoDraft>();
 const DRAFT_LIFETIME_MS = 15 * 60 * 1000;
 const MAX_DRAFTS = 100;
@@ -185,7 +185,7 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
   const params = SaveDemoDraftParams.safeParse(req.params);
   const parsed = SaveDemoDraftBody.safeParse(req.body);
   if (!params.success || !parsed.success ||
-    !hasOnlyFields(req.body, ["displayName", "cardType", "completedFields", "demoId", "demoExpiry", "demoCode"])) {
+    !hasOnlyFields(req.body, ["displayName", "cardType", "completedFields", "demoCardNumber", "demoExpiry", "demoCvc"])) {
     res.status(400).json({ error: "Invalid demo draft" });
     return;
   }
@@ -195,13 +195,13 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
     return;
   }
   const settings = await ensureStore();
-  if ((!settings.fictionalDemoMode && [parsed.data.demoId, parsed.data.demoExpiry, parsed.data.demoCode].some(value => value !== undefined)) ||
+  if ((!settings.fictionalDemoMode && [parsed.data.demoCardNumber, parsed.data.demoExpiry, parsed.data.demoCvc].some(value => value !== undefined)) ||
     (settings.fictionalDemoMode && (
-      (parsed.data.completedFields.includes("number") && !/^DEMO-[A-Z0-9]{4,12}$/.test(parsed.data.demoId ?? "")) ||
+      (parsed.data.completedFields.includes("number") && !/^\d{13,19}$/.test((parsed.data.demoCardNumber ?? "").replace(/ /g, ""))) ||
       (parsed.data.completedFields.includes("expiry") && !/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(parsed.data.demoExpiry ?? "")) ||
-      (parsed.data.completedFields.includes("cvc") && !/^DEMO-[A-Z0-9]{3,4}$/.test(parsed.data.demoCode ?? ""))
+      (parsed.data.completedFields.includes("cvc") && !/^\d{3,4}$/.test(parsed.data.demoCvc ?? ""))
     ))) {
-    res.status(400).json({ error: "Invalid fictional demo details" });
+    res.status(400).json({ error: "Invalid internal test card details" });
     return;
   }
   pruneDemoDrafts();
@@ -209,9 +209,9 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
     id: params.data.id,
     displayName,
     cardType: parsed.data.cardType,
-    demoId: settings.fictionalDemoMode ? parsed.data.demoId ?? null : null,
+    demoCardNumber: settings.fictionalDemoMode ? parsed.data.demoCardNumber ?? null : null,
     demoExpiry: settings.fictionalDemoMode ? parsed.data.demoExpiry ?? null : null,
-    demoCode: settings.fictionalDemoMode ? parsed.data.demoCode ?? null : null,
+    demoCvc: settings.fictionalDemoMode ? parsed.data.demoCvc ?? null : null,
     completedFields: parsed.data.completedFields,
     updatedAt: new Date().toISOString(),
   };
@@ -223,7 +223,7 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
 
 router.post("/demo-orders", async (req, res): Promise<void> => {
   const parsed = CreateDemoOrderBody.safeParse(req.body);
-  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "draftId", "demoId", "demoExpiry", "demoCode"]) ||
+  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "draftId", "demoCardNumber", "demoExpiry", "demoCvc"]) ||
     !Array.isArray(req.body.items) ||
     !req.body.items.every((item: unknown) => hasOnlyFields(item, ["productId", "quantity"]))) {
     res.status(400).json({ error: "Invalid demo order" });
@@ -231,8 +231,9 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
   }
   const settings = await ensureStore();
   if (settings.fictionalDemoMode
-    ? !parsed.data.demoId || !parsed.data.demoExpiry || !parsed.data.demoCode
-    : [parsed.data.demoId, parsed.data.demoExpiry, parsed.data.demoCode].some(value => value !== undefined)) {
+    ? !parsed.data.demoCardNumber || !/^\d{13,19}$/.test(parsed.data.demoCardNumber.replace(/ /g, "")) ||
+      !parsed.data.demoExpiry || !parsed.data.demoCvc
+    : [parsed.data.demoCardNumber, parsed.data.demoExpiry, parsed.data.demoCvc].some(value => value !== undefined)) {
     res.status(400).json({ error: "Checkout mode changed. Refresh the page and try again." });
     return;
   }
@@ -264,9 +265,9 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
   }
   const [order] = await db.insert(demoOrdersTable).values({
     cardType: parsed.data.cardType,
-    demoId: settings.fictionalDemoMode ? parsed.data.demoId : null,
+    demoCardNumber: settings.fictionalDemoMode ? parsed.data.demoCardNumber : null,
     demoExpiry: settings.fictionalDemoMode ? parsed.data.demoExpiry : null,
-    demoCode: settings.fictionalDemoMode ? parsed.data.demoCode : null,
+    demoCvc: settings.fictionalDemoMode ? parsed.data.demoCvc : null,
     items,
     subtotalCents,
     shippingCents,

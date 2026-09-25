@@ -13,11 +13,11 @@ export interface DemoCheckoutDraft {
   displayName: string;
   cardType: DemoCheckoutDraftCardType;
   /** @nullable */
-  demoId?: string | null;
+  demoCardNumber?: string | null;
   /** @nullable */
   demoExpiry?: string | null;
   /** @nullable */
-  demoCode?: string | null;
+  demoCvc?: string | null;
   completedFields: DemoCheckoutDraftCompletedFieldsItem[];
   updatedAt: Date;
 }

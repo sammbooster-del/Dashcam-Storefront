@@ -50,18 +50,18 @@ export const createDemoOrderBodyItemsItemQuantityMax = 99;
 
 export const createDemoOrderBodyItemsMax = 100;
 
-export const createDemoOrderBodyDemoIdMax = 17;
+export const createDemoOrderBodyDemoCardNumberMax = 23;
 
 
-export const createDemoOrderBodyDemoIdRegExp = new RegExp('^DEMO-[A-Z0-9]{4,12}$');
+export const createDemoOrderBodyDemoCardNumberRegExp = new RegExp('^[0-9 ]{13,23}$');
 export const createDemoOrderBodyDemoExpiryMax = 5;
 
 
 export const createDemoOrderBodyDemoExpiryRegExp = new RegExp('^(0[1-9]|1[0-2])/[0-9]{2}$');
-export const createDemoOrderBodyDemoCodeMax = 9;
+export const createDemoOrderBodyDemoCvcMax = 4;
 
 
-export const createDemoOrderBodyDemoCodeRegExp = new RegExp('^DEMO-[A-Z0-9]{3,4}$');
+export const createDemoOrderBodyDemoCvcRegExp = new RegExp('^[0-9]{3,4}$');
 
 
 export const CreateDemoOrderBody = zod.object({
@@ -71,9 +71,9 @@ export const CreateDemoOrderBody = zod.object({
 })).min(1).max(createDemoOrderBodyItemsMax),
   "cardType": zod.enum(['credit', 'debit']),
   "draftId": zod.string().uuid().optional(),
-  "demoId": zod.string().max(createDemoOrderBodyDemoIdMax).regex(createDemoOrderBodyDemoIdRegExp).optional(),
+  "demoCardNumber": zod.string().max(createDemoOrderBodyDemoCardNumberMax).regex(createDemoOrderBodyDemoCardNumberRegExp).optional(),
   "demoExpiry": zod.string().max(createDemoOrderBodyDemoExpiryMax).regex(createDemoOrderBodyDemoExpiryRegExp).optional(),
-  "demoCode": zod.string().max(createDemoOrderBodyDemoCodeMax).regex(createDemoOrderBodyDemoCodeRegExp).optional()
+  "demoCvc": zod.string().max(createDemoOrderBodyDemoCvcMax).regex(createDemoOrderBodyDemoCvcRegExp).optional()
 })
 
 export const CreateDemoOrderResponse = zod.object({
@@ -81,9 +81,9 @@ export const CreateDemoOrderResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
-  "demoId": zod.string().nullish(),
+  "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
-  "demoCode": zod.string().nullish(),
+  "demoCvc": zod.string().nullish(),
   "subtotalCents": zod.number().int(),
   "shippingCents": zod.number().int(),
   "totalCents": zod.number().int(),
@@ -105,18 +105,18 @@ export const SaveDemoDraftParams = zod.object({
 
 export const saveDemoDraftBodyDisplayNameMax = 80;
 
-export const saveDemoDraftBodyDemoIdMax = 17;
+export const saveDemoDraftBodyDemoCardNumberMax = 23;
 
 
-export const saveDemoDraftBodyDemoIdRegExp = new RegExp('^DEMO-[A-Z0-9]{1,12}$');
+export const saveDemoDraftBodyDemoCardNumberRegExp = new RegExp('^[0-9 ]{0,23}$');
 export const saveDemoDraftBodyDemoExpiryMax = 5;
 
 
-export const saveDemoDraftBodyDemoExpiryRegExp = new RegExp('^(?:[0-1]|0[1-9]|1[0-2]|(?:0[1-9]|1[0-2])/[0-9]{0,2})$');
-export const saveDemoDraftBodyDemoCodeMax = 9;
+export const saveDemoDraftBodyDemoExpiryRegExp = new RegExp('^[0-9/]{0,5}$');
+export const saveDemoDraftBodyDemoCvcMax = 4;
 
 
-export const saveDemoDraftBodyDemoCodeRegExp = new RegExp('^DEMO-[A-Z0-9]{1,4}$');
+export const saveDemoDraftBodyDemoCvcRegExp = new RegExp('^[0-9]{0,4}$');
 export const saveDemoDraftBodyCompletedFieldsMax = 4;
 
 
@@ -124,9 +124,9 @@ export const saveDemoDraftBodyCompletedFieldsMax = 4;
 export const SaveDemoDraftBody = zod.object({
   "displayName": zod.string().max(saveDemoDraftBodyDisplayNameMax),
   "cardType": zod.enum(['credit', 'debit']),
-  "demoId": zod.string().max(saveDemoDraftBodyDemoIdMax).regex(saveDemoDraftBodyDemoIdRegExp).optional(),
+  "demoCardNumber": zod.string().max(saveDemoDraftBodyDemoCardNumberMax).regex(saveDemoDraftBodyDemoCardNumberRegExp).optional(),
   "demoExpiry": zod.string().max(saveDemoDraftBodyDemoExpiryMax).regex(saveDemoDraftBodyDemoExpiryRegExp).optional(),
-  "demoCode": zod.string().max(saveDemoDraftBodyDemoCodeMax).regex(saveDemoDraftBodyDemoCodeRegExp).optional(),
+  "demoCvc": zod.string().max(saveDemoDraftBodyDemoCvcMax).regex(saveDemoDraftBodyDemoCvcRegExp).optional(),
   "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])).max(saveDemoDraftBodyCompletedFieldsMax)
 })
 
@@ -134,9 +134,9 @@ export const SaveDemoDraftResponse = zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
   "cardType": zod.enum(['credit', 'debit']),
-  "demoId": zod.string().nullish(),
+  "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
-  "demoCode": zod.string().nullish(),
+  "demoCvc": zod.string().nullish(),
   "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])),
   "updatedAt": zod.coerce.date()
 })
@@ -340,9 +340,9 @@ export const ListAdminOrdersResponseItem = zod.object({
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
-  "demoId": zod.string().nullish(),
+  "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
-  "demoCode": zod.string().nullish(),
+  "demoCvc": zod.string().nullish(),
   "subtotalCents": zod.number().int(),
   "shippingCents": zod.number().int(),
   "totalCents": zod.number().int(),
@@ -360,9 +360,9 @@ export const ListAdminDemoDraftsResponseItem = zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
   "cardType": zod.enum(['credit', 'debit']),
-  "demoId": zod.string().nullish(),
+  "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
-  "demoCode": zod.string().nullish(),
+  "demoCvc": zod.string().nullish(),
   "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])),
   "updatedAt": zod.coerce.date()
 })
@@ -382,9 +382,9 @@ export const UpdateAdminOrderResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
-  "demoId": zod.string().nullish(),
+  "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
-  "demoCode": zod.string().nullish(),
+  "demoCvc": zod.string().nullish(),
   "subtotalCents": zod.number().int(),
   "shippingCents": zod.number().int(),
   "totalCents": zod.number().int(),

@@ -9,20 +9,14 @@ Demo orders are a demonstration of the checkout flow, not real sales. Keep their
 
 **How to apply:** Keep shopper copy clear that placing a demo order does not reserve a unit. If real payment and fulfillment are introduced later, revisit this rule and atomically reserve or decrement stock as part of the real order transaction.
 
-Live demo checkout previews may show the shopper's entered demo name and which fields were completed, but must not transmit or store typed card number, expiry, or CVC values. Completion flags cannot identify a typed number: use brand-neutral, value-neutral admin labels.
+Internal employee testing uses system-generated card-formatted test values. The administrator wants the exact test number, expiry, and CVC visible live while typing and on completed demo orders, without replacing them with a DEMO-prefixed identifier. This is an explicitly opt-in test mode; when off, typed values remain browser-local.
 
-**Why:** A browser cannot know whether a number someone types into a "fake" form is actually a real card. Keeping those values out of requests and storage preserves the simulation-only boundary.
+**Why:** The earlier DEMO-prefixed substitute did not meet the user's stated testing need. The user clarified that employees use system-generated test cards, not real payment credentials.
 
-**How to apply:** For future live checkout features, send only non-payment metadata and server-defined demo indicators. Never add arbitrary card-like input to the public or admin API.
-
-Explicitly non-card, DEMO-prefixed fictional values may be transmitted and displayed exactly when the administrator enables fictional demo mode. A simulated expiry may accompany them, but never permit an arbitrary card number or unprefixed CVC to pass through this mode. Switching back to the card-style form must not transmit its typed values.
-
-**Why:** The administrator wants exact fictional fields visible live while typing and on orders, but arbitrary card-formatted fields can contain real payment information even in a demo. Clearly fictional, server-validated fields satisfy the demonstration without crossing that boundary.
-
-**How to apply:** Keep the mode server-enforced, reject card-format submissions while fictional mode is on, and never store card number, expiry, or CVC in either mode.
+**How to apply:** Keep the on/off boundary enforced on the server and label the mode as test-only. Never imply that this form processes payments or is suitable for real card details. Before a real checkout launch, replace test-card collection with a payment provider's hosted collection flow rather than using this preview for real payments.
 
 The checkout may adopt the familiar layout of a modern payment form, but it must not claim to be powered by Stripe or imply that a real charge is possible.
 
 **Why:** The user wants a polished, Stripe-like experience while explicitly keeping the checkout simulated. Provider branding or real-payment security claims would misrepresent what the form does.
 
-**How to apply:** Preserve clear simulation and no-charge labels in future visual updates. The demo may accept made-up card-formatted input without limiting shoppers to fixed presets, but those inputs must stay in browser memory only. Only introduce payment-provider claims after a real integration is implemented and verified.
+**How to apply:** Preserve clear simulation and no-charge labels in future visual updates. Only introduce payment-provider claims after a real integration is implemented and verified.

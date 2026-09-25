@@ -13,20 +13,20 @@ export interface DemoCheckoutDraftInput {
   displayName: string;
   cardType: DemoCheckoutDraftInputCardType;
   /**
-     * @maxLength 17
-     * @pattern ^DEMO-[A-Z0-9]{1,12}$
+     * @maxLength 23
+     * @pattern ^[0-9 ]{0,23}$
      */
-  demoId?: string;
+  demoCardNumber?: string;
   /**
      * @maxLength 5
-     * @pattern ^(?:[0-1]|0[1-9]|1[0-2]|(?:0[1-9]|1[0-2])/[0-9]{0,2})$
+     * @pattern ^[0-9/]{0,5}$
      */
   demoExpiry?: string;
   /**
-     * @maxLength 9
-     * @pattern ^DEMO-[A-Z0-9]{1,4}$
+     * @maxLength 4
+     * @pattern ^[0-9]{0,4}$
      */
-  demoCode?: string;
+  demoCvc?: string;
   /** @maxItems 4 */
   completedFields: DemoCheckoutDraftInputCompletedFieldsItem[];
 }
