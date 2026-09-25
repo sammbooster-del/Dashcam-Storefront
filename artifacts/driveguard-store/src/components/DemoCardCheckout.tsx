@@ -65,13 +65,29 @@ export function DemoCardCheckout({
   const [verificationError, setVerificationError] = useState('');
   const [pollError, setPollError] = useState('');
   const [declineVisible, setDeclineVisible] = useState(false);
-  const [draftId] = useState(() => crypto.randomUUID());
+  const [draftId, setDraftId] = useState(() => crypto.randomUUID());
   const declineRef = useRef<HTMLDivElement>(null);
   const completedRef = useRef<DemoCheckoutDraftInput['completedFields']>([]);
   const pendingDraft = useRef<Promise<unknown>>(Promise.resolve());
   const draftSequence = useRef(0);
   const order = useCreateDemoOrder();
   const saveDemoDraft = useSaveDemoDraft();
+  const stopWaiting = (message: string) => {
+    forgetPending();
+    setPending(null);
+    setVerificationState('waiting');
+    setVerificationMethod(null);
+    setVerificationCode('');
+    setVerificationError('');
+    setPollError('');
+    setDemoName('');
+    setDemoNumber('');
+    setDemoExpiry('');
+    setDemoCvc('');
+    completedRef.current = [];
+    setDraftId(crypto.randomUUID());
+    setFormError(message);
+  };
   useEffect(() => {
     if (!declineVisible) return;
     declineRef.current?.focus();
@@ -112,19 +128,7 @@ export function DemoCardCheckout({
       } catch (error) {
         if (!active) return;
         if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
-          forgetPending();
-          setPending(null);
-          setVerificationState('waiting');
-          setVerificationMethod(null);
-          setVerificationCode('');
-          setVerificationError('');
-          setPollError('');
-          setDemoName('');
-          setDemoNumber('');
-          setDemoExpiry('');
-          setDemoCvc('');
-          completedRef.current = [];
-          setFormError('This order is no longer available. Please try again.');
+          stopWaiting('This order is no longer available. Please try again.');
         } else {
           setPollError('Connection interrupted. Reconnecting…');
         }
@@ -262,6 +266,9 @@ export function DemoCardCheckout({
     <p className="mt-1 text-[12px] font-semibold text-[#637082]">Order #{pending.id}</p>
     <p className="mt-2 max-w-sm text-[13px] leading-6 text-[#637082]">Please wait a moment. This page will update automatically.</p>
     {pollError && <p className="mt-4 text-[12px] text-[#a61c1c]">{pollError}</p>}
+    <button type="button" className="mt-6 rounded-lg border border-[#d5dbe3] bg-white px-5 py-2.5 text-[13px] font-semibold text-[#263241] hover:bg-[#f5f6f8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" onClick={() => stopWaiting('You stopped waiting for this order. The order has not been cancelled.')} data-testid="button-stop-waiting">
+      Stop waiting
+    </button>
   </section>;
 
   return <section className="rounded-xl border border-[#dfe3e8] bg-white p-5 shadow-[0_14px_36px_-30px_rgba(28,37,50,.3)] sm:p-7" data-testid="panel-demo-card-checkout">
