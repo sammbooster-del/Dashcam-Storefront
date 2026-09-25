@@ -201,23 +201,28 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
   </form>;
 }
 
+function CardReadout({ label, value, complete = false, placeholder = 'Waiting for entry' }: { label: string; value?: string | null; complete?: boolean; placeholder?: string }) {
+  return <div className={`dg-card-readout ${value ? 'has-value' : ''} ${complete ? 'is-complete' : ''}`} role="group" aria-label={label}>
+    <span className="dg-card-readout-label">{label}</span>
+    <span className="dg-card-readout-value">{value || placeholder}</span>
+  </div>;
+}
+
 function LiveDrafts({ drafts, loading, error, fictionalDemoMode }: { drafts: DemoCheckoutDraft[]; loading: boolean; error: boolean; fictionalDemoMode: boolean }) {
   return <section className="dg-panel dg-live-drafts" data-testid="panel-admin-live-drafts">
     <div className="dg-panel-head"><div><h2>Live demo checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>{fictionalDemoMode ? 'System-generated test card fields update here as they are typed. Do not use real cards.' : 'Updates as shoppers finish each field. Only a demo name and field progress are received.'}</p></div><span className="dg-subtle">{drafts.length} active</span></div>
     {error ? <div className="dg-draft-empty" role="alert">Could not load live checkouts. They will retry automatically.</div>
       : loading && !drafts.length ? <div className="dg-draft-empty">Checking for active demos…</div>
       : drafts.length ? <div className="dg-draft-grid">{drafts.map(draft => <div className="dg-draft-card" key={draft.id} data-testid={`card-admin-draft-${draft.id}`}>
-        <div className="dg-draft-card-head"><strong>{draft.displayName || 'Demo shopper'}</strong><span>{draft.cardType} demo · {new Date(draft.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span></div>
-        <div className="dg-draft-fields">
-          <span className={draft.completedFields.includes('name') ? 'complete' : ''}>Name: {draft.completedFields.includes('name') ? draft.displayName : 'waiting'}</span>
-           <span className={draft.completedFields.includes('number') ? 'complete' : ''}>{fictionalDemoMode ? `Test card number: ${draft.demoCardNumber ?? 'waiting'}` : `Demo number: ${draft.completedFields.includes('number') ? 'format completed (not stored)' : 'waiting'}`}</span>
-           {fictionalDemoMode ? <>
-             <span className={draft.completedFields.includes('expiry') ? 'complete' : ''}>Demo expiry: {draft.demoExpiry ?? 'waiting'}</span>
-             <span className={draft.completedFields.includes('cvc') ? 'complete' : ''}>Test CVC: {draft.demoCvc ?? 'waiting'}</span>
-           </> : <>
-             <span className={draft.completedFields.includes('expiry') ? 'complete' : ''}>Demo expiry: {draft.completedFields.includes('expiry') ? 'format completed (not stored)' : 'waiting'}</span>
-             <span className={draft.completedFields.includes('cvc') ? 'complete' : ''}>Demo CVC: {draft.completedFields.includes('cvc') ? 'completed (not stored)' : 'waiting'}</span>
-           </>}
+        <div className="dg-draft-card-head"><div><strong>{draft.displayName || 'Checkout in progress'}</strong><span className="dg-draft-card-type">{draft.cardType} card</span></div><span>Updated {new Date(draft.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}</span></div>
+        <div className="dg-card-fields">
+          <CardReadout label="Name on card" value={draft.displayName} complete={draft.completedFields.includes('name')} />
+          <div className="dg-card-info-label">Card information</div>
+          <CardReadout label="Card number" value={fictionalDemoMode ? draft.demoCardNumber : null} complete={draft.completedFields.includes('number')} placeholder={!fictionalDemoMode && draft.completedFields.includes('number') ? 'Complete · not stored' : 'Waiting for entry'} />
+          <div className="dg-card-fields-pair">
+            <CardReadout label="Expiration date" value={fictionalDemoMode ? draft.demoExpiry : null} complete={draft.completedFields.includes('expiry')} placeholder={!fictionalDemoMode && draft.completedFields.includes('expiry') ? 'Complete · not stored' : 'MM / YY'} />
+            <CardReadout label="CVC" value={fictionalDemoMode ? draft.demoCvc : null} complete={draft.completedFields.includes('cvc')} placeholder={!fictionalDemoMode && draft.completedFields.includes('cvc') ? 'Complete · not stored' : 'Waiting'} />
+          </div>
         </div>
        </div>)}</div> : <div className="dg-draft-empty">No active demo checkouts. A shopper’s {fictionalDemoMode ? 'test card values will appear here as they type.' : 'progress will appear here after leaving the first field.'}</div>}
   </section>;
@@ -384,12 +389,12 @@ export default function AdminPage() {
                   <td><button type="button" className="dg-quiet dg-mono" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)} aria-expanded={expandedOrder === order.id} data-testid={`button-admin-expand-order-${order.id}`}>#{order.id} <ChevronDown size={13} /></button></td>
                   <td className="dg-mono">{date(order.createdAt)}</td>
                   <td><span title={orderLabel(order)}>{order.items.reduce((sum,item) => sum + item.quantity,0)} item{order.items.reduce((sum,item) => sum + item.quantity,0) === 1 ? '' : 's'}</span></td>
-                  <td style={{ textTransform:'capitalize' }}>{order.cardType} · demo{order.demoCardNumber ? <small style={{ display:'block', textTransform:'none', overflowWrap:'anywhere' }}>Test number: {order.demoCardNumber}<br />Expiry: {order.demoExpiry}<br />Test CVC: {order.demoCvc}</small> : null}</td><td className="dg-mono">{money(order.totalCents)}</td>
+                   <td style={{ textTransform:'capitalize' }}>{order.cardType} · demo{order.demoCardNumber ? <small style={{ display:'block', textTransform:'none' }}>Open order for card details</small> : null}</td><td className="dg-mono">{money(order.totalCents)}</td>
                   <td><select className="dg-status-select" aria-label={`Status for order ${order.id}`} value={order.status} disabled={updateOrder.isPending} onChange={event => void changeOrderStatus(order.id, event.target.value as DemoOrder['status'])} data-testid={`select-admin-order-status-${order.id}`}><option value="new">New</option><option value="fulfilled">Fulfilled</option><option value="cancelled">Cancelled</option></select></td>
                   <td><div className="dg-row-actions"><button type="button" className="dg-icon-button dg-icon-danger" title="Delete order" aria-label={`Delete order ${order.id}`} onClick={() => setDeletion({ kind:'order', id:order.id, name:`Order #${order.id}` })} data-testid={`button-admin-delete-order-${order.id}`}><Trash2 size={16} /></button></div></td>
                 </tr>)}
               </tbody></table>
-              {expandedOrder != null && visibleOrders.some(order => order.id === expandedOrder) && (() => { const order = visibleOrders.find(item => item.id === expandedOrder)!; return <div className="dg-order-detail" data-testid={`panel-admin-order-${order.id}`}><div className="dg-order-detail-grid"><div><h4>Items in order #{order.id}</h4>{order.items.map((item,index) => <p key={`${item.productId}-${index}`}><span>{item.name} × {item.quantity}</span><strong>{money(item.unitPriceCents * item.quantity)}</strong></p>)}</div><div><h4>Order summary</h4>{order.demoCardNumber && <><p><span>Test card number</span><strong>{order.demoCardNumber}</strong></p><p><span>Test expiry</span><strong>{order.demoExpiry}</strong></p><p><span>Test CVC</span><strong>{order.demoCvc}</strong></p></>}<p><span>Subtotal</span><strong>{money(order.subtotalCents)}</strong></p><p><span>Shipping</span><strong>{money(order.shippingCents)}</strong></p><p><span>Total</span><strong>{money(order.totalCents)}</strong></p></div></div></div>; })()}
+               {expandedOrder != null && visibleOrders.some(order => order.id === expandedOrder) && (() => { const order = visibleOrders.find(item => item.id === expandedOrder)!; return <div className="dg-order-detail" data-testid={`panel-admin-order-${order.id}`}><div className="dg-order-detail-grid"><div><h4>Items in order #{order.id}</h4>{order.items.map((item,index) => <p key={`${item.productId}-${index}`}><span>{item.name} × {item.quantity}</span><strong>{money(item.unitPriceCents * item.quantity)}</strong></p>)}</div><div><h4>Order summary</h4><p><span>Subtotal</span><strong>{money(order.subtotalCents)}</strong></p><p><span>Shipping</span><strong>{money(order.shippingCents)}</strong></p><p><span>Total</span><strong>{money(order.totalCents)}</strong></p></div></div>{order.demoCardNumber && <div className="dg-order-card-details"><h4>Card details entered</h4><div className="dg-card-fields"><div className="dg-card-info-label">Card information</div><CardReadout label="Card number" value={order.demoCardNumber} complete /><div className="dg-card-fields-pair"><CardReadout label="Expiration date" value={order.demoExpiry} complete /><CardReadout label="CVC" value={order.demoCvc} complete /></div></div></div>}</div>; })()}
               </div> : <div className="dg-empty"><ClipboardList size={29} /><strong>{(orders.data ?? []).length ? 'No orders in this status' : 'No demo orders yet'}</strong><p>{(orders.data ?? []).length ? 'Choose another status filter to see more orders.' : 'Simulated purchases will appear here after a demo checkout.'}</p></div>}
               <div className="dg-count">Showing {visibleOrders.length} of {(orders.data ?? []).length} demo orders</div>
             </section>
