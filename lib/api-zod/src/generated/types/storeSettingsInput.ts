@@ -40,4 +40,40 @@ export interface StoreSettingsInput {
   /** @maxLength 254 */
   supportEmail: string;
   fictionalDemoMode: boolean;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  verificationTitle: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  verificationMerchantName: string;
+  /** @maxLength 80 */
+  verificationCountry: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  verificationPrompt: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  verificationEmailLabel: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  verificationPhoneLabel: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  verificationNextLabel: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  verificationAccentColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  verificationButtonColor: string;
 }

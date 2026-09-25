@@ -15,6 +15,15 @@ export const storeSettingsTable = pgTable("store_settings", {
   shippingCents: integer("shipping_cents").notNull(),
   supportEmail: text("support_email").notNull(),
   fictionalDemoMode: boolean("fictional_demo_mode").notNull().default(true),
+  verificationTitle: text("verification_title").notNull().default("Verify test checkout"),
+  verificationMerchantName: text("verification_merchant_name").notNull().default("DriveGuard"),
+  verificationCountry: text("verification_country").notNull().default(""),
+  verificationPrompt: text("verification_prompt").notNull().default("SELECT A METHOD FOR YOUR TEST CODE"),
+  verificationEmailLabel: text("verification_email_label").notNull().default("Email"),
+  verificationPhoneLabel: text("verification_phone_label").notNull().default("Phone"),
+  verificationNextLabel: text("verification_next_label").notNull().default("Next"),
+  verificationAccentColor: text("verification_accent_color").notNull().default("#603b89"),
+  verificationButtonColor: text("verification_button_color").notNull().default("#e59119"),
 });
 
 export const insertStoreSettingsSchema = createInsertSchema(storeSettingsTable);

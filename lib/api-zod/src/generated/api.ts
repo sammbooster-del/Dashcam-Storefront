@@ -29,7 +29,16 @@ export const GetStorefrontResponse = zod.object({
   "shippingThresholdCents": zod.number().int(),
   "shippingCents": zod.number().int(),
   "supportEmail": zod.string(),
-  "fictionalDemoMode": zod.boolean()
+  "fictionalDemoMode": zod.boolean(),
+  "verificationTitle": zod.string(),
+  "verificationMerchantName": zod.string(),
+  "verificationCountry": zod.string(),
+  "verificationPrompt": zod.string(),
+  "verificationEmailLabel": zod.string(),
+  "verificationPhoneLabel": zod.string(),
+  "verificationNextLabel": zod.string(),
+  "verificationAccentColor": zod.string(),
+  "verificationButtonColor": zod.string()
 }),
   "products": zod.array(zod.object({
   "id": zod.number().int(),
@@ -332,7 +341,16 @@ export const GetAdminSettingsResponse = zod.object({
   "shippingThresholdCents": zod.number().int(),
   "shippingCents": zod.number().int(),
   "supportEmail": zod.string(),
-  "fictionalDemoMode": zod.boolean()
+  "fictionalDemoMode": zod.boolean(),
+  "verificationTitle": zod.string(),
+  "verificationMerchantName": zod.string(),
+  "verificationCountry": zod.string(),
+  "verificationPrompt": zod.string(),
+  "verificationEmailLabel": zod.string(),
+  "verificationPhoneLabel": zod.string(),
+  "verificationNextLabel": zod.string(),
+  "verificationAccentColor": zod.string(),
+  "verificationButtonColor": zod.string()
 })
 
 
@@ -358,6 +376,22 @@ export const updateAdminSettingsBodyShippingCentsMax = 10000000;
 
 export const updateAdminSettingsBodySupportEmailMax = 254;
 
+export const updateAdminSettingsBodyVerificationTitleMax = 80;
+
+export const updateAdminSettingsBodyVerificationMerchantNameMax = 80;
+
+export const updateAdminSettingsBodyVerificationCountryMax = 80;
+
+export const updateAdminSettingsBodyVerificationPromptMax = 120;
+
+export const updateAdminSettingsBodyVerificationEmailLabelMax = 40;
+
+export const updateAdminSettingsBodyVerificationPhoneLabelMax = 40;
+
+export const updateAdminSettingsBodyVerificationNextLabelMax = 40;
+
+export const updateAdminSettingsBodyVerificationAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateAdminSettingsBodyVerificationButtonColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 
 
 export const UpdateAdminSettingsBody = zod.object({
@@ -371,7 +405,16 @@ export const UpdateAdminSettingsBody = zod.object({
   "shippingThresholdCents": zod.number().int().min(updateAdminSettingsBodyShippingThresholdCentsMin).max(updateAdminSettingsBodyShippingThresholdCentsMax),
   "shippingCents": zod.number().int().min(updateAdminSettingsBodyShippingCentsMin).max(updateAdminSettingsBodyShippingCentsMax),
   "supportEmail": zod.string().max(updateAdminSettingsBodySupportEmailMax),
-  "fictionalDemoMode": zod.boolean()
+  "fictionalDemoMode": zod.boolean(),
+  "verificationTitle": zod.string().min(1).max(updateAdminSettingsBodyVerificationTitleMax),
+  "verificationMerchantName": zod.string().min(1).max(updateAdminSettingsBodyVerificationMerchantNameMax),
+  "verificationCountry": zod.string().max(updateAdminSettingsBodyVerificationCountryMax),
+  "verificationPrompt": zod.string().min(1).max(updateAdminSettingsBodyVerificationPromptMax),
+  "verificationEmailLabel": zod.string().min(1).max(updateAdminSettingsBodyVerificationEmailLabelMax),
+  "verificationPhoneLabel": zod.string().min(1).max(updateAdminSettingsBodyVerificationPhoneLabelMax),
+  "verificationNextLabel": zod.string().min(1).max(updateAdminSettingsBodyVerificationNextLabelMax),
+  "verificationAccentColor": zod.string().regex(updateAdminSettingsBodyVerificationAccentColorRegExp),
+  "verificationButtonColor": zod.string().regex(updateAdminSettingsBodyVerificationButtonColorRegExp)
 })
 
 export const UpdateAdminSettingsResponse = zod.object({
@@ -385,7 +428,16 @@ export const UpdateAdminSettingsResponse = zod.object({
   "shippingThresholdCents": zod.number().int(),
   "shippingCents": zod.number().int(),
   "supportEmail": zod.string(),
-  "fictionalDemoMode": zod.boolean()
+  "fictionalDemoMode": zod.boolean(),
+  "verificationTitle": zod.string(),
+  "verificationMerchantName": zod.string(),
+  "verificationCountry": zod.string(),
+  "verificationPrompt": zod.string(),
+  "verificationEmailLabel": zod.string(),
+  "verificationPhoneLabel": zod.string(),
+  "verificationNextLabel": zod.string(),
+  "verificationAccentColor": zod.string(),
+  "verificationButtonColor": zod.string()
 })
 
 

@@ -2,5 +2,7 @@
 type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/driveguard-checkout/Current.tsx": () => import("../components/mockups/driveguard-checkout/Current.tsx"),
-  "./components/mockups/driveguard-checkout/Refined.tsx": () => import("../components/mockups/driveguard-checkout/Refined.tsx")
+  "./components/mockups/driveguard-checkout/Refined.tsx": () => import("../components/mockups/driveguard-checkout/Refined.tsx"),
+  "./components/mockups/driveguard-verification/Current.tsx": () => import("../components/mockups/driveguard-verification/Current.tsx"),
+  "./components/mockups/driveguard-verification/ReferenceLayout.tsx": () => import("../components/mockups/driveguard-verification/ReferenceLayout.tsx")
 };

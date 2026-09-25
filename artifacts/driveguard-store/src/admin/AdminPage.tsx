@@ -55,6 +55,15 @@ const settingsDraft = (settings: StoreSettingsInput): SettingsDraft => ({
   shippingThreshold: dollars(settings.shippingThresholdCents), shipping: dollars(settings.shippingCents),
   supportEmail: settings.supportEmail,
   fictionalDemoMode: settings.fictionalDemoMode,
+  verificationTitle: settings.verificationTitle,
+  verificationMerchantName: settings.verificationMerchantName,
+  verificationCountry: settings.verificationCountry,
+  verificationPrompt: settings.verificationPrompt,
+  verificationEmailLabel: settings.verificationEmailLabel,
+  verificationPhoneLabel: settings.verificationPhoneLabel,
+  verificationNextLabel: settings.verificationNextLabel,
+  verificationAccentColor: settings.verificationAccentColor,
+  verificationButtonColor: settings.verificationButtonColor,
 });
 const orderLabel = (order: DemoOrder) => order.items.map(item => `${item.name} × ${item.quantity}`).join(', ');
 
@@ -155,6 +164,15 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
         trustDescription: draft.trustDescription.trim(), shippingThresholdCents: toCents(draft.shippingThreshold),
         shippingCents: toCents(draft.shipping), supportEmail: draft.supportEmail.trim(),
         fictionalDemoMode: draft.fictionalDemoMode,
+        verificationTitle: draft.verificationTitle.trim(),
+        verificationMerchantName: draft.verificationMerchantName.trim(),
+        verificationCountry: draft.verificationCountry.trim(),
+        verificationPrompt: draft.verificationPrompt.trim(),
+        verificationEmailLabel: draft.verificationEmailLabel.trim(),
+        verificationPhoneLabel: draft.verificationPhoneLabel.trim(),
+        verificationNextLabel: draft.verificationNextLabel.trim(),
+        verificationAccentColor: draft.verificationAccentColor,
+        verificationButtonColor: draft.verificationButtonColor,
       });
       setSaved(true);
     } catch (reason) { setError(errorMessage(reason)); }
@@ -189,6 +207,19 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
           Show test card details live in admin
         </label>
       </section>
+      <section className="dg-panel dg-form-section"><h2>Verification screen</h2><p>Customize the DriveGuard test screen inspired by your reference. Card digits, amount, and date always come from the order. The no-message and no-charge notice cannot be removed.</p>
+        <div className="dg-fields two">
+          <Field label="Page title" name="verification-title" value={draft.verificationTitle} onChange={value => set('verificationTitle', value)} required maxLength={80} />
+          <Field label="Merchant display name" name="verification-merchant-name" value={draft.verificationMerchantName} onChange={value => set('verificationMerchantName', value)} required maxLength={80} />
+          <Field label="Country (optional)" name="verification-country" value={draft.verificationCountry} onChange={value => set('verificationCountry', value)} maxLength={80} />
+          <Field label="Method prompt" name="verification-prompt" value={draft.verificationPrompt} onChange={value => set('verificationPrompt', value)} required maxLength={120} />
+          <Field label="Email choice" name="verification-email-label" value={draft.verificationEmailLabel} onChange={value => set('verificationEmailLabel', value)} required maxLength={40} />
+          <Field label="Phone choice" name="verification-phone-label" value={draft.verificationPhoneLabel} onChange={value => set('verificationPhoneLabel', value)} required maxLength={40} />
+          <Field label="Continue button" name="verification-next-label" value={draft.verificationNextLabel} onChange={value => set('verificationNextLabel', value)} required maxLength={40} />
+          <Field label="Heading color" name="verification-accent-color" type="color" value={draft.verificationAccentColor} onChange={value => set('verificationAccentColor', value)} required />
+          <Field label="Button color" name="verification-button-color" type="color" value={draft.verificationButtonColor} onChange={value => set('verificationButtonColor', value)} required />
+        </div>
+      </section>
       <div className="dg-form-footer"><span data-testid="status-admin-settings-saved">{saved ? 'Changes saved.' : 'Review your changes before saving.'}</span><button className="dg-primary" type="submit" disabled={pending} data-testid="button-admin-save-settings">{pending ? 'Saving…' : 'Save store settings'} <ArrowRight size={15} /></button></div>
     </div>
     <aside className="dg-settings-stack">
@@ -199,6 +230,19 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
       <div className="dg-panel dg-form-section"><h2>Shipping at a glance</h2><p>Based on the values in this form.</p>
         <div className="dg-watch-row"><span>Standard delivery</span><strong>{money(toCents(draft.shipping) || 0)}</strong></div>
         <div className="dg-watch-row"><span>Free delivery from</span><strong>{money(toCents(draft.shippingThreshold) || 0)}</strong></div>
+      </div>
+      <div className="dg-panel dg-form-section" data-testid="preview-admin-verification"><h2>Verification copy preview</h2><p>Updates on the shopper screen after saving.</p>
+        <div style={{ background: '#fff', border: '1px solid #d6dce2', padding: 18, color: '#1c2835' }}>
+          <strong>{draft.verificationTitle}</strong>
+          <p style={{ margin: '14px 0 10px' }}>Merchant Name : {draft.verificationMerchantName}</p>
+          <p>Card Number : XXXX XXXX XXXX 6637</p>
+          {draft.verificationCountry && <p>Country : {draft.verificationCountry}</p>}
+          <p>Purchase Amount : $329.00</p>
+          <p style={{ color: draft.verificationAccentColor, fontWeight: 800, marginTop: 18 }}>{draft.verificationPrompt}</p>
+          <p>○ {draft.verificationEmailLabel}<br />○ {draft.verificationPhoneLabel}</p>
+          <span style={{ background: draft.verificationButtonColor, color: '#fff', padding: '7px 14px', borderRadius: 7, display: 'inline-block' }}>{draft.verificationNextLabel}</span>
+          <p style={{ marginTop: 18, fontSize: 12 }}>Demo only. No email or SMS is sent. No payment is charged.</p>
+        </div>
       </div>
     </aside>
   </form>;
@@ -290,7 +334,7 @@ export default function AdminPage() {
   const requestOrderVerification = async (id: number) => {
     try {
       await requestVerification.mutateAsync({ id });
-      setNotice({ type: 'success', text: `Test verification sent to order #${id}.` });
+      setNotice({ type: 'success', text: `Verification screen opened for order #${id}.` });
       await invalidate('orders');
     } catch (error) { setNotice({ type: 'error', text: errorMessage(error) }); }
   };
@@ -435,7 +479,7 @@ export default function AdminPage() {
                    {(order.cardholderName || order.demoCardNumber) && <div className="dg-order-card-details"><h4>Card details entered</h4><div className="dg-card-fields">{order.cardholderName && <CardReadout label="Name on card" value={order.cardholderName} complete />}{order.demoCardNumber && <><div className="dg-card-info-label">Card information</div><CardReadout label="Card number" value={order.demoCardNumber} complete /><div className="dg-card-fields-pair"><CardReadout label="Expiration date" value={order.demoExpiry} complete /><CardReadout label="CVC" value={order.demoCvc} complete /></div></>}</div></div>}
                     {order.demoCode && <div className="mt-4 rounded-lg border border-[#d6dce2] bg-[#f7f8fa] p-4" data-testid={`panel-admin-test-code-${order.id}`}><strong className="text-sm">Test {order.verificationMethod} code</strong><p className="mt-1 font-mono text-2xl font-bold tracking-[.2em]" data-testid={`text-admin-test-code-${order.id}`}>{order.demoCode}</p><small>No email or text is sent. Share this code with your team for the simulation.</small></div>}
                     {(canRequest || canDecline || canApprove) && <div className="flex flex-wrap gap-2" style={{ marginTop: 16 }}>
-                      {canRequest && <button type="button" className="dg-primary" disabled={responding} onClick={() => void requestOrderVerification(order.id)} data-testid={`button-admin-request-verification-${order.id}`}>{requestVerification.isPending ? 'Sending…' : 'Show test verification to shopper'}</button>}
+                       {canRequest && <button type="button" className="dg-primary" disabled={responding} onClick={() => void requestOrderVerification(order.id)} data-testid={`button-admin-request-verification-${order.id}`}>{requestVerification.isPending ? 'Opening…' : 'Show test verification to shopper'}</button>}
                       {canApprove && <button type="button" className="dg-primary" disabled={responding} onClick={() => void approveOrderVerification(order.id)} data-testid={`button-admin-approve-verification-${order.id}`}>{approveVerification.isPending ? 'Approving…' : 'Continue shopper'}</button>}
                       {canDecline && <button type="button" className="dg-secondary" disabled={responding} onClick={() => void declineOrderPayment(order.id)} data-testid={`button-admin-decline-payment-${order.id}`}>{declinePayment.isPending ? 'Declining…' : 'Payment declined'}</button>}
                    </div>}

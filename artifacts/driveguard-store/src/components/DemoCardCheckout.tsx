@@ -1,11 +1,11 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type Product } from '@workspace/api-client-react';
+import { checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type Product, type StoreSettings } from '@workspace/api-client-react';
 import { ArrowRight, CreditCard, LoaderCircle } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
 
 type DemoBrand = 'visa' | 'mastercard';
 type CardType = 'credit' | 'debit';
-type PendingVerification = { id: number; draftId: string; last4: string; totalCents: number; cardType: CardType };
+type PendingVerification = { id: number; draftId: string; last4: string; totalCents: number; cardType: CardType; createdAt?: string };
 const pendingKey = 'driveguard-pending-test-verification';
 function forgetPending() {
   try { sessionStorage.removeItem(pendingKey); } catch { /* In-memory flow still works. */ }
@@ -41,13 +41,14 @@ function errorMessage(error: unknown) {
 }
 
 export function DemoCardCheckout({
-  cart, clearCart, onSubmitted, totalCents, fictionalDemoMode,
+  cart, clearCart, onSubmitted, totalCents, fictionalDemoMode, settings,
 }: {
   cart: { product: Product; quantity: number }[];
   clearCart: () => void;
   onSubmitted: (type: CardType) => void;
   totalCents: number;
   fictionalDemoMode: boolean;
+  settings: StoreSettings;
 }) {
   const [cardType, setCardType] = useState<CardType>('credit');
   const [demoName, setDemoName] = useState('');
@@ -99,8 +100,16 @@ export function DemoCardCheckout({
           setVerificationError('');
           setFormError('Payment declined, please enter valid card details.');
         }
-      } catch {
-        if (active) setPollError('Connection interrupted. Reconnecting…');
+      } catch (error) {
+        if (!active) return;
+        if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
+          forgetPending();
+          setPending(null);
+          setVerificationState('waiting');
+          setFormError('This test order is no longer available. Please try again.');
+        } else {
+          setPollError('Connection interrupted. Reconnecting…');
+        }
       } finally { inFlight = false; }
     };
     void check();
@@ -185,7 +194,7 @@ export function DemoCardCheckout({
       await pendingDraft.current.catch(() => {});
       const placed = await order.mutateAsync({ data: { cardType, cardholderName: demoName.trim(), draftId, items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })), ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}) } });
       if (fictionalDemoMode) {
-        const next = { id: placed.id, draftId, last4: demoNumber.replace(/\D/g, '').slice(-4), totalCents: placed.totalCents, cardType };
+        const next = { id: placed.id, draftId, last4: demoNumber.replace(/\D/g, '').slice(-4), totalCents: placed.totalCents, cardType, createdAt: placed.createdAt };
         try { sessionStorage.setItem(pendingKey, JSON.stringify(next)); } catch { /* In-memory flow still works. */ }
         setPending(next);
         setVerificationState('waiting');
@@ -206,7 +215,8 @@ export function DemoCardCheckout({
   const firstDigit = demoNumber.charAt(0);
   const displayedBrand: DemoBrand | null = firstDigit === '4' ? 'visa' : firstDigit === '5' ? 'mastercard' : null;
 
-  if (pending && verificationState !== 'waiting') return <TestVerificationScreen orderId={pending.id} cardLast4={pending.last4} totalCents={pending.totalCents}
+  if (pending && verificationState !== 'waiting') return <TestVerificationScreen orderId={pending.id} cardLast4={pending.last4} totalCents={pending.totalCents} orderCreatedAt={pending.createdAt}
+    brandName={settings.brandName} appearance={settings}
     method={verificationMethod} code={verificationCode}
     phase={verificationState === 'approved' ? 'approved' : verificationState === 'code_submitted' ? 'waiting' : verificationMethod ? 'enter' : 'choose'}
     busy={verificationBusy} error={verificationError}

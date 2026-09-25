@@ -66,6 +66,15 @@ const defaultSettings = {
   shippingCents: 1200,
   supportEmail: "",
   fictionalDemoMode: true,
+  verificationTitle: "Verify test checkout",
+  verificationMerchantName: "DriveGuard",
+  verificationCountry: "",
+  verificationPrompt: "SELECT A METHOD FOR YOUR TEST CODE",
+  verificationEmailLabel: "Email",
+  verificationPhoneLabel: "Phone",
+  verificationNextLabel: "Next",
+  verificationAccentColor: "#603b89",
+  verificationButtonColor: "#e59119",
 };
 
 async function ensureStore() {

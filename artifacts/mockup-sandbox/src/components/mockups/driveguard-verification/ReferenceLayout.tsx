@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Check, CheckCircle2, LoaderCircle, ShieldCheck } from 'lucide-react';
+import './_group.css';
 
 type VerificationMethod = 'email' | 'phone';
 
@@ -34,13 +35,8 @@ type TestVerificationScreenProps = {
 };
 
 const disclosure = 'Internal demonstration only. No email or SMS is sent, and no payment is charged.';
-function contrastText(hex: string) {
-  const channels = [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16) / 255);
-  const [red, green, blue] = channels.map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
-  return red * 0.2126 + green * 0.7152 + blue * 0.0722 > 0.18 ? '#1c2835' : '#ffffff';
-}
 
-export function TestVerificationScreen({
+function TestVerificationScreen({
   orderId,
   cardLast4,
   totalCents,
@@ -75,8 +71,7 @@ export function TestVerificationScreen({
     : null;
   const accent = appearance?.verificationAccentColor || '#54448b';
   const buttonColor = appearance?.verificationButtonColor || '#e18a23';
-  const buttonClass = 'inline-flex min-h-10 items-center justify-center rounded-md px-6 py-2 text-[13px] font-semibold shadow-sm transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
-  const buttonStyle = { backgroundColor: buttonColor, color: contrastText(buttonColor) };
+  const buttonClass = 'inline-flex min-h-10 items-center justify-center rounded-md px-6 py-2 text-[13px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
 
   return (
     <section
@@ -84,7 +79,7 @@ export function TestVerificationScreen({
       aria-modal="true"
       aria-labelledby="test-verification-title"
       data-testid="screen-test-verification"
-      className="fixed inset-0 z-[100] overflow-y-auto overscroll-contain bg-white text-[#20242d] md:bg-[#f4f5f7]"
+      className="driveguard-verification-root fixed inset-0 z-[100] min-h-screen overflow-y-auto overscroll-contain bg-white text-[#20242d] md:bg-[#f4f5f7]"
     >
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-[620px] flex-col bg-white px-5 pb-6 pt-7 sm:px-9 md:my-8 md:min-h-[calc(100dvh-4rem)] md:border md:border-[#e5e7eb] md:px-10 md:shadow-[0_12px_38px_rgba(27,36,51,.06)]">
         <header>
@@ -159,7 +154,7 @@ export function TestVerificationScreen({
                   onClick={() => { if (selectedMethod) onChoose(selectedMethod); }}
                   data-testid="button-verification-method-next"
                   className={buttonClass}
-                  style={buttonStyle}
+                  style={{ backgroundColor: buttonColor }}
                 >
                   {busy ? 'Continuing…' : (appearance?.verificationNextLabel?.trim() || 'Next')}
                 </button>
@@ -192,7 +187,7 @@ export function TestVerificationScreen({
                 {error && <p id="test-verification-error" role="alert" data-testid="text-verification-error" className="mt-2 text-[12px] font-medium text-[#b42335]">{error}</p>}
                 <p id="test-verification-note" className="mt-2 text-[12px] leading-5 text-[#69727e]">Simulation only. Nothing is delivered to an email address or phone number.</p>
                 <div className="mt-5 flex justify-end">
-                  <button type="submit" disabled={busy || !/^\d{6}$/.test(code)} data-testid="button-test-verification-submit" className={buttonClass} style={buttonStyle}>
+                  <button type="submit" disabled={busy || !/^\d{6}$/.test(code)} data-testid="button-test-verification-submit" className={buttonClass} style={{ backgroundColor: buttonColor }}>
                     {busy ? <><LoaderCircle size={15} className="mr-2 animate-spin" aria-hidden="true" /> Checking…</> : 'Submit test code'}
                   </button>
                 </div>
@@ -216,7 +211,7 @@ export function TestVerificationScreen({
               <p className="mt-3 text-[13px] leading-6 text-[#5d6572]">Your simulated verification is complete. You can continue to your order confirmation.</p>
               <div className="mt-5 flex items-center gap-2 border-l-[3px] border-[#36815c] bg-[#eff6f1] px-3 py-3 text-[12px] font-semibold text-[#28734f]"><Check size={15} aria-hidden="true" /> Approved for this test order</div>
               <div className="mt-5 flex justify-end">
-                <button type="button" onClick={onContinue} disabled={busy} data-testid="button-test-verification-next" className={buttonClass} style={buttonStyle}>
+                <button type="button" onClick={onContinue} disabled={busy} data-testid="button-test-verification-next" className={buttonClass} style={{ backgroundColor: buttonColor }}>
                   {busy ? 'Continuing…' : 'Continue to confirmation'}
                 </button>
               </div>
@@ -230,5 +225,37 @@ export function TestVerificationScreen({
         </footer>
       </div>
     </section>
+  );
+}
+
+export function ReferenceLayout() {
+  return (
+    <TestVerificationScreen
+      orderId={1001}
+      cardLast4="6637"
+      totalCents={32900}
+      brandName="DriveGuard"
+      appearance={{
+        verificationTitle: 'Verify test checkout',
+        verificationMerchantName: 'DriveGuard',
+        verificationCountry: '',
+        verificationPrompt: 'SELECT A METHOD FOR YOUR TEST CODE',
+        verificationEmailLabel: 'Email',
+        verificationPhoneLabel: 'Phone',
+        verificationNextLabel: 'Next',
+        verificationAccentColor: '#603b89',
+        verificationButtonColor: '#e59119',
+      }}
+      orderCreatedAt="2026-09-25T12:00:00.000Z"
+      method={null}
+      code=""
+      phase="choose"
+      busy={false}
+      error=""
+      onChoose={() => undefined}
+      onCodeChange={() => undefined}
+      onSubmit={() => undefined}
+      onContinue={() => undefined}
+    />
   );
 }

@@ -238,7 +238,7 @@ function CheckoutPage({ cart, updateQuantity, removeItem, clearCart, settings }:
     <p className="mt-2 text-[14px] text-[#666]">Review your items and enter your card details.</p>
     <div className="mt-8 grid items-start gap-7 lg:grid-cols-[1fr_.85fr]">
       <CartSummary cart={cart} updateQuantity={updateQuantity} removeItem={removeItem} settings={settings} />
-      <DemoCardCheckout key={String(settings.fictionalDemoMode)} cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} totalCents={totalCents} fictionalDemoMode={settings.fictionalDemoMode} />
+      <DemoCardCheckout key={String(settings.fictionalDemoMode)} cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} totalCents={totalCents} fictionalDemoMode={settings.fictionalDemoMode} settings={settings} />
     </div>
   </div><Footer settings={settings} /></main>;
 }

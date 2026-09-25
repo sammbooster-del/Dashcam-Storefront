@@ -18,4 +18,13 @@ export interface StoreSettings {
   shippingCents: number;
   supportEmail: string;
   fictionalDemoMode: boolean;
+  verificationTitle: string;
+  verificationMerchantName: string;
+  verificationCountry: string;
+  verificationPrompt: string;
+  verificationEmailLabel: string;
+  verificationPhoneLabel: string;
+  verificationNextLabel: string;
+  verificationAccentColor: string;
+  verificationButtonColor: string;
 }

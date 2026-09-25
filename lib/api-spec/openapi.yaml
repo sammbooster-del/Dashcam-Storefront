@@ -420,7 +420,7 @@ components:
         active: { type: boolean }
     StoreSettings:
       type: object
-      required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail, fictionalDemoMode]
+      required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail, fictionalDemoMode, verificationTitle, verificationMerchantName, verificationCountry, verificationPrompt, verificationEmailLabel, verificationPhoneLabel, verificationNextLabel, verificationAccentColor, verificationButtonColor]
       properties:
         brandName: { type: string }
         announcement: { type: string }
@@ -433,10 +433,19 @@ components:
         shippingCents: { type: integer }
         supportEmail: { type: string }
         fictionalDemoMode: { type: boolean }
+        verificationTitle: { type: string }
+        verificationMerchantName: { type: string }
+        verificationCountry: { type: string }
+        verificationPrompt: { type: string }
+        verificationEmailLabel: { type: string }
+        verificationPhoneLabel: { type: string }
+        verificationNextLabel: { type: string }
+        verificationAccentColor: { type: string }
+        verificationButtonColor: { type: string }
     StoreSettingsInput:
       type: object
       additionalProperties: false
-      required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail, fictionalDemoMode]
+      required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail, fictionalDemoMode, verificationTitle, verificationMerchantName, verificationCountry, verificationPrompt, verificationEmailLabel, verificationPhoneLabel, verificationNextLabel, verificationAccentColor, verificationButtonColor]
       properties:
         brandName: { type: string, minLength: 1, maxLength: 80 }
         announcement: { type: string, maxLength: 180 }
@@ -449,6 +458,15 @@ components:
         shippingCents: { type: integer, minimum: 0, maximum: 10000000 }
         supportEmail: { type: string, maxLength: 254 }
         fictionalDemoMode: { type: boolean }
+        verificationTitle: { type: string, minLength: 1, maxLength: 80 }
+        verificationMerchantName: { type: string, minLength: 1, maxLength: 80 }
+        verificationCountry: { type: string, maxLength: 80 }
+        verificationPrompt: { type: string, minLength: 1, maxLength: 120 }
+        verificationEmailLabel: { type: string, minLength: 1, maxLength: 40 }
+        verificationPhoneLabel: { type: string, minLength: 1, maxLength: 40 }
+        verificationNextLabel: { type: string, minLength: 1, maxLength: 40 }
+        verificationAccentColor: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+        verificationButtonColor: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
     Storefront:
       type: object
       required: [settings, products]
