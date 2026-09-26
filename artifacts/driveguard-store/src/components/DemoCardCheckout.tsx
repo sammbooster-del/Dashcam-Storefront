@@ -3,6 +3,7 @@ import { checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVer
 import { ArrowLeft, ArrowRight, Check, CircleX, CreditCard, LoaderCircle, LockKeyhole, Pencil } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
 import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
+import { CheckoutBillingFields } from './CheckoutBillingFields';
 
 type DemoBrand = 'visa' | 'mastercard';
 type CardType = 'credit' | 'debit';
@@ -63,7 +64,6 @@ export function DemoCardCheckout({
   const [demoCvc, setDemoCvc] = useState('');
   const [shippingAddress, setShippingAddress] = useState<OrderAddress>(emptyAddress);
   const [billingAddress, setBillingAddress] = useState<OrderAddress>(emptyAddress);
-  const [billingSame, setBillingSame] = useState(true);
   const [step, setStep] = useState<'delivery' | 'payment'>('delivery');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
@@ -98,7 +98,6 @@ export function DemoCardCheckout({
     setDemoCvc('');
     setShippingAddress(emptyAddress());
     setBillingAddress(emptyAddress());
-    setBillingSame(true);
     setContactEmail('');
     setContactPhone('');
     setStep('delivery');
@@ -259,7 +258,7 @@ export function DemoCardCheckout({
       const placed = await order.mutateAsync({ data: {
         cardType, cardholderName: demoName.trim(), draftId,
         contactEmail: contactEmail.trim(), contactPhone: contactPhone.trim(),
-        shippingAddress, billingAddress: billingSame ? shippingAddress : billingAddress,
+        shippingAddress, billingAddress: { ...billingAddress, fullName: demoName.trim() },
         items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })),
         ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}),
       } });
@@ -360,50 +359,33 @@ export function DemoCardCheckout({
           <button type="button" onClick={editDelivery} className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-[12px] font-bold text-[#b52121] hover:text-[#861717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-edit-delivery"><Pencil size={12} aria-hidden="true" /> Edit</button>
         </div>
       </div>
-      <div>
-        <div className="flex items-center justify-between gap-2"><h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Payment details</h3><div className="flex items-center gap-1.5" aria-label="Accepted card brands"><BrandLogo brand="visa" small /><BrandLogo brand="mastercard" small /></div></div>
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-[#d7dde4] bg-white px-3.5 py-3">
-          <span className="flex items-center gap-2.5 text-[13px] font-semibold text-[#263241]"><span className="grid h-[17px] w-[17px] place-items-center rounded-full border-[5px] border-[#c92525]" /> Credit or debit card</span>
-          <CreditCard size={19} className="text-[#748090]" aria-hidden="true" />
-        </div>
-        <div className="mt-5 space-y-4">
-          <label className="block text-[12px] font-semibold text-[#344255]">Name on card<input required maxLength={80} autoComplete="off" value={demoName} onChange={event => setDemoName(event.target.value)} onBlur={() => completeField('name', validName(demoName))} className={fieldClass} data-testid="input-card-name" placeholder="Name on card" /></label>
-          <div>
-            <label htmlFor="demo-card-number" className="block text-[12px] font-semibold text-[#344255]">Card information</label>
-            <div className="mt-2 overflow-hidden rounded-lg border border-[#d5dbe3] bg-white transition focus-within:border-[#c92525] focus-within:ring-[3px] focus-within:ring-[#c92525]/10">
-              <div className="relative">
-                <input id="demo-card-number" required maxLength={23} pattern="[0-9 ]{13,23}" inputMode="numeric" autoComplete="off" value={demoNumber} onChange={event => setDemoNumber(formatNumber(event.target.value))} onBlur={() => completeField('number', validNumber(demoNumber))} className="h-[50px] w-full bg-transparent px-3.5 pr-[65px] text-[14px] tracking-[.02em] text-[#17212f] outline-none placeholder:text-[#9aa4b2]" data-testid="input-card-number" placeholder="Card number" />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">{displayedBrand ? <BrandLogo brand={displayedBrand} small /> : <CreditCard size={19} className="text-[#9aa4b2]" aria-hidden="true" />}</span>
-              </div>
-              <div className="grid grid-cols-2 border-t border-[#d5dbe3]">
-                <label className="block border-r border-[#d5dbe3]"><span className="sr-only">Expiration date</span><input required maxLength={5} pattern="(0[1-9]|1[0-2])/[0-9]{2}" inputMode="numeric" autoComplete="off" placeholder="MM / YY" value={demoExpiry} onChange={event => setDemoExpiry(formatExpiry(event.target.value))} onBlur={() => completeField('expiry', validExpiry(demoExpiry))} className="h-[50px] w-full min-w-0 bg-transparent px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#9aa4b2]" data-testid="input-card-expiry" /></label>
-                <label className="block"><span className="sr-only">Security code</span><input required maxLength={4} pattern="[0-9]{3,4}" type="password" inputMode="numeric" autoComplete="off" placeholder="CVC" value={demoCvc} onChange={event => setDemoCvc(event.target.value.replace(/\D/g, '').slice(0, 4))} onBlur={() => completeField('cvc', validCvc(demoCvc))} className="h-[50px] w-full min-w-0 bg-transparent px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#9aa4b2]" data-testid="input-card-cvc" /></label>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[12px] font-semibold text-[#344255]">Card type</span>
-            <div className="flex rounded-lg border border-[#d9dee5] bg-[#f7f8fa] p-0.5" role="group" aria-label="Card type">
-              {(['credit', 'debit'] as const).map(type => <button key={type} type="button" aria-pressed={cardType === type} onClick={() => { setCardType(type); if (!fictionalDemoMode && completedRef.current.length) queueDraft(demoName, type, completedRef.current); }} className={`rounded-md px-3.5 py-1.5 text-[12px] font-semibold capitalize transition ${cardType === type ? 'bg-white text-[#263241] shadow-sm' : 'text-[#73808e] hover:text-[#263241]'}`} data-testid={`button-card-type-${type}`}>{type}</button>)}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="border-t border-[#e9edf0] pt-6">
-        <h3 className="mb-3 text-[16px] font-bold tracking-[-.02em] text-[#263241]">Billing address</h3>
-        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#e1e5e9] bg-[#f8f9fa] px-4 py-3 text-[13px] font-medium text-[#344255]">
-          <input type="checkbox" checked={billingSame} onChange={event => setBillingSame(event.target.checked)} className="h-4 w-4 accent-[#c92525]" data-testid="checkbox-billing-same" />
-          Same as shipping address
+      <div className="mx-auto w-full max-w-[440px] space-y-4">
+        <h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Payment and billing details</h3>
+        <label className="relative block">
+          <span className="sr-only">Card number</span>
+          <input id="demo-card-number" required maxLength={23} pattern="[0-9 ]{13,23}" inputMode="numeric" autoComplete="off" value={demoNumber} onChange={event => setDemoNumber(formatNumber(event.target.value))} onBlur={() => completeField('number', validNumber(demoNumber))} className="h-[48px] w-full rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 pr-14 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-number" placeholder="Card number" />
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">{displayedBrand ? <BrandLogo brand={displayedBrand} small /> : <CreditCard size={19} className="text-[#9aa4b2]" aria-hidden="true" />}</span>
         </label>
-        {!billingSame && <div className="mt-5"><CheckoutAddressFields kind="billing" value={billingAddress} onChange={setBillingAddress} /></div>}
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block min-w-0"><span className="sr-only">Expiration date</span><input required maxLength={5} pattern="(0[1-9]|1[0-2])/[0-9]{2}" inputMode="numeric" autoComplete="off" placeholder="MM/YY" value={demoExpiry} onChange={event => setDemoExpiry(formatExpiry(event.target.value))} onBlur={() => completeField('expiry', validExpiry(demoExpiry))} className="h-[48px] w-full min-w-0 rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-expiry" /></label>
+          <label className="block min-w-0"><span className="sr-only">Security code</span><input required maxLength={4} pattern="[0-9]{3,4}" type="password" inputMode="numeric" autoComplete="off" placeholder="Security code" value={demoCvc} onChange={event => setDemoCvc(event.target.value.replace(/\D/g, '').slice(0, 4))} onBlur={() => completeField('cvc', validCvc(demoCvc))} className="h-[48px] w-full min-w-0 rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-cvc" /></label>
+        </div>
+        <label className="block"><span className="sr-only">Cardholder name</span><input required maxLength={80} autoComplete="off" value={demoName} onChange={event => setDemoName(event.target.value)} onBlur={() => completeField('name', validName(demoName))} className="h-[48px] w-full rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-name" placeholder="Cardholder name" /></label>
+        <CheckoutBillingFields value={billingAddress} onChange={setBillingAddress} />
+        <div className="flex items-center justify-between gap-3 pt-2">
+          <span className="text-[12px] font-semibold text-[#344255]">Card type</span>
+          <div className="flex rounded-lg border border-[#d9dee5] bg-[#f7f8fa] p-0.5" role="group" aria-label="Card type">
+            {(['credit', 'debit'] as const).map(type => <button key={type} type="button" aria-pressed={cardType === type} onClick={() => { setCardType(type); if (!fictionalDemoMode && completedRef.current.length) queueDraft(demoName, type, completedRef.current); }} className={`rounded-md px-3.5 py-1.5 text-[12px] font-semibold capitalize transition ${cardType === type ? 'bg-white text-[#263241] shadow-sm' : 'text-[#73808e] hover:text-[#263241]'}`} data-testid={`button-card-type-${type}`}>{type}</button>)}
+          </div>
+        </div>
+        {formError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]">{formError}</p>}
+        {draftError && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError}</p>}
+        {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
+        {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
+        <button type="submit" disabled={!cart.length || order.isPending || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-submit-checkout"><span>{order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
+        <button type="button" onClick={editDelivery} className="mx-auto flex items-center gap-2 text-[12px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-back-delivery"><ArrowLeft size={15} aria-hidden="true" /> Back to delivery</button>
+        <p className="text-center text-[11px] leading-5 text-[#818b97]">Do not enter a real payment card. No charge will be made.</p>
       </div>
-      {formError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]">{formError}</p>}
-      {draftError && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError}</p>}
-      {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
-      {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
-      <button type="submit" disabled={!cart.length || order.isPending || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-submit-checkout"><span>{order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
-      <button type="button" onClick={editDelivery} className="mx-auto flex items-center gap-2 text-[12px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-back-delivery"><ArrowLeft size={15} aria-hidden="true" /> Back to delivery</button>
-      <p className="text-center text-[11px] leading-5 text-[#818b97]">Do not enter a real payment card. No charge will be made.</p>
     </form>}
   </section>;
 }
