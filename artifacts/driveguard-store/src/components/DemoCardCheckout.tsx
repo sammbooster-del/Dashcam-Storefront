@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, CircleX, CreditCard, LoaderCircle, LockKe
 import { TestVerificationScreen } from './TestVerificationScreen';
 import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
 import { CheckoutBillingFields } from './CheckoutBillingFields';
+import { AcceptedCards, CardBrandLogo, detectCardBrand } from './AcceptedCards';
 
 type DemoBrand = 'visa' | 'mastercard';
 type CardType = 'credit' | 'debit';
@@ -278,8 +279,7 @@ export function DemoCardCheckout({
     }
   };
   const stockError = cart.some(line => line.quantity > line.product.stock);
-  const firstDigit = demoNumber.charAt(0);
-  const displayedBrand: DemoBrand | null = firstDigit === '4' ? 'visa' : firstDigit === '5' ? 'mastercard' : null;
+  const displayedBrand = detectCardBrand(demoNumber);
   const deliverySummary = `${shippingAddress.line1}${shippingAddress.line2 ? `, ${shippingAddress.line2}` : ''}, ${shippingAddress.city}, ${shippingAddress.region} ${shippingAddress.postalCode}, ${shippingAddress.country === 'CA' ? 'Canada' : 'United States'}`;
 
   if (declineVisible) return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#17212f]/75 px-5 py-8" data-testid="screen-order-declined">
@@ -361,10 +361,11 @@ export function DemoCardCheckout({
       </div>
       <div className="mx-auto w-full max-w-[440px] space-y-4">
         <h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Payment and billing details</h3>
+        <AcceptedCards location="payment" />
         <label className="relative block">
           <span className="sr-only">Card number</span>
           <input id="demo-card-number" required maxLength={23} pattern="[0-9 ]{13,23}" inputMode="numeric" autoComplete="off" value={demoNumber} onChange={event => setDemoNumber(formatNumber(event.target.value))} onBlur={() => completeField('number', validNumber(demoNumber))} className="h-[48px] w-full rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 pr-14 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-number" placeholder="Card number" />
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">{displayedBrand ? <BrandLogo brand={displayedBrand} small /> : <CreditCard size={19} className="text-[#9aa4b2]" aria-hidden="true" />}</span>
+          <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">{displayedBrand === 'visa' || displayedBrand === 'mastercard' ? <BrandLogo brand={displayedBrand} small /> : displayedBrand ? <CardBrandLogo brand={displayedBrand} /> : <CreditCard size={19} className="mr-2.5 text-[#9aa4b2]" aria-hidden="true" />}</span>
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block min-w-0"><span className="sr-only">Expiration date</span><input required maxLength={5} pattern="(0[1-9]|1[0-2])/[0-9]{2}" inputMode="numeric" autoComplete="off" placeholder="MM/YY" value={demoExpiry} onChange={event => setDemoExpiry(formatExpiry(event.target.value))} onBlur={() => completeField('expiry', validExpiry(demoExpiry))} className="h-[48px] w-full min-w-0 rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-expiry" /></label>
