@@ -15,6 +15,7 @@ export const DemoVerificationState = {
   method_selected: 'method_selected',
   code_ready: 'code_ready',
   code_submitted: 'code_submitted',
+  invalid_code: 'invalid_code',
   approved: 'approved',
   declined: 'declined',
   cancelled: 'cancelled',

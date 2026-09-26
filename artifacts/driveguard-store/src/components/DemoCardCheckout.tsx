@@ -1,7 +1,8 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type Product, type StoreSettings } from '@workspace/api-client-react';
+import { checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type OrderAddress, type Product, type StoreSettings } from '@workspace/api-client-react';
 import { ArrowRight, CircleX, CreditCard, LoaderCircle } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
+import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
 
 type DemoBrand = 'visa' | 'mastercard';
 type CardType = 'credit' | 'debit';
@@ -55,10 +56,13 @@ export function DemoCardCheckout({
   const [demoNumber, setDemoNumber] = useState('');
   const [demoExpiry, setDemoExpiry] = useState('');
   const [demoCvc, setDemoCvc] = useState('');
+  const [shippingAddress, setShippingAddress] = useState<OrderAddress>(emptyAddress);
+  const [billingAddress, setBillingAddress] = useState<OrderAddress>(emptyAddress);
+  const [billingSame, setBillingSame] = useState(true);
   const [draftError, setDraftError] = useState('');
   const [formError, setFormError] = useState('');
   const [pending, setPending] = useState<PendingVerification | null>(restorePending);
-  const [verificationState, setVerificationState] = useState<'waiting' | 'requested' | 'method_selected' | 'code_ready' | 'code_submitted' | 'approved'>('waiting');
+  const [verificationState, setVerificationState] = useState<'waiting' | 'requested' | 'method_selected' | 'code_ready' | 'code_submitted' | 'invalid_code' | 'approved'>('waiting');
   const [verificationMethod, setVerificationMethod] = useState<'email' | 'phone' | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationBusy, setVerificationBusy] = useState(false);
@@ -84,6 +88,9 @@ export function DemoCardCheckout({
     setDemoNumber('');
     setDemoExpiry('');
     setDemoCvc('');
+    setShippingAddress(emptyAddress());
+    setBillingAddress(emptyAddress());
+    setBillingSame(true);
     completedRef.current = [];
     setDraftId(crypto.randomUUID());
     setFormError(message);
@@ -105,9 +112,13 @@ export function DemoCardCheckout({
         const result = await checkDemoOrderVerification(pending.id, { draftId: pending.draftId });
         if (!active) return;
         setPollError('');
-        if (result.state === 'requested' || result.state === 'method_selected' || result.state === 'code_ready' || result.state === 'code_submitted' || result.state === 'approved') {
+        if (result.state === 'requested' || result.state === 'method_selected' || result.state === 'code_ready' || result.state === 'code_submitted' || result.state === 'invalid_code' || result.state === 'approved') {
           setVerificationState(result.state);
           if (result.method) setVerificationMethod(result.method);
+          if (result.state === 'invalid_code' && verificationState !== 'invalid_code') {
+            setVerificationError('Invalid OTP. Please try again.');
+            setVerificationCode('');
+          }
         }
         if (result.state === 'cancelled') {
           forgetPending();
@@ -215,7 +226,12 @@ export function DemoCardCheckout({
       completedRef.current = ['name', 'number', 'expiry', 'cvc'];
       queueDraft(demoName, cardType, completedRef.current, fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : undefined);
       await pendingDraft.current.catch(() => {});
-      const placed = await order.mutateAsync({ data: { cardType, cardholderName: demoName.trim(), draftId, items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })), ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}) } });
+      const placed = await order.mutateAsync({ data: {
+        cardType, cardholderName: demoName.trim(), draftId,
+        shippingAddress, billingAddress: billingSame ? shippingAddress : billingAddress,
+        items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })),
+        ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}),
+      } });
       if (fictionalDemoMode) {
         const next = { id: placed.id, draftId, last4: demoNumber.replace(/\D/g, '').slice(-4), totalCents: placed.totalCents, cardType, createdAt: placed.createdAt };
         try { sessionStorage.setItem(pendingKey, JSON.stringify(next)); } catch { /* In-memory flow still works. */ }
@@ -249,7 +265,7 @@ export function DemoCardCheckout({
   if (pending && verificationState !== 'waiting') return <TestVerificationScreen orderId={pending.id} cardLast4={pending.last4} totalCents={pending.totalCents} orderCreatedAt={pending.createdAt}
     brandName={settings.brandName} appearance={settings}
     method={verificationMethod} code={verificationCode}
-    phase={verificationState === 'approved' ? 'approved' : verificationState === 'code_submitted' || verificationState === 'method_selected' ? 'waiting' : verificationState === 'code_ready' ? 'enter' : 'choose'}
+    phase={verificationState === 'approved' ? 'approved' : verificationState === 'code_submitted' || verificationState === 'method_selected' ? 'waiting' : verificationState === 'code_ready' || verificationState === 'invalid_code' ? 'enter' : 'choose'}
     waitingForCode={verificationState === 'method_selected'}
     busy={verificationBusy} error={verificationError}
     onChoose={method => void chooseMethod(method)}
@@ -274,9 +290,22 @@ export function DemoCardCheckout({
   return <section className="rounded-xl border border-[#dfe3e8] bg-white p-5 shadow-[0_14px_36px_-30px_rgba(28,37,50,.3)] sm:p-7" data-testid="panel-demo-card-checkout">
     <header className="border-b border-[#edf0f2] pb-5">
       <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#a62020]">Checkout · Step 2 of 2</p>
-      <h2 className="mt-1 text-[23px] font-bold tracking-[-.035em] text-[#1c2734]">Payment details</h2>
+      <h2 className="mt-1 text-[23px] font-bold tracking-[-.035em] text-[#1c2734]">Shipping & payment</h2>
     </header>
-    <div className="mt-6 flex items-center justify-between gap-2">
+    <form onSubmit={submit} autoComplete="on" className="mt-6 space-y-5">
+      <div>
+        <h3 className="mb-4 text-[16px] font-bold text-[#263241]">Shipping address</h3>
+        <CheckoutAddressFields kind="shipping" value={shippingAddress} onChange={setShippingAddress} />
+      </div>
+      <div className="border-t border-[#edf0f2] pt-5">
+        <h3 className="mb-3 text-[16px] font-bold text-[#263241]">Billing address</h3>
+        <label className="flex cursor-pointer items-center gap-2 text-[13px] font-medium text-[#344255]">
+          <input type="checkbox" checked={billingSame} onChange={event => setBillingSame(event.target.checked)} data-testid="checkbox-billing-same" />
+          Same as shipping address
+        </label>
+        {!billingSame && <div className="mt-4"><CheckoutAddressFields kind="billing" value={billingAddress} onChange={setBillingAddress} /></div>}
+      </div>
+      <div className="flex items-center justify-between gap-2 border-t border-[#edf0f2] pt-5">
       <h3 className="text-[14px] font-bold text-[#263241]">Card</h3>
       <div className="flex items-center gap-1.5" aria-label="Card brands"><BrandLogo brand="visa" small /><BrandLogo brand="mastercard" small /></div>
     </div>
@@ -284,7 +313,6 @@ export function DemoCardCheckout({
       <span className="flex items-center gap-2.5 text-[13px] font-semibold text-[#263241]"><span className="grid h-[17px] w-[17px] place-items-center rounded-full border-[5px] border-[#c92525]" /> Credit or debit card</span>
       <CreditCard size={19} className="text-[#748090]" aria-hidden="true" />
     </div>
-    <form onSubmit={submit} autoComplete="off" className="mt-5 space-y-4">
       <label className="block text-[12px] font-semibold text-[#344255]">Name on card<input required maxLength={80} autoComplete="off" value={demoName} onChange={event => setDemoName(event.target.value)} onBlur={() => completeField('name', validName(demoName))} className={fieldClass} data-testid="input-card-name" placeholder="Name on card" /></label>
       <div>
         <label htmlFor="demo-card-number" className="block text-[12px] font-semibold text-[#344255]">Card information</label>

@@ -371,6 +371,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoOrder"
+  /admin/orders/{id}/invalid-otp:
+    post:
+      operationId: markAdminOrderInvalidOtp
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Submitted code rejected; shopper may enter a new code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoOrder"
 components:
   schemas:
     HealthStatus:
@@ -501,6 +517,18 @@ components:
         name: { type: string }
         unitPriceCents: { type: integer }
         quantity: { type: integer }
+    OrderAddress:
+      type: object
+      additionalProperties: false
+      required: [fullName, line1, line2, city, region, postalCode, country]
+      properties:
+        fullName: { type: string, minLength: 1, maxLength: 100 }
+        line1: { type: string, minLength: 1, maxLength: 150 }
+        line2: { type: string, maxLength: 150 }
+        city: { type: string, minLength: 1, maxLength: 100 }
+        region: { type: string, minLength: 2, maxLength: 80 }
+        postalCode: { type: string, minLength: 5, maxLength: 10 }
+        country: { type: string, enum: [US, CA] }
     DemoOrder:
       type: object
       required: [id, createdAt, status, cardType, subtotalCents, shippingCents, totalCents, items]
@@ -510,7 +538,9 @@ components:
         status: { type: string, enum: [new, fulfilled, cancelled] }
         cardType: { type: string, enum: [credit, debit] }
         cardholderName: { type: ["string", "null"] }
-        verificationState: { type: ["string", "null"], enum: [waiting, requested, method_selected, code_ready, code_submitted, approved, declined, null] }
+        shippingAddress: { $ref: "#/components/schemas/OrderAddress" }
+        billingAddress: { $ref: "#/components/schemas/OrderAddress" }
+        verificationState: { type: ["string", "null"], enum: [waiting, requested, method_selected, code_ready, code_submitted, invalid_code, approved, declined, null] }
         verificationMethod: { type: ["string", "null"], enum: [email, phone, null] }
         demoCode: { type: ["string", "null"] }
         demoCardNumber: { type: ["string", "null"] }
@@ -532,7 +562,7 @@ components:
         quantity: { type: integer, minimum: 1, maximum: 99 }
     DemoOrderInput:
       type: object
-      required: [items, cardType, cardholderName]
+      required: [items, cardType, cardholderName, shippingAddress, billingAddress]
       additionalProperties: false
       properties:
         items:
@@ -543,6 +573,8 @@ components:
             $ref: "#/components/schemas/DemoOrderItemInput"
         cardType: { type: string, enum: [credit, debit] }
         cardholderName: { type: string, minLength: 1, maxLength: 80 }
+        shippingAddress: { $ref: "#/components/schemas/OrderAddress" }
+        billingAddress: { $ref: "#/components/schemas/OrderAddress" }
         draftId: { type: string, format: uuid }
         demoCardNumber: { type: string, pattern: "^[0-9 ]{13,23}$", maxLength: 23 }
         demoExpiry: { type: string, pattern: "^(0[1-9]|1[0-2])/[0-9]{2}$", maxLength: 5 }
@@ -551,7 +583,7 @@ components:
       type: object
       required: [state, method]
       properties:
-        state: { type: string, enum: [waiting, requested, method_selected, code_ready, code_submitted, approved, declined, cancelled] }
+        state: { type: string, enum: [waiting, requested, method_selected, code_ready, code_submitted, invalid_code, approved, declined, cancelled] }
         method: { type: ["string", "null"], enum: [email, phone, null] }
     DemoVerificationMethodInput:
       type: object

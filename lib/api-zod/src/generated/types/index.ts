@@ -30,6 +30,8 @@ export * from './demoVerificationMethodInput';
 export * from './demoVerificationMethodInputMethod';
 export * from './demoVerificationState';
 export * from './healthStatus';
+export * from './orderAddress';
+export * from './orderAddressCountry';
 export * from './orderItem';
 export * from './orderStatusInput';
 export * from './orderStatusInputStatus';

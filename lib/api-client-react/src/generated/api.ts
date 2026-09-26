@@ -1800,3 +1800,71 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getApproveAdminOrderVerificationMutationOptions(options));
     }
 
+export const getMarkAdminOrderInvalidOtpUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/orders/${id}/invalid-otp`
+}
+
+export const markAdminOrderInvalidOtp = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<DemoOrder> => {
+
+  return customFetch<DemoOrder>(getMarkAdminOrderInvalidOtpUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getMarkAdminOrderInvalidOtpMutationKey = () => ['markAdminOrderInvalidOtp'] as const;
+
+export const getMarkAdminOrderInvalidOtpMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markAdminOrderInvalidOtp>>, TError,MarkAdminOrderInvalidOtpMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markAdminOrderInvalidOtp>>, TError,MarkAdminOrderInvalidOtpMutationVariables, TContext> => {
+
+const mutationKey = getMarkAdminOrderInvalidOtpMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markAdminOrderInvalidOtp>>, MarkAdminOrderInvalidOtpMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  markAdminOrderInvalidOtp(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkAdminOrderInvalidOtpMutationResult = NonNullable<Awaited<ReturnType<typeof markAdminOrderInvalidOtp>>>
+
+    export type MarkAdminOrderInvalidOtpMutationError = ErrorType<unknown>
+    export type MarkAdminOrderInvalidOtpMutationVariables = {id: number}
+
+    export const useMarkAdminOrderInvalidOtp = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markAdminOrderInvalidOtp>>, TError,MarkAdminOrderInvalidOtpMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markAdminOrderInvalidOtp>>,
+        TError,
+        MarkAdminOrderInvalidOtpMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMarkAdminOrderInvalidOtpMutationOptions(options));
+    }
+

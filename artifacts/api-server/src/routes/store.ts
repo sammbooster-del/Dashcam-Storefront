@@ -34,6 +34,8 @@ import {
   ListAdminDemoDraftsResponse,
   ListAdminOrdersResponse,
   ListAdminProductsResponse,
+  MarkAdminOrderInvalidOtpParams,
+  MarkAdminOrderInvalidOtpResponse,
   RequestAdminOrderVerificationParams,
   RequestAdminOrderVerificationResponse,
   SaveDemoDraftBody,
@@ -178,7 +180,27 @@ const requireSameOriginWrite: RequestHandler = (req, res, next) => {
   next();
 };
 
-const formatOrder = (order: DemoOrder) => ({ ...order, createdAt: order.createdAt.toISOString() });
+const formatOrder = (order: DemoOrder) => ({
+  ...order,
+  shippingAddress: order.shippingAddress ?? undefined,
+  billingAddress: order.billingAddress ?? undefined,
+  createdAt: order.createdAt.toISOString(),
+});
+
+function normalizeAddress(address: NonNullable<DemoOrder["shippingAddress"]>) {
+  return {
+    fullName: address.fullName.trim(), line1: address.line1.trim(), line2: address.line2.trim(),
+    city: address.city.trim(), region: address.region.trim(),
+    postalCode: address.postalCode.trim().toUpperCase(), country: address.country,
+  };
+}
+
+function validAddress(address: NonNullable<DemoOrder["shippingAddress"]>) {
+  return Boolean(address.fullName && address.line1 && address.city && address.region) &&
+    (address.country === "US"
+      ? /^\d{5}(?:-\d{4})?$/.test(address.postalCode)
+      : /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/.test(address.postalCode));
+}
 
 type DemoDraft = {
   id: string;
@@ -262,9 +284,11 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
 
 router.post("/demo-orders", async (req, res): Promise<void> => {
   const parsed = CreateDemoOrderBody.safeParse(req.body);
-  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "cardholderName", "draftId", "demoCardNumber", "demoExpiry", "demoCvc"]) ||
+  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "cardholderName", "shippingAddress", "billingAddress", "draftId", "demoCardNumber", "demoExpiry", "demoCvc"]) ||
     !Array.isArray(req.body.items) ||
-    !req.body.items.every((item: unknown) => hasOnlyFields(item, ["productId", "quantity"]))) {
+    !req.body.items.every((item: unknown) => hasOnlyFields(item, ["productId", "quantity"])) ||
+    !hasOnlyFields(req.body.shippingAddress, ["fullName", "line1", "line2", "city", "region", "postalCode", "country"]) ||
+    !hasOnlyFields(req.body.billingAddress, ["fullName", "line1", "line2", "city", "region", "postalCode", "country"])) {
     res.status(400).json({ error: "Invalid demo order" });
     return;
   }
@@ -276,6 +300,12 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
   const cardholderName = parsed.data.cardholderName.trim();
   if (!cardholderName || !/^[\p{L}\p{M}\p{N} .'-]+$/u.test(cardholderName)) {
     res.status(400).json({ error: "Enter a valid name on card" });
+    return;
+  }
+  const shippingAddress = normalizeAddress(parsed.data.shippingAddress);
+  const billingAddress = normalizeAddress(parsed.data.billingAddress);
+  if (!validAddress(shippingAddress) || !validAddress(billingAddress)) {
+    res.status(400).json({ error: "Enter valid US or Canadian shipping and billing addresses" });
     return;
   }
   if (settings.fictionalDemoMode
@@ -314,6 +344,8 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
   const [order] = await db.insert(demoOrdersTable).values({
     cardType: parsed.data.cardType,
     cardholderName,
+    shippingAddress,
+    billingAddress,
     demoId: settings.fictionalDemoMode ? parsed.data.draftId : null,
     verificationState: settings.fictionalDemoMode ? "waiting" : null,
     demoCardNumber: settings.fictionalDemoMode ? parsed.data.demoCardNumber : null,
@@ -390,7 +422,7 @@ router.post("/demo-orders/:id/verification-code", async (req, res): Promise<void
     .where(and(
       eq(demoOrdersTable.id, params.data.id),
       eq(demoOrdersTable.demoId, body.data.draftId),
-      eq(demoOrdersTable.verificationState, "code_ready"),
+      inArray(demoOrdersTable.verificationState, ["code_ready", "invalid_code"]),
       eq(demoOrdersTable.status, "new"),
     )).returning();
   if (!order) {
@@ -585,6 +617,25 @@ router.post("/admin/orders/:id/approve-verification", async (req, res): Promise<
     return;
   }
   res.json(ApproveAdminOrderVerificationResponse.parse(formatOrder(order)));
+});
+
+router.post("/admin/orders/:id/invalid-otp", async (req, res): Promise<void> => {
+  const params = MarkAdminOrderInvalidOtpParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid order ID" });
+    return;
+  }
+  const [order] = await db.update(demoOrdersTable).set({ verificationState: "invalid_code" })
+    .where(and(
+      eq(demoOrdersTable.id, params.data.id),
+      eq(demoOrdersTable.verificationState, "code_submitted"),
+      eq(demoOrdersTable.status, "new"),
+    )).returning();
+  if (!order) {
+    res.status(409).json({ error: "Only submitted codes can be marked invalid" });
+    return;
+  }
+  res.json(MarkAdminOrderInvalidOtpResponse.parse(formatOrder(order)));
 });
 
 router.patch("/admin/orders/:id", async (req, res): Promise<void> => {

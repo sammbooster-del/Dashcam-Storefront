@@ -7,6 +7,7 @@
  */
 import type { DemoOrderInputCardType } from './demoOrderInputCardType';
 import type { DemoOrderItemInput } from './demoOrderItemInput';
+import type { OrderAddress } from './orderAddress';
 
 export interface DemoOrderInput {
   /**
@@ -20,6 +21,8 @@ export interface DemoOrderInput {
      * @maxLength 80
      */
   cardholderName: string;
+  shippingAddress: OrderAddress;
+  billingAddress: OrderAddress;
   draftId?: string;
   /**
      * @maxLength 23

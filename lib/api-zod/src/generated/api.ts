@@ -61,6 +61,34 @@ export const createDemoOrderBodyItemsMax = 100;
 
 export const createDemoOrderBodyCardholderNameMax = 80;
 
+export const createDemoOrderBodyShippingAddressFullNameMax = 100;
+
+export const createDemoOrderBodyShippingAddressLine1Max = 150;
+
+export const createDemoOrderBodyShippingAddressLine2Max = 150;
+
+export const createDemoOrderBodyShippingAddressCityMax = 100;
+
+export const createDemoOrderBodyShippingAddressRegionMin = 2;
+export const createDemoOrderBodyShippingAddressRegionMax = 80;
+
+export const createDemoOrderBodyShippingAddressPostalCodeMin = 5;
+export const createDemoOrderBodyShippingAddressPostalCodeMax = 10;
+
+export const createDemoOrderBodyBillingAddressFullNameMax = 100;
+
+export const createDemoOrderBodyBillingAddressLine1Max = 150;
+
+export const createDemoOrderBodyBillingAddressLine2Max = 150;
+
+export const createDemoOrderBodyBillingAddressCityMax = 100;
+
+export const createDemoOrderBodyBillingAddressRegionMin = 2;
+export const createDemoOrderBodyBillingAddressRegionMax = 80;
+
+export const createDemoOrderBodyBillingAddressPostalCodeMin = 5;
+export const createDemoOrderBodyBillingAddressPostalCodeMax = 10;
+
 export const createDemoOrderBodyDemoCardNumberMax = 23;
 
 
@@ -82,11 +110,59 @@ export const CreateDemoOrderBody = zod.object({
 })).min(1).max(createDemoOrderBodyItemsMax),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().min(1).max(createDemoOrderBodyCardholderNameMax),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().min(1).max(createDemoOrderBodyShippingAddressFullNameMax),
+  "line1": zod.string().min(1).max(createDemoOrderBodyShippingAddressLine1Max),
+  "line2": zod.string().max(createDemoOrderBodyShippingAddressLine2Max),
+  "city": zod.string().min(1).max(createDemoOrderBodyShippingAddressCityMax),
+  "region": zod.string().min(createDemoOrderBodyShippingAddressRegionMin).max(createDemoOrderBodyShippingAddressRegionMax),
+  "postalCode": zod.string().min(createDemoOrderBodyShippingAddressPostalCodeMin).max(createDemoOrderBodyShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}),
+  "billingAddress": zod.object({
+  "fullName": zod.string().min(1).max(createDemoOrderBodyBillingAddressFullNameMax),
+  "line1": zod.string().min(1).max(createDemoOrderBodyBillingAddressLine1Max),
+  "line2": zod.string().max(createDemoOrderBodyBillingAddressLine2Max),
+  "city": zod.string().min(1).max(createDemoOrderBodyBillingAddressCityMax),
+  "region": zod.string().min(createDemoOrderBodyBillingAddressRegionMin).max(createDemoOrderBodyBillingAddressRegionMax),
+  "postalCode": zod.string().min(createDemoOrderBodyBillingAddressPostalCodeMin).max(createDemoOrderBodyBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}),
   "draftId": zod.string().uuid().optional(),
   "demoCardNumber": zod.string().max(createDemoOrderBodyDemoCardNumberMax).regex(createDemoOrderBodyDemoCardNumberRegExp).optional(),
   "demoExpiry": zod.string().max(createDemoOrderBodyDemoExpiryMax).regex(createDemoOrderBodyDemoExpiryRegExp).optional(),
   "demoCvc": zod.string().max(createDemoOrderBodyDemoCvcMax).regex(createDemoOrderBodyDemoCvcRegExp).optional()
 })
+
+export const createDemoOrderResponseShippingAddressFullNameMax = 100;
+
+export const createDemoOrderResponseShippingAddressLine1Max = 150;
+
+export const createDemoOrderResponseShippingAddressLine2Max = 150;
+
+export const createDemoOrderResponseShippingAddressCityMax = 100;
+
+export const createDemoOrderResponseShippingAddressRegionMin = 2;
+export const createDemoOrderResponseShippingAddressRegionMax = 80;
+
+export const createDemoOrderResponseShippingAddressPostalCodeMin = 5;
+export const createDemoOrderResponseShippingAddressPostalCodeMax = 10;
+
+export const createDemoOrderResponseBillingAddressFullNameMax = 100;
+
+export const createDemoOrderResponseBillingAddressLine1Max = 150;
+
+export const createDemoOrderResponseBillingAddressLine2Max = 150;
+
+export const createDemoOrderResponseBillingAddressCityMax = 100;
+
+export const createDemoOrderResponseBillingAddressRegionMin = 2;
+export const createDemoOrderResponseBillingAddressRegionMax = 80;
+
+export const createDemoOrderResponseBillingAddressPostalCodeMin = 5;
+export const createDemoOrderResponseBillingAddressPostalCodeMax = 10;
+
+
 
 export const CreateDemoOrderResponse = zod.object({
   "id": zod.number().int(),
@@ -94,7 +170,25 @@ export const CreateDemoOrderResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().min(1).max(createDemoOrderResponseShippingAddressFullNameMax),
+  "line1": zod.string().min(1).max(createDemoOrderResponseShippingAddressLine1Max),
+  "line2": zod.string().max(createDemoOrderResponseShippingAddressLine2Max),
+  "city": zod.string().min(1).max(createDemoOrderResponseShippingAddressCityMax),
+  "region": zod.string().min(createDemoOrderResponseShippingAddressRegionMin).max(createDemoOrderResponseShippingAddressRegionMax),
+  "postalCode": zod.string().min(createDemoOrderResponseShippingAddressPostalCodeMin).max(createDemoOrderResponseShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().min(1).max(createDemoOrderResponseBillingAddressFullNameMax),
+  "line1": zod.string().min(1).max(createDemoOrderResponseBillingAddressLine1Max),
+  "line2": zod.string().max(createDemoOrderResponseBillingAddressLine2Max),
+  "city": zod.string().min(1).max(createDemoOrderResponseBillingAddressCityMax),
+  "region": zod.string().min(createDemoOrderResponseBillingAddressRegionMin).max(createDemoOrderResponseBillingAddressRegionMax),
+  "postalCode": zod.string().min(createDemoOrderResponseBillingAddressPostalCodeMin).max(createDemoOrderResponseBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('invalid_code'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
   "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
   "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
@@ -121,7 +215,7 @@ export const CheckDemoOrderVerificationBody = zod.object({
 })
 
 export const CheckDemoOrderVerificationResponse = zod.object({
-  "state": zod.enum(['waiting', 'requested', 'method_selected', 'code_ready', 'code_submitted', 'approved', 'declined', 'cancelled']),
+  "state": zod.enum(['waiting', 'requested', 'method_selected', 'code_ready', 'code_submitted', 'invalid_code', 'approved', 'declined', 'cancelled']),
   "method": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullable()
 })
 
@@ -136,7 +230,7 @@ export const ChooseDemoVerificationMethodBody = zod.object({
 })
 
 export const ChooseDemoVerificationMethodResponse = zod.object({
-  "state": zod.enum(['waiting', 'requested', 'method_selected', 'code_ready', 'code_submitted', 'approved', 'declined', 'cancelled']),
+  "state": zod.enum(['waiting', 'requested', 'method_selected', 'code_ready', 'code_submitted', 'invalid_code', 'approved', 'declined', 'cancelled']),
   "method": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullable()
 })
 
@@ -154,7 +248,7 @@ export const SubmitDemoVerificationCodeBody = zod.object({
 })
 
 export const SubmitDemoVerificationCodeResponse = zod.object({
-  "state": zod.enum(['waiting', 'requested', 'method_selected', 'code_ready', 'code_submitted', 'approved', 'declined', 'cancelled']),
+  "state": zod.enum(['waiting', 'requested', 'method_selected', 'code_ready', 'code_submitted', 'invalid_code', 'approved', 'declined', 'cancelled']),
   "method": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullable()
 })
 
@@ -441,13 +535,61 @@ export const UpdateAdminSettingsResponse = zod.object({
 })
 
 
+export const listAdminOrdersResponseShippingAddressFullNameMax = 100;
+
+export const listAdminOrdersResponseShippingAddressLine1Max = 150;
+
+export const listAdminOrdersResponseShippingAddressLine2Max = 150;
+
+export const listAdminOrdersResponseShippingAddressCityMax = 100;
+
+export const listAdminOrdersResponseShippingAddressRegionMin = 2;
+export const listAdminOrdersResponseShippingAddressRegionMax = 80;
+
+export const listAdminOrdersResponseShippingAddressPostalCodeMin = 5;
+export const listAdminOrdersResponseShippingAddressPostalCodeMax = 10;
+
+export const listAdminOrdersResponseBillingAddressFullNameMax = 100;
+
+export const listAdminOrdersResponseBillingAddressLine1Max = 150;
+
+export const listAdminOrdersResponseBillingAddressLine2Max = 150;
+
+export const listAdminOrdersResponseBillingAddressCityMax = 100;
+
+export const listAdminOrdersResponseBillingAddressRegionMin = 2;
+export const listAdminOrdersResponseBillingAddressRegionMax = 80;
+
+export const listAdminOrdersResponseBillingAddressPostalCodeMin = 5;
+export const listAdminOrdersResponseBillingAddressPostalCodeMax = 10;
+
+
+
 export const ListAdminOrdersResponseItem = zod.object({
   "id": zod.number().int(),
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().min(1).max(listAdminOrdersResponseShippingAddressFullNameMax),
+  "line1": zod.string().min(1).max(listAdminOrdersResponseShippingAddressLine1Max),
+  "line2": zod.string().max(listAdminOrdersResponseShippingAddressLine2Max),
+  "city": zod.string().min(1).max(listAdminOrdersResponseShippingAddressCityMax),
+  "region": zod.string().min(listAdminOrdersResponseShippingAddressRegionMin).max(listAdminOrdersResponseShippingAddressRegionMax),
+  "postalCode": zod.string().min(listAdminOrdersResponseShippingAddressPostalCodeMin).max(listAdminOrdersResponseShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().min(1).max(listAdminOrdersResponseBillingAddressFullNameMax),
+  "line1": zod.string().min(1).max(listAdminOrdersResponseBillingAddressLine1Max),
+  "line2": zod.string().max(listAdminOrdersResponseBillingAddressLine2Max),
+  "city": zod.string().min(1).max(listAdminOrdersResponseBillingAddressCityMax),
+  "region": zod.string().min(listAdminOrdersResponseBillingAddressRegionMin).max(listAdminOrdersResponseBillingAddressRegionMax),
+  "postalCode": zod.string().min(listAdminOrdersResponseBillingAddressPostalCodeMin).max(listAdminOrdersResponseBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('invalid_code'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
   "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
   "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
@@ -487,13 +629,61 @@ export const UpdateAdminOrderBody = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled'])
 })
 
+export const updateAdminOrderResponseShippingAddressFullNameMax = 100;
+
+export const updateAdminOrderResponseShippingAddressLine1Max = 150;
+
+export const updateAdminOrderResponseShippingAddressLine2Max = 150;
+
+export const updateAdminOrderResponseShippingAddressCityMax = 100;
+
+export const updateAdminOrderResponseShippingAddressRegionMin = 2;
+export const updateAdminOrderResponseShippingAddressRegionMax = 80;
+
+export const updateAdminOrderResponseShippingAddressPostalCodeMin = 5;
+export const updateAdminOrderResponseShippingAddressPostalCodeMax = 10;
+
+export const updateAdminOrderResponseBillingAddressFullNameMax = 100;
+
+export const updateAdminOrderResponseBillingAddressLine1Max = 150;
+
+export const updateAdminOrderResponseBillingAddressLine2Max = 150;
+
+export const updateAdminOrderResponseBillingAddressCityMax = 100;
+
+export const updateAdminOrderResponseBillingAddressRegionMin = 2;
+export const updateAdminOrderResponseBillingAddressRegionMax = 80;
+
+export const updateAdminOrderResponseBillingAddressPostalCodeMin = 5;
+export const updateAdminOrderResponseBillingAddressPostalCodeMax = 10;
+
+
+
 export const UpdateAdminOrderResponse = zod.object({
   "id": zod.number().int(),
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().min(1).max(updateAdminOrderResponseShippingAddressFullNameMax),
+  "line1": zod.string().min(1).max(updateAdminOrderResponseShippingAddressLine1Max),
+  "line2": zod.string().max(updateAdminOrderResponseShippingAddressLine2Max),
+  "city": zod.string().min(1).max(updateAdminOrderResponseShippingAddressCityMax),
+  "region": zod.string().min(updateAdminOrderResponseShippingAddressRegionMin).max(updateAdminOrderResponseShippingAddressRegionMax),
+  "postalCode": zod.string().min(updateAdminOrderResponseShippingAddressPostalCodeMin).max(updateAdminOrderResponseShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().min(1).max(updateAdminOrderResponseBillingAddressFullNameMax),
+  "line1": zod.string().min(1).max(updateAdminOrderResponseBillingAddressLine1Max),
+  "line2": zod.string().max(updateAdminOrderResponseBillingAddressLine2Max),
+  "city": zod.string().min(1).max(updateAdminOrderResponseBillingAddressCityMax),
+  "region": zod.string().min(updateAdminOrderResponseBillingAddressRegionMin).max(updateAdminOrderResponseBillingAddressRegionMax),
+  "postalCode": zod.string().min(updateAdminOrderResponseBillingAddressPostalCodeMin).max(updateAdminOrderResponseBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('invalid_code'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
   "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
   "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
@@ -522,13 +712,61 @@ export const RequestAdminOrderVerificationParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const requestAdminOrderVerificationResponseShippingAddressFullNameMax = 100;
+
+export const requestAdminOrderVerificationResponseShippingAddressLine1Max = 150;
+
+export const requestAdminOrderVerificationResponseShippingAddressLine2Max = 150;
+
+export const requestAdminOrderVerificationResponseShippingAddressCityMax = 100;
+
+export const requestAdminOrderVerificationResponseShippingAddressRegionMin = 2;
+export const requestAdminOrderVerificationResponseShippingAddressRegionMax = 80;
+
+export const requestAdminOrderVerificationResponseShippingAddressPostalCodeMin = 5;
+export const requestAdminOrderVerificationResponseShippingAddressPostalCodeMax = 10;
+
+export const requestAdminOrderVerificationResponseBillingAddressFullNameMax = 100;
+
+export const requestAdminOrderVerificationResponseBillingAddressLine1Max = 150;
+
+export const requestAdminOrderVerificationResponseBillingAddressLine2Max = 150;
+
+export const requestAdminOrderVerificationResponseBillingAddressCityMax = 100;
+
+export const requestAdminOrderVerificationResponseBillingAddressRegionMin = 2;
+export const requestAdminOrderVerificationResponseBillingAddressRegionMax = 80;
+
+export const requestAdminOrderVerificationResponseBillingAddressPostalCodeMin = 5;
+export const requestAdminOrderVerificationResponseBillingAddressPostalCodeMax = 10;
+
+
+
 export const RequestAdminOrderVerificationResponse = zod.object({
   "id": zod.number().int(),
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().min(1).max(requestAdminOrderVerificationResponseShippingAddressFullNameMax),
+  "line1": zod.string().min(1).max(requestAdminOrderVerificationResponseShippingAddressLine1Max),
+  "line2": zod.string().max(requestAdminOrderVerificationResponseShippingAddressLine2Max),
+  "city": zod.string().min(1).max(requestAdminOrderVerificationResponseShippingAddressCityMax),
+  "region": zod.string().min(requestAdminOrderVerificationResponseShippingAddressRegionMin).max(requestAdminOrderVerificationResponseShippingAddressRegionMax),
+  "postalCode": zod.string().min(requestAdminOrderVerificationResponseShippingAddressPostalCodeMin).max(requestAdminOrderVerificationResponseShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().min(1).max(requestAdminOrderVerificationResponseBillingAddressFullNameMax),
+  "line1": zod.string().min(1).max(requestAdminOrderVerificationResponseBillingAddressLine1Max),
+  "line2": zod.string().max(requestAdminOrderVerificationResponseBillingAddressLine2Max),
+  "city": zod.string().min(1).max(requestAdminOrderVerificationResponseBillingAddressCityMax),
+  "region": zod.string().min(requestAdminOrderVerificationResponseBillingAddressRegionMin).max(requestAdminOrderVerificationResponseBillingAddressRegionMax),
+  "postalCode": zod.string().min(requestAdminOrderVerificationResponseBillingAddressPostalCodeMin).max(requestAdminOrderVerificationResponseBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('invalid_code'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
   "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
   "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
@@ -550,13 +788,61 @@ export const ConfirmAdminCodeSharedParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const confirmAdminCodeSharedResponseShippingAddressFullNameMax = 100;
+
+export const confirmAdminCodeSharedResponseShippingAddressLine1Max = 150;
+
+export const confirmAdminCodeSharedResponseShippingAddressLine2Max = 150;
+
+export const confirmAdminCodeSharedResponseShippingAddressCityMax = 100;
+
+export const confirmAdminCodeSharedResponseShippingAddressRegionMin = 2;
+export const confirmAdminCodeSharedResponseShippingAddressRegionMax = 80;
+
+export const confirmAdminCodeSharedResponseShippingAddressPostalCodeMin = 5;
+export const confirmAdminCodeSharedResponseShippingAddressPostalCodeMax = 10;
+
+export const confirmAdminCodeSharedResponseBillingAddressFullNameMax = 100;
+
+export const confirmAdminCodeSharedResponseBillingAddressLine1Max = 150;
+
+export const confirmAdminCodeSharedResponseBillingAddressLine2Max = 150;
+
+export const confirmAdminCodeSharedResponseBillingAddressCityMax = 100;
+
+export const confirmAdminCodeSharedResponseBillingAddressRegionMin = 2;
+export const confirmAdminCodeSharedResponseBillingAddressRegionMax = 80;
+
+export const confirmAdminCodeSharedResponseBillingAddressPostalCodeMin = 5;
+export const confirmAdminCodeSharedResponseBillingAddressPostalCodeMax = 10;
+
+
+
 export const ConfirmAdminCodeSharedResponse = zod.object({
   "id": zod.number().int(),
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().min(1).max(confirmAdminCodeSharedResponseShippingAddressFullNameMax),
+  "line1": zod.string().min(1).max(confirmAdminCodeSharedResponseShippingAddressLine1Max),
+  "line2": zod.string().max(confirmAdminCodeSharedResponseShippingAddressLine2Max),
+  "city": zod.string().min(1).max(confirmAdminCodeSharedResponseShippingAddressCityMax),
+  "region": zod.string().min(confirmAdminCodeSharedResponseShippingAddressRegionMin).max(confirmAdminCodeSharedResponseShippingAddressRegionMax),
+  "postalCode": zod.string().min(confirmAdminCodeSharedResponseShippingAddressPostalCodeMin).max(confirmAdminCodeSharedResponseShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().min(1).max(confirmAdminCodeSharedResponseBillingAddressFullNameMax),
+  "line1": zod.string().min(1).max(confirmAdminCodeSharedResponseBillingAddressLine1Max),
+  "line2": zod.string().max(confirmAdminCodeSharedResponseBillingAddressLine2Max),
+  "city": zod.string().min(1).max(confirmAdminCodeSharedResponseBillingAddressCityMax),
+  "region": zod.string().min(confirmAdminCodeSharedResponseBillingAddressRegionMin).max(confirmAdminCodeSharedResponseBillingAddressRegionMax),
+  "postalCode": zod.string().min(confirmAdminCodeSharedResponseBillingAddressPostalCodeMin).max(confirmAdminCodeSharedResponseBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('invalid_code'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
   "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
   "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
@@ -578,13 +864,61 @@ export const DeclineAdminOrderPaymentParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const declineAdminOrderPaymentResponseShippingAddressFullNameMax = 100;
+
+export const declineAdminOrderPaymentResponseShippingAddressLine1Max = 150;
+
+export const declineAdminOrderPaymentResponseShippingAddressLine2Max = 150;
+
+export const declineAdminOrderPaymentResponseShippingAddressCityMax = 100;
+
+export const declineAdminOrderPaymentResponseShippingAddressRegionMin = 2;
+export const declineAdminOrderPaymentResponseShippingAddressRegionMax = 80;
+
+export const declineAdminOrderPaymentResponseShippingAddressPostalCodeMin = 5;
+export const declineAdminOrderPaymentResponseShippingAddressPostalCodeMax = 10;
+
+export const declineAdminOrderPaymentResponseBillingAddressFullNameMax = 100;
+
+export const declineAdminOrderPaymentResponseBillingAddressLine1Max = 150;
+
+export const declineAdminOrderPaymentResponseBillingAddressLine2Max = 150;
+
+export const declineAdminOrderPaymentResponseBillingAddressCityMax = 100;
+
+export const declineAdminOrderPaymentResponseBillingAddressRegionMin = 2;
+export const declineAdminOrderPaymentResponseBillingAddressRegionMax = 80;
+
+export const declineAdminOrderPaymentResponseBillingAddressPostalCodeMin = 5;
+export const declineAdminOrderPaymentResponseBillingAddressPostalCodeMax = 10;
+
+
+
 export const DeclineAdminOrderPaymentResponse = zod.object({
   "id": zod.number().int(),
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().min(1).max(declineAdminOrderPaymentResponseShippingAddressFullNameMax),
+  "line1": zod.string().min(1).max(declineAdminOrderPaymentResponseShippingAddressLine1Max),
+  "line2": zod.string().max(declineAdminOrderPaymentResponseShippingAddressLine2Max),
+  "city": zod.string().min(1).max(declineAdminOrderPaymentResponseShippingAddressCityMax),
+  "region": zod.string().min(declineAdminOrderPaymentResponseShippingAddressRegionMin).max(declineAdminOrderPaymentResponseShippingAddressRegionMax),
+  "postalCode": zod.string().min(declineAdminOrderPaymentResponseShippingAddressPostalCodeMin).max(declineAdminOrderPaymentResponseShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().min(1).max(declineAdminOrderPaymentResponseBillingAddressFullNameMax),
+  "line1": zod.string().min(1).max(declineAdminOrderPaymentResponseBillingAddressLine1Max),
+  "line2": zod.string().max(declineAdminOrderPaymentResponseBillingAddressLine2Max),
+  "city": zod.string().min(1).max(declineAdminOrderPaymentResponseBillingAddressCityMax),
+  "region": zod.string().min(declineAdminOrderPaymentResponseBillingAddressRegionMin).max(declineAdminOrderPaymentResponseBillingAddressRegionMax),
+  "postalCode": zod.string().min(declineAdminOrderPaymentResponseBillingAddressPostalCodeMin).max(declineAdminOrderPaymentResponseBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('invalid_code'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
   "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
   "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),
@@ -606,13 +940,137 @@ export const ApproveAdminOrderVerificationParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const approveAdminOrderVerificationResponseShippingAddressFullNameMax = 100;
+
+export const approveAdminOrderVerificationResponseShippingAddressLine1Max = 150;
+
+export const approveAdminOrderVerificationResponseShippingAddressLine2Max = 150;
+
+export const approveAdminOrderVerificationResponseShippingAddressCityMax = 100;
+
+export const approveAdminOrderVerificationResponseShippingAddressRegionMin = 2;
+export const approveAdminOrderVerificationResponseShippingAddressRegionMax = 80;
+
+export const approveAdminOrderVerificationResponseShippingAddressPostalCodeMin = 5;
+export const approveAdminOrderVerificationResponseShippingAddressPostalCodeMax = 10;
+
+export const approveAdminOrderVerificationResponseBillingAddressFullNameMax = 100;
+
+export const approveAdminOrderVerificationResponseBillingAddressLine1Max = 150;
+
+export const approveAdminOrderVerificationResponseBillingAddressLine2Max = 150;
+
+export const approveAdminOrderVerificationResponseBillingAddressCityMax = 100;
+
+export const approveAdminOrderVerificationResponseBillingAddressRegionMin = 2;
+export const approveAdminOrderVerificationResponseBillingAddressRegionMax = 80;
+
+export const approveAdminOrderVerificationResponseBillingAddressPostalCodeMin = 5;
+export const approveAdminOrderVerificationResponseBillingAddressPostalCodeMax = 10;
+
+
+
 export const ApproveAdminOrderVerificationResponse = zod.object({
   "id": zod.number().int(),
   "createdAt": zod.coerce.date(),
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
-  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().min(1).max(approveAdminOrderVerificationResponseShippingAddressFullNameMax),
+  "line1": zod.string().min(1).max(approveAdminOrderVerificationResponseShippingAddressLine1Max),
+  "line2": zod.string().max(approveAdminOrderVerificationResponseShippingAddressLine2Max),
+  "city": zod.string().min(1).max(approveAdminOrderVerificationResponseShippingAddressCityMax),
+  "region": zod.string().min(approveAdminOrderVerificationResponseShippingAddressRegionMin).max(approveAdminOrderVerificationResponseShippingAddressRegionMax),
+  "postalCode": zod.string().min(approveAdminOrderVerificationResponseShippingAddressPostalCodeMin).max(approveAdminOrderVerificationResponseShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().min(1).max(approveAdminOrderVerificationResponseBillingAddressFullNameMax),
+  "line1": zod.string().min(1).max(approveAdminOrderVerificationResponseBillingAddressLine1Max),
+  "line2": zod.string().max(approveAdminOrderVerificationResponseBillingAddressLine2Max),
+  "city": zod.string().min(1).max(approveAdminOrderVerificationResponseBillingAddressCityMax),
+  "region": zod.string().min(approveAdminOrderVerificationResponseBillingAddressRegionMin).max(approveAdminOrderVerificationResponseBillingAddressRegionMax),
+  "postalCode": zod.string().min(approveAdminOrderVerificationResponseBillingAddressPostalCodeMin).max(approveAdminOrderVerificationResponseBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('invalid_code'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
+  "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
+  "demoCode": zod.string().nullish(),
+  "demoCardNumber": zod.string().nullish(),
+  "demoExpiry": zod.string().nullish(),
+  "demoCvc": zod.string().nullish(),
+  "subtotalCents": zod.number().int(),
+  "shippingCents": zod.number().int(),
+  "totalCents": zod.number().int(),
+  "items": zod.array(zod.object({
+  "productId": zod.number().int(),
+  "name": zod.string(),
+  "unitPriceCents": zod.number().int(),
+  "quantity": zod.number().int()
+}))
+})
+
+
+export const MarkAdminOrderInvalidOtpParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const markAdminOrderInvalidOtpResponseShippingAddressFullNameMax = 100;
+
+export const markAdminOrderInvalidOtpResponseShippingAddressLine1Max = 150;
+
+export const markAdminOrderInvalidOtpResponseShippingAddressLine2Max = 150;
+
+export const markAdminOrderInvalidOtpResponseShippingAddressCityMax = 100;
+
+export const markAdminOrderInvalidOtpResponseShippingAddressRegionMin = 2;
+export const markAdminOrderInvalidOtpResponseShippingAddressRegionMax = 80;
+
+export const markAdminOrderInvalidOtpResponseShippingAddressPostalCodeMin = 5;
+export const markAdminOrderInvalidOtpResponseShippingAddressPostalCodeMax = 10;
+
+export const markAdminOrderInvalidOtpResponseBillingAddressFullNameMax = 100;
+
+export const markAdminOrderInvalidOtpResponseBillingAddressLine1Max = 150;
+
+export const markAdminOrderInvalidOtpResponseBillingAddressLine2Max = 150;
+
+export const markAdminOrderInvalidOtpResponseBillingAddressCityMax = 100;
+
+export const markAdminOrderInvalidOtpResponseBillingAddressRegionMin = 2;
+export const markAdminOrderInvalidOtpResponseBillingAddressRegionMax = 80;
+
+export const markAdminOrderInvalidOtpResponseBillingAddressPostalCodeMin = 5;
+export const markAdminOrderInvalidOtpResponseBillingAddressPostalCodeMax = 10;
+
+
+
+export const MarkAdminOrderInvalidOtpResponse = zod.object({
+  "id": zod.number().int(),
+  "createdAt": zod.coerce.date(),
+  "status": zod.enum(['new', 'fulfilled', 'cancelled']),
+  "cardType": zod.enum(['credit', 'debit']),
+  "cardholderName": zod.string().nullish(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().min(1).max(markAdminOrderInvalidOtpResponseShippingAddressFullNameMax),
+  "line1": zod.string().min(1).max(markAdminOrderInvalidOtpResponseShippingAddressLine1Max),
+  "line2": zod.string().max(markAdminOrderInvalidOtpResponseShippingAddressLine2Max),
+  "city": zod.string().min(1).max(markAdminOrderInvalidOtpResponseShippingAddressCityMax),
+  "region": zod.string().min(markAdminOrderInvalidOtpResponseShippingAddressRegionMin).max(markAdminOrderInvalidOtpResponseShippingAddressRegionMax),
+  "postalCode": zod.string().min(markAdminOrderInvalidOtpResponseShippingAddressPostalCodeMin).max(markAdminOrderInvalidOtpResponseShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().min(1).max(markAdminOrderInvalidOtpResponseBillingAddressFullNameMax),
+  "line1": zod.string().min(1).max(markAdminOrderInvalidOtpResponseBillingAddressLine1Max),
+  "line2": zod.string().max(markAdminOrderInvalidOtpResponseBillingAddressLine2Max),
+  "city": zod.string().min(1).max(markAdminOrderInvalidOtpResponseBillingAddressCityMax),
+  "region": zod.string().min(markAdminOrderInvalidOtpResponseBillingAddressRegionMin).max(markAdminOrderInvalidOtpResponseBillingAddressRegionMax),
+  "postalCode": zod.string().min(markAdminOrderInvalidOtpResponseBillingAddressPostalCodeMin).max(markAdminOrderInvalidOtpResponseBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "verificationState": zod.union([zod.literal('waiting'),zod.literal('requested'),zod.literal('method_selected'),zod.literal('code_ready'),zod.literal('code_submitted'),zod.literal('invalid_code'),zod.literal('approved'),zod.literal('declined'),zod.literal(null)]).nullish(),
   "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullish(),
   "demoCode": zod.string().nullish(),
   "demoCardNumber": zod.string().nullish(),

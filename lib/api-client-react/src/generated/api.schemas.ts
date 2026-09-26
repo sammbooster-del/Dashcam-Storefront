@@ -218,6 +218,45 @@ export interface OrderItem {
   quantity: number;
 }
 
+export type OrderAddressCountry = typeof OrderAddressCountry[keyof typeof OrderAddressCountry];
+
+
+export const OrderAddressCountry = {
+  US: 'US',
+  CA: 'CA',
+} as const;
+
+export interface OrderAddress {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  fullName: string;
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  line1: string;
+  /** @maxLength 150 */
+  line2: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  city: string;
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  region: string;
+  /**
+     * @minLength 5
+     * @maxLength 10
+     */
+  postalCode: string;
+  country: OrderAddressCountry;
+}
+
 export type DemoOrderStatus = typeof DemoOrderStatus[keyof typeof DemoOrderStatus];
 
 
@@ -247,6 +286,7 @@ export const DemoOrderVerificationState = {
   method_selected: 'method_selected',
   code_ready: 'code_ready',
   code_submitted: 'code_submitted',
+  invalid_code: 'invalid_code',
   approved: 'approved',
   declined: 'declined',
 } as const;
@@ -269,6 +309,8 @@ export interface DemoOrder {
   cardType: DemoOrderCardType;
   /** @nullable */
   cardholderName?: string | null;
+  shippingAddress?: OrderAddress;
+  billingAddress?: OrderAddress;
   /** @nullable */
   verificationState?: DemoOrderVerificationState;
   /** @nullable */
@@ -316,6 +358,8 @@ export interface DemoOrderInput {
      * @maxLength 80
      */
   cardholderName: string;
+  shippingAddress: OrderAddress;
+  billingAddress: OrderAddress;
   draftId?: string;
   /**
      * @maxLength 23
@@ -343,6 +387,7 @@ export const DemoVerificationState = {
   method_selected: 'method_selected',
   code_ready: 'code_ready',
   code_submitted: 'code_submitted',
+  invalid_code: 'invalid_code',
   approved: 'approved',
   declined: 'declined',
   cancelled: 'cancelled',
