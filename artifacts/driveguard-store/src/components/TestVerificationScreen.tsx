@@ -92,7 +92,7 @@ export function TestVerificationScreen({
           <h1 id="test-verification-title" className="text-[22px] font-medium leading-tight tracking-[-.035em] sm:text-[24px]">
             {appearance?.verificationTitle?.trim() || 'Verify your order'}
           </h1>
-          <div className="mt-7 grid grid-cols-2 items-center gap-3 border-b border-[#e6e8ec] pb-7 sm:mt-9 sm:pb-9">
+          <div className="mt-7 flex items-center border-b border-[#e6e8ec] pb-7 sm:mt-9 sm:pb-9">
             <div className="flex min-w-0 items-center gap-2.5">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[5px] bg-[#243b54] text-white" aria-hidden="true">
                 <ShieldCheck size={22} strokeWidth={1.7} />
@@ -100,11 +100,6 @@ export function TestVerificationScreen({
               <div className="min-w-0">
                 <p className="truncate text-[16px] font-bold leading-tight tracking-[-.04em]">{brandName}</p>
                 <p className="text-[10px] leading-tight text-[#737d89]">Order verification</p>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <div className="border-l border-[#e6e8ec] pl-3 text-right sm:pl-6">
-                <span className="inline-block rounded-[3px] border border-[#d8cfa7] bg-[#fff8df] px-2 py-0.5 text-[11px] font-extrabold tracking-[.1em] text-[#705715]">NO CHARGE</span>
               </div>
             </div>
           </div>
