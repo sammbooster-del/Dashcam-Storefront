@@ -13,6 +13,8 @@ export const demoOrdersTable = pgTable("demo_orders", {
   status: text("status", { enum: ["new", "fulfilled", "cancelled"] }).notNull().default("new"),
   cardType: text("card_type", { enum: ["credit", "debit"] }).notNull(),
   cardholderName: text("cardholder_name"),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
   shippingAddress: jsonb("shipping_address").$type<OrderAddress>(),
   billingAddress: jsonb("billing_address").$type<OrderAddress>(),
   demoId: text("demo_id"),

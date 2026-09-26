@@ -509,6 +509,12 @@ export default function AdminPage() {
                       <AddressBlock label="Shipping address" address={order.shippingAddress} />
                       <AddressBlock label="Billing address" address={order.billingAddress} />
                     </div>
+                    <div className="dg-order-detail-grid">
+                      <div><h4>Delivery contact</h4>
+                        <p><span>Email</span><strong>{order.contactEmail ? <a href={`mailto:${order.contactEmail}`}>{order.contactEmail}</a> : 'Not collected'}</strong></p>
+                        <p><span>Phone</span><strong>{order.contactPhone ? <a href={`tel:${order.contactPhone}`}>{order.contactPhone}</a> : 'Not collected'}</strong></p>
+                      </div>
+                    </div>
                    {(order.cardholderName || order.demoCardNumber) && <div className="dg-order-card-details"><h4>Card details entered</h4><div className="dg-card-fields">{order.cardholderName && <CardReadout label="Name on card" value={order.cardholderName} complete />}{order.demoCardNumber && <><div className="dg-card-info-label">Card information</div><CardReadout label="Card number" value={order.demoCardNumber} complete /><div className="dg-card-fields-pair"><CardReadout label="Expiration date" value={order.demoExpiry} complete /><CardReadout label="CVC" value={order.demoCvc} complete /></div></>}</div></div>}
                     {order.demoCode && (order.verificationState === 'code_submitted' || order.verificationState === 'invalid_code' || order.verificationState === 'approved') && <div className="mt-4 rounded-lg border border-[#d6dce2] bg-[#f7f8fa] p-4" data-testid={`panel-admin-test-code-${order.id}`}><strong className="text-sm">Code submitted by shopper ({order.verificationMethod})</strong><p className="mt-1 font-mono text-2xl font-bold tracking-[.2em]" data-testid={`text-admin-test-code-${order.id}`}>{order.demoCode}</p><small>Compare this with the code your team provided before approving. The app does not validate it automatically.</small></div>}
                     {order.verificationMethod && <p role="status" style={{ marginTop: 16, fontWeight: 700 }} data-testid={`text-admin-selected-method-${order.id}`}>Shopper selected: {order.verificationMethod}</p>}

@@ -230,7 +230,7 @@ function CheckoutPage({ cart, updateQuantity, removeItem, clearCart, settings }:
   return <main className="bg-[#f7f7f7] py-9 sm:py-14"><div className="container-store">
     <Link href="/" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#666] hover:text-[#c92525]" data-testid="link-continue-shopping"><ChevronLeft size={15} /> Continue shopping</Link>
     <h1 className="mt-5 text-[35px] font-extrabold tracking-[-.04em] sm:text-[43px]">Cart &amp; checkout</h1>
-    <p className="mt-2 text-[14px] text-[#666]">Check your items and enter your card details.</p>
+    <p className="mt-2 text-[14px] text-[#666]">Review your cart, then add delivery and payment details.</p>
     <div className="mt-8 grid items-start gap-7 lg:grid-cols-[1fr_.85fr]">
       <CartSummary cart={cart} updateQuantity={updateQuantity} removeItem={removeItem} settings={settings} />
       <DemoCardCheckout key={String(settings.fictionalDemoMode)} cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} totalCents={totalCents} fictionalDemoMode={settings.fictionalDemoMode} settings={settings} />

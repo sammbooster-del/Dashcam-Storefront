@@ -182,6 +182,8 @@ const requireSameOriginWrite: RequestHandler = (req, res, next) => {
 
 const formatOrder = (order: DemoOrder) => ({
   ...order,
+  contactEmail: order.contactEmail ?? undefined,
+  contactPhone: order.contactPhone ?? undefined,
   shippingAddress: order.shippingAddress ?? undefined,
   billingAddress: order.billingAddress ?? undefined,
   createdAt: order.createdAt.toISOString(),
@@ -200,6 +202,17 @@ function validAddress(address: NonNullable<DemoOrder["shippingAddress"]>) {
     (address.country === "US"
       ? /^\d{5}(?:-\d{4})?$/.test(address.postalCode)
       : /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/.test(address.postalCode));
+}
+
+function normalizePhone(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 10 ? `+1${digits}` : `+${digits}`;
+}
+
+function validPhone(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return /^[+()\d.\s-]+$/.test(phone) &&
+    (digits.length === 10 || (digits.length === 11 && digits.startsWith("1")));
 }
 
 type DemoDraft = {
@@ -284,7 +297,7 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
 
 router.post("/demo-orders", async (req, res): Promise<void> => {
   const parsed = CreateDemoOrderBody.safeParse(req.body);
-  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "cardholderName", "shippingAddress", "billingAddress", "draftId", "demoCardNumber", "demoExpiry", "demoCvc"]) ||
+  if (!parsed.success || !hasOnlyFields(req.body, ["items", "cardType", "cardholderName", "contactEmail", "contactPhone", "shippingAddress", "billingAddress", "draftId", "demoCardNumber", "demoExpiry", "demoCvc"]) ||
     !Array.isArray(req.body.items) ||
     !req.body.items.every((item: unknown) => hasOnlyFields(item, ["productId", "quantity"])) ||
     !hasOnlyFields(req.body.shippingAddress, ["fullName", "line1", "line2", "city", "region", "postalCode", "country"]) ||
@@ -300,6 +313,12 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
   const cardholderName = parsed.data.cardholderName.trim();
   if (!cardholderName || !/^[\p{L}\p{M}\p{N} .'-]+$/u.test(cardholderName)) {
     res.status(400).json({ error: "Enter a valid name on card" });
+    return;
+  }
+  const contactEmail = parsed.data.contactEmail.trim().toLowerCase();
+  const contactPhone = parsed.data.contactPhone.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail) || !validPhone(contactPhone)) {
+    res.status(400).json({ error: "Enter a valid email and US or Canadian phone number" });
     return;
   }
   const shippingAddress = normalizeAddress(parsed.data.shippingAddress);
@@ -344,6 +363,8 @@ router.post("/demo-orders", async (req, res): Promise<void> => {
   const [order] = await db.insert(demoOrdersTable).values({
     cardType: parsed.data.cardType,
     cardholderName,
+    contactEmail,
+    contactPhone: normalizePhone(contactPhone),
     shippingAddress,
     billingAddress,
     demoId: settings.fictionalDemoMode ? parsed.data.draftId : null,

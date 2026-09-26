@@ -538,6 +538,8 @@ components:
         status: { type: string, enum: [new, fulfilled, cancelled] }
         cardType: { type: string, enum: [credit, debit] }
         cardholderName: { type: ["string", "null"] }
+        contactEmail: { type: string, format: email }
+        contactPhone: { type: string }
         shippingAddress: { $ref: "#/components/schemas/OrderAddress" }
         billingAddress: { $ref: "#/components/schemas/OrderAddress" }
         verificationState: { type: ["string", "null"], enum: [waiting, requested, method_selected, code_ready, code_submitted, invalid_code, approved, declined, null] }
@@ -562,7 +564,7 @@ components:
         quantity: { type: integer, minimum: 1, maximum: 99 }
     DemoOrderInput:
       type: object
-      required: [items, cardType, cardholderName, shippingAddress, billingAddress]
+      required: [items, cardType, cardholderName, contactEmail, contactPhone, shippingAddress, billingAddress]
       additionalProperties: false
       properties:
         items:
@@ -573,6 +575,8 @@ components:
             $ref: "#/components/schemas/DemoOrderItemInput"
         cardType: { type: string, enum: [credit, debit] }
         cardholderName: { type: string, minLength: 1, maxLength: 80 }
+        contactEmail: { type: string, format: email, maxLength: 254 }
+        contactPhone: { type: string, minLength: 10, maxLength: 30 }
         shippingAddress: { $ref: "#/components/schemas/OrderAddress" }
         billingAddress: { $ref: "#/components/schemas/OrderAddress" }
         draftId: { type: string, format: uuid }

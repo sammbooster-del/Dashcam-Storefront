@@ -19,6 +19,8 @@ export interface DemoOrder {
   cardType: DemoOrderCardType;
   /** @nullable */
   cardholderName?: string | null;
+  contactEmail?: string;
+  contactPhone?: string;
   shippingAddress?: OrderAddress;
   billingAddress?: OrderAddress;
   /** @nullable */

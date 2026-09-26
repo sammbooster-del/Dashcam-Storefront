@@ -21,6 +21,13 @@ export interface DemoOrderInput {
      * @maxLength 80
      */
   cardholderName: string;
+  /** @maxLength 254 */
+  contactEmail: string;
+  /**
+     * @minLength 10
+     * @maxLength 30
+     */
+  contactPhone: string;
   shippingAddress: OrderAddress;
   billingAddress: OrderAddress;
   draftId?: string;

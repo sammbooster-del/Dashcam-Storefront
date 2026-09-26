@@ -61,6 +61,11 @@ export const createDemoOrderBodyItemsMax = 100;
 
 export const createDemoOrderBodyCardholderNameMax = 80;
 
+export const createDemoOrderBodyContactEmailMax = 254;
+
+export const createDemoOrderBodyContactPhoneMin = 10;
+export const createDemoOrderBodyContactPhoneMax = 30;
+
 export const createDemoOrderBodyShippingAddressFullNameMax = 100;
 
 export const createDemoOrderBodyShippingAddressLine1Max = 150;
@@ -110,6 +115,8 @@ export const CreateDemoOrderBody = zod.object({
 })).min(1).max(createDemoOrderBodyItemsMax),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().min(1).max(createDemoOrderBodyCardholderNameMax),
+  "contactEmail": zod.string().email().max(createDemoOrderBodyContactEmailMax),
+  "contactPhone": zod.string().min(createDemoOrderBodyContactPhoneMin).max(createDemoOrderBodyContactPhoneMax),
   "shippingAddress": zod.object({
   "fullName": zod.string().min(1).max(createDemoOrderBodyShippingAddressFullNameMax),
   "line1": zod.string().min(1).max(createDemoOrderBodyShippingAddressLine1Max),
@@ -170,6 +177,8 @@ export const CreateDemoOrderResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
+  "contactEmail": zod.string().email().optional(),
+  "contactPhone": zod.string().optional(),
   "shippingAddress": zod.object({
   "fullName": zod.string().min(1).max(createDemoOrderResponseShippingAddressFullNameMax),
   "line1": zod.string().min(1).max(createDemoOrderResponseShippingAddressLine1Max),
@@ -571,6 +580,8 @@ export const ListAdminOrdersResponseItem = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
+  "contactEmail": zod.string().email().optional(),
+  "contactPhone": zod.string().optional(),
   "shippingAddress": zod.object({
   "fullName": zod.string().min(1).max(listAdminOrdersResponseShippingAddressFullNameMax),
   "line1": zod.string().min(1).max(listAdminOrdersResponseShippingAddressLine1Max),
@@ -665,6 +676,8 @@ export const UpdateAdminOrderResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
+  "contactEmail": zod.string().email().optional(),
+  "contactPhone": zod.string().optional(),
   "shippingAddress": zod.object({
   "fullName": zod.string().min(1).max(updateAdminOrderResponseShippingAddressFullNameMax),
   "line1": zod.string().min(1).max(updateAdminOrderResponseShippingAddressLine1Max),
@@ -748,6 +761,8 @@ export const RequestAdminOrderVerificationResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
+  "contactEmail": zod.string().email().optional(),
+  "contactPhone": zod.string().optional(),
   "shippingAddress": zod.object({
   "fullName": zod.string().min(1).max(requestAdminOrderVerificationResponseShippingAddressFullNameMax),
   "line1": zod.string().min(1).max(requestAdminOrderVerificationResponseShippingAddressLine1Max),
@@ -824,6 +839,8 @@ export const ConfirmAdminCodeSharedResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
+  "contactEmail": zod.string().email().optional(),
+  "contactPhone": zod.string().optional(),
   "shippingAddress": zod.object({
   "fullName": zod.string().min(1).max(confirmAdminCodeSharedResponseShippingAddressFullNameMax),
   "line1": zod.string().min(1).max(confirmAdminCodeSharedResponseShippingAddressLine1Max),
@@ -900,6 +917,8 @@ export const DeclineAdminOrderPaymentResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
+  "contactEmail": zod.string().email().optional(),
+  "contactPhone": zod.string().optional(),
   "shippingAddress": zod.object({
   "fullName": zod.string().min(1).max(declineAdminOrderPaymentResponseShippingAddressFullNameMax),
   "line1": zod.string().min(1).max(declineAdminOrderPaymentResponseShippingAddressLine1Max),
@@ -976,6 +995,8 @@ export const ApproveAdminOrderVerificationResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
+  "contactEmail": zod.string().email().optional(),
+  "contactPhone": zod.string().optional(),
   "shippingAddress": zod.object({
   "fullName": zod.string().min(1).max(approveAdminOrderVerificationResponseShippingAddressFullNameMax),
   "line1": zod.string().min(1).max(approveAdminOrderVerificationResponseShippingAddressLine1Max),
@@ -1052,6 +1073,8 @@ export const MarkAdminOrderInvalidOtpResponse = zod.object({
   "status": zod.enum(['new', 'fulfilled', 'cancelled']),
   "cardType": zod.enum(['credit', 'debit']),
   "cardholderName": zod.string().nullish(),
+  "contactEmail": zod.string().email().optional(),
+  "contactPhone": zod.string().optional(),
   "shippingAddress": zod.object({
   "fullName": zod.string().min(1).max(markAdminOrderInvalidOtpResponseShippingAddressFullNameMax),
   "line1": zod.string().min(1).max(markAdminOrderInvalidOtpResponseShippingAddressLine1Max),
