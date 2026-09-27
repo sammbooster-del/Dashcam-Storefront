@@ -66,6 +66,7 @@ export function DemoCardCheckout({
   const [shippingAddress, setShippingAddress] = useState<OrderAddress>(emptyAddress);
   const [billingAddress, setBillingAddress] = useState<OrderAddress>(emptyAddress);
   const [step, setStep] = useState<'delivery' | 'payment'>('delivery');
+  const [transitioningToPayment, setTransitioningToPayment] = useState(false);
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [draftError, setDraftError] = useState('');
@@ -85,6 +86,10 @@ export function DemoCardCheckout({
   const completedRef = useRef<DemoCheckoutDraftInput['completedFields']>([]);
   const pendingDraft = useRef<Promise<unknown>>(Promise.resolve());
   const draftSequence = useRef(0);
+  const stepTransitionTimer = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (stepTransitionTimer.current !== null) window.clearTimeout(stepTransitionTimer.current);
+  }, []);
   useEffect(() => {
     if (previousStepRef.current === step) return;
     previousStepRef.current = step;
@@ -240,12 +245,18 @@ export function DemoCardCheckout({
   };
   const continueToPayment = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (transitioningToPayment || !cart.length || cart.some(line => line.quantity > line.product.stock)) return;
     if (!validPhone(contactPhone.trim())) {
       setFormError('Enter a valid US or Canadian 10-digit phone number.');
       return;
     }
     setFormError('');
-    setStep('payment');
+    setTransitioningToPayment(true);
+    stepTransitionTimer.current = window.setTimeout(() => {
+      stepTransitionTimer.current = null;
+      setStep('payment');
+      setTransitioningToPayment(false);
+    }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 120 : 850);
   };
   const editDelivery = () => {
     setFormError('');
@@ -330,8 +341,8 @@ export function DemoCardCheckout({
   return <section ref={checkoutRef} className="overflow-hidden rounded-2xl border border-[#dfe3e8] bg-[#fffefd] shadow-[0_18px_48px_-32px_rgba(28,37,50,.35)]" data-testid="panel-demo-card-checkout">
     <header className="border-b border-[#e9edf0] bg-[#f8f9fa] px-5 pb-6 pt-6 sm:px-8 sm:pt-8">
       <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em] text-[#a62020]"><LockKeyhole size={13} aria-hidden="true" /> Secure checkout</div>
-      <h2 className="mt-2 text-[25px] font-bold tracking-[-.04em] text-[#1c2734] sm:text-[28px]">{step === 'delivery' ? 'Where should it go?' : 'Almost there.'}</h2>
-      <p className="mt-1 text-[13px] leading-5 text-[#637082]">{step === 'delivery' ? 'Add your contact and delivery details.' : 'Review your delivery and complete your order.'}</p>
+      <h2 className="mt-2 text-[25px] font-bold tracking-[-.04em] text-[#1c2734] sm:text-[28px]">{transitioningToPayment ? 'Just a moment.' : step === 'delivery' ? 'Where should it go?' : 'Almost there.'}</h2>
+      <p className="mt-1 text-[13px] leading-5 text-[#637082]">{transitioningToPayment ? 'Opening your payment details.' : step === 'delivery' ? 'Add your contact and delivery details.' : 'Review your delivery and complete your order.'}</p>
       <div className="mt-7 flex items-center" aria-label={`Checkout progress: step ${step === 'delivery' ? '1' : '2'} of 2`}>
         <div className="flex items-center gap-2.5">
           <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-[12px] font-bold ${step === 'payment' ? 'bg-[#263241] text-white' : 'bg-[#c92525] text-white'}`}>{step === 'payment' ? <Check size={16} aria-hidden="true" /> : '01'}</span>
@@ -344,7 +355,17 @@ export function DemoCardCheckout({
         </div>
       </div>
     </header>
-    {step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
+    {transitioningToPayment ? <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#f8f9fa]/95 px-6 text-center backdrop-blur-sm" role="status" aria-live="polite" data-testid="status-opening-payment">
+      <div className="flex w-full max-w-[320px] flex-col items-center rounded-xl border border-[#e4e8ed] bg-white px-6 py-10 shadow-[0_20px_70px_-35px_rgba(28,37,50,.38)]">
+        <div className="relative grid h-16 w-16 place-items-center" aria-hidden="true">
+          <span className="absolute inset-0 rounded-full border-[3px] border-[#e3e8ed]" />
+          <span className="absolute inset-0 animate-spin rounded-full border-[3px] border-transparent border-r-[#c92525] border-t-[#c92525] [animation-duration:700ms] motion-reduce:animate-none" />
+          <span className="h-8 w-8 rounded-full border border-[#eef0f2] bg-white" />
+        </div>
+        <p className="mt-7 text-[17px] font-bold tracking-[-.025em] text-[#263241]">Opening payment details</p>
+        <p className="mt-1.5 text-[13px] text-[#637082]">Your delivery details are ready.</p>
+      </div>
+    </div> : step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
       <div>
         <div className="mb-4 flex items-baseline justify-between gap-3"><h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Contact details</h3><span className="text-[11px] text-[#818b97]">For order updates</span></div>
         <div className="grid gap-4 sm:grid-cols-2">
