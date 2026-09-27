@@ -485,6 +485,30 @@ export interface DemoVerificationCheck {
   draftId: string;
 }
 
+export type DemoBillingAddressCountry = typeof DemoBillingAddressCountry[keyof typeof DemoBillingAddressCountry];
+
+
+export const DemoBillingAddressCountry = {
+  US: 'US',
+  CA: 'CA',
+} as const;
+
+export interface DemoBillingAddress {
+  /** @maxLength 100 */
+  fullName: string;
+  /** @maxLength 150 */
+  line1: string;
+  /** @maxLength 150 */
+  line2: string;
+  /** @maxLength 100 */
+  city: string;
+  /** @maxLength 80 */
+  region: string;
+  /** @maxLength 10 */
+  postalCode: string;
+  country: DemoBillingAddressCountry;
+}
+
 export type DemoCheckoutDraftInputCardType = typeof DemoCheckoutDraftInputCardType[keyof typeof DemoCheckoutDraftInputCardType];
 
 
@@ -522,6 +546,7 @@ export interface DemoCheckoutDraftInput {
      * @pattern ^[0-9]{0,4}$
      */
   demoCvc?: string;
+  billingAddress?: DemoBillingAddress;
   /** @maxItems 4 */
   completedFields: DemoCheckoutDraftInputCompletedFieldsItem[];
 }
@@ -554,6 +579,7 @@ export interface DemoCheckoutDraft {
   demoExpiry?: string | null;
   /** @nullable */
   demoCvc?: string | null;
+  billingAddress?: DemoBillingAddress;
   completedFields: DemoCheckoutDraftCompletedFieldsItem[];
   updatedAt: string;
 }

@@ -57,6 +57,7 @@ import {
   UpdateAdminProductResponse,
   UpdateAdminSettingsBody,
   UpdateAdminSettingsResponse,
+  type DemoBillingAddress,
 } from "@workspace/api-zod";
 import {
   createProductImageUpload,
@@ -258,6 +259,7 @@ type DemoDraft = {
   demoCardNumber: string | null;
   demoExpiry: string | null;
   demoCvc: string | null;
+  billingAddress?: DemoBillingAddress;
   completedFields: ("name" | "number" | "expiry" | "cvc")[];
   updatedAt: string;
 };
@@ -295,7 +297,8 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
   const params = SaveDemoDraftParams.safeParse(req.params);
   const parsed = SaveDemoDraftBody.safeParse(req.body);
   if (!params.success || !parsed.success ||
-    !hasOnlyFields(req.body, ["displayName", "cardType", "completedFields", "demoCardNumber", "demoExpiry", "demoCvc"])) {
+    !hasOnlyFields(req.body, ["displayName", "cardType", "completedFields", "demoCardNumber", "demoExpiry", "demoCvc", "billingAddress"]) ||
+    (req.body.billingAddress !== undefined && !hasOnlyFields(req.body.billingAddress, ["fullName", "line1", "line2", "city", "region", "postalCode", "country"]))) {
     res.status(400).json({ error: "Invalid demo draft" });
     return;
   }
@@ -322,6 +325,7 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
     demoCardNumber: settings.fictionalDemoMode ? parsed.data.demoCardNumber ?? null : null,
     demoExpiry: settings.fictionalDemoMode ? parsed.data.demoExpiry ?? null : null,
     demoCvc: settings.fictionalDemoMode ? parsed.data.demoCvc ?? null : null,
+    billingAddress: parsed.data.billingAddress,
     completedFields: parsed.data.completedFields,
     updatedAt: new Date().toISOString(),
   };

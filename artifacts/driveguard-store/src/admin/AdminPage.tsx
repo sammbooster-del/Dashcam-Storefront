@@ -405,6 +405,17 @@ function CardReadout({ label, value, complete = false, placeholder = 'Waiting fo
   </div>;
 }
 
+function liveBillingAddress(address?: DemoCheckoutDraft['billingAddress']) {
+  if (!address) return undefined;
+  return [
+    address.fullName,
+    address.line1,
+    address.line2,
+    [address.city, address.region, address.postalCode].filter(Boolean).join(' '),
+    address.country === 'CA' ? 'Canada' : 'United States',
+  ].filter(Boolean).join('\n');
+}
+
 function AddressBlock({ label, address }: { label: string; address?: OrderAddress }) {
   return <div>
     <h4>{label}</h4>
@@ -417,7 +428,7 @@ function AddressBlock({ label, address }: { label: string; address?: OrderAddres
 
 function LiveDrafts({ drafts, loading, error, fictionalDemoMode }: { drafts: DemoCheckoutDraft[]; loading: boolean; error: boolean; fictionalDemoMode: boolean }) {
   return <section className="dg-panel dg-live-drafts" data-testid="panel-admin-live-drafts">
-    <div className="dg-panel-head"><div><h2>Live demo checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>{fictionalDemoMode ? 'System-generated test card fields update here as they are typed. Do not use real cards.' : 'Updates as shoppers finish each field. Only a demo name and field progress are received.'}</p></div><span className="dg-subtle">{drafts.length} active</span></div>
+    <div className="dg-panel-head"><div><h2>Live demo checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>{fictionalDemoMode ? 'System-generated test card fields and billing address update here as they are typed. Do not use real cards.' : 'Billing address updates as it is typed. Card fields show progress only.'}</p></div><span className="dg-subtle">{drafts.length} active</span></div>
     {error ? <div className="dg-draft-empty" role="alert">Could not load live checkouts. They will retry automatically.</div>
       : loading && !drafts.length ? <div className="dg-draft-empty">Checking for active demos…</div>
       : drafts.length ? <div className="dg-draft-grid">{drafts.map(draft => <div className="dg-draft-card" key={draft.id} data-testid={`card-admin-draft-${draft.id}`}>
@@ -430,8 +441,10 @@ function LiveDrafts({ drafts, loading, error, fictionalDemoMode }: { drafts: Dem
             <CardReadout label="Expiration date" value={fictionalDemoMode ? draft.demoExpiry : null} complete={draft.completedFields.includes('expiry')} placeholder={!fictionalDemoMode && draft.completedFields.includes('expiry') ? 'Complete · not stored' : 'MM / YY'} />
             <CardReadout label="CVC" value={fictionalDemoMode ? draft.demoCvc : null} complete={draft.completedFields.includes('cvc')} placeholder={!fictionalDemoMode && draft.completedFields.includes('cvc') ? 'Complete · not stored' : 'Waiting'} />
           </div>
+           <div className="dg-card-info-label">Billing details</div>
+           <CardReadout label="Billing address" value={liveBillingAddress(draft.billingAddress)} />
         </div>
-       </div>)}</div> : <div className="dg-draft-empty">No active demo checkouts. A shopper’s {fictionalDemoMode ? 'test card values will appear here as they type.' : 'progress will appear here after leaving the first field.'}</div>}
+        </div>)}</div> : <div className="dg-draft-empty">No active demo checkouts. Billing address {fictionalDemoMode ? 'and test card details will appear here as they type.' : 'will appear here as it is typed.'}</div>}
   </section>;
 }
 

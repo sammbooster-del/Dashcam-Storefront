@@ -8,6 +8,8 @@
 
 export * from './adminIdentity';
 export * from './adminOverview';
+export * from './demoBillingAddress';
+export * from './demoBillingAddressCountry';
 export * from './demoCheckoutDraft';
 export * from './demoCheckoutDraftCardType';
 export * from './demoCheckoutDraftCompletedFieldsItem';

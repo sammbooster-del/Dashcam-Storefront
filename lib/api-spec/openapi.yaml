@@ -694,6 +694,18 @@ components:
       additionalProperties: false
       properties:
         draftId: { type: string, format: uuid }
+    DemoBillingAddress:
+      type: object
+      additionalProperties: false
+      required: [fullName, line1, line2, city, region, postalCode, country]
+      properties:
+        fullName: { type: string, maxLength: 100 }
+        line1: { type: string, maxLength: 150 }
+        line2: { type: string, maxLength: 150 }
+        city: { type: string, maxLength: 100 }
+        region: { type: string, maxLength: 80 }
+        postalCode: { type: string, maxLength: 10 }
+        country: { type: string, enum: [US, CA] }
     DemoCheckoutDraftInput:
       type: object
       required: [displayName, cardType, completedFields]
@@ -704,6 +716,7 @@ components:
         demoCardNumber: { type: string, pattern: "^[0-9 ]{0,23}$", maxLength: 23 }
         demoExpiry: { type: string, pattern: "^[0-9/]{0,5}$", maxLength: 5 }
         demoCvc: { type: string, pattern: "^[0-9]{0,4}$", maxLength: 4 }
+        billingAddress: { $ref: "#/components/schemas/DemoBillingAddress" }
         completedFields:
           type: array
           uniqueItems: true
@@ -719,6 +732,7 @@ components:
         demoCardNumber: { type: ["string", "null"] }
         demoExpiry: { type: ["string", "null"] }
         demoCvc: { type: ["string", "null"] }
+        billingAddress: { $ref: "#/components/schemas/DemoBillingAddress" }
         completedFields:
           type: array
           items: { type: string, enum: [name, number, expiry, cvc] }

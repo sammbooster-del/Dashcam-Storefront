@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DemoBillingAddress } from './demoBillingAddress';
 import type { DemoCheckoutDraftInputCardType } from './demoCheckoutDraftInputCardType';
 import type { DemoCheckoutDraftInputCompletedFieldsItem } from './demoCheckoutDraftInputCompletedFieldsItem';
 
@@ -27,6 +28,7 @@ export interface DemoCheckoutDraftInput {
      * @pattern ^[0-9]{0,4}$
      */
   demoCvc?: string;
+  billingAddress?: DemoBillingAddress;
   /** @maxItems 4 */
   completedFields: DemoCheckoutDraftInputCompletedFieldsItem[];
 }

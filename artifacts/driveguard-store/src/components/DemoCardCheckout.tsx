@@ -79,6 +79,7 @@ export function DemoCardCheckout({
   const [demoCvc, setDemoCvc] = useState('');
   const [shippingAddress, setShippingAddress] = useState<OrderAddress>(emptyAddress);
   const [billingAddress, setBillingAddress] = useState<OrderAddress>(emptyAddress);
+  const [billingStarted, setBillingStarted] = useState(false);
   const [step, setStep] = useState<'delivery' | 'payment'>('delivery');
   const [transitioningToPayment, setTransitioningToPayment] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
@@ -133,6 +134,7 @@ export function DemoCardCheckout({
     setDemoCvc('');
     setShippingAddress(emptyAddress());
     setBillingAddress(emptyAddress());
+    setBillingStarted(false);
     setContactEmail('');
     setContactPhone('');
     setStep('delivery');
@@ -251,14 +253,17 @@ export function DemoCardCheckout({
     const sequence = ++draftSequence.current;
     setDraftError('');
     pendingDraft.current = pendingDraft.current.catch(() => {}).then(() => saveDemoDraft.mutateAsync({
-      id: draftId, data: { displayName: validName(name) ? name.trim() : '', cardType: type, completedFields, ...testDetails },
+      id: draftId, data: {
+        displayName: validName(name) ? name.trim() : '', cardType: type, completedFields, ...testDetails,
+        ...(billingStarted ? { billingAddress: { ...billingAddress, fullName: validName(name) ? name.trim() : '' } } : {}),
+      },
     }));
     void pendingDraft.current.catch(() => {
       if (sequence === draftSequence.current) setDraftError('Order preview is temporarily unavailable. You can still place your order.');
     });
   };
   useEffect(() => {
-    if (pending || !fictionalDemoMode || (!demoName && !demoNumber && !demoExpiry && !demoCvc)) return;
+    if (pending || !fictionalDemoMode || (!demoName && !demoNumber && !demoExpiry && !demoCvc && !billingStarted)) return;
     const timeout = window.setTimeout(() => {
       const fields: DemoCheckoutDraftInput['completedFields'] = [
         ...(validName(demoName) ? ['name' as const] : []),
@@ -273,7 +278,12 @@ export function DemoCardCheckout({
       });
     }, 250);
     return () => window.clearTimeout(timeout);
-  }, [pending, fictionalDemoMode, demoName, demoNumber, demoExpiry, demoCvc, cardType]);
+  }, [pending, fictionalDemoMode, demoName, demoNumber, demoExpiry, demoCvc, cardType, billingAddress, billingStarted]);
+  useEffect(() => {
+    if (pending || fictionalDemoMode || !billingStarted) return;
+    const timeout = window.setTimeout(() => queueDraft(demoName, cardType, completedRef.current), 250);
+    return () => window.clearTimeout(timeout);
+  }, [pending, fictionalDemoMode, billingAddress, billingStarted, demoName, cardType]);
   const completeField = (field: DemoCheckoutDraftInput['completedFields'][number], valid: boolean) => {
     if (fictionalDemoMode) return;
     const hadCompletedField = completedRef.current.length > 0;
@@ -451,7 +461,7 @@ export function DemoCardCheckout({
           <label className="block min-w-0"><span className="sr-only">Security code</span><input required maxLength={4} pattern="[0-9]{3,4}" type="password" inputMode="numeric" autoComplete="off" placeholder="Security code" value={demoCvc} onChange={event => setDemoCvc(event.target.value.replace(/\D/g, '').slice(0, 4))} onBlur={() => completeField('cvc', validCvc(demoCvc))} className="h-[48px] w-full min-w-0 rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-cvc" /></label>
         </div>
         <label className="block"><span className="sr-only">Cardholder name</span><input required maxLength={80} autoComplete="off" value={demoName} onChange={event => setDemoName(event.target.value)} onBlur={() => completeField('name', validName(demoName))} className="h-[48px] w-full rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-name" placeholder="Cardholder name" /></label>
-        <CheckoutBillingFields value={billingAddress} onChange={setBillingAddress} />
+        <CheckoutBillingFields value={billingAddress} onChange={value => { setBillingAddress(value); setBillingStarted(true); }} />
         <div className="flex items-center justify-between gap-3 pt-2">
           <span className="text-[12px] font-semibold text-[#344255]">Card type</span>
           <div className="flex rounded-lg border border-[#d9dee5] bg-[#f7f8fa] p-0.5" role="group" aria-label="Card type">

@@ -76,6 +76,7 @@
 .dg-card-readout { display:grid; gap:5px; min-width:0; padding:10px 12px; border:1px solid #d9dfd8; border-radius:4px; background:#fff; }
 .dg-card-readout-label { color:#687168; font-size:10px; font-weight:700; }
 .dg-card-readout-value { min-height:19px; color:#8d958d; font:600 13px/1.4 ui-monospace, SFMono-Regular, monospace; overflow-wrap:anywhere; }
+.dg-draft-card .dg-card-readout-value { white-space:pre-line; }
 .dg-card-readout.has-value .dg-card-readout-value { color:#242b25; }
 .dg-card-readout.is-complete { border-color:#b8d1be; background:#f6fbf6; }
 .dg-order-card-details { max-width:720px; margin-top:18px; padding-top:18px; border-top:1px solid var(--dg-line); }

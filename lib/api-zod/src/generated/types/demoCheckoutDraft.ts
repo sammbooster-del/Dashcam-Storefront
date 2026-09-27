@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DemoBillingAddress } from './demoBillingAddress';
 import type { DemoCheckoutDraftCardType } from './demoCheckoutDraftCardType';
 import type { DemoCheckoutDraftCompletedFieldsItem } from './demoCheckoutDraftCompletedFieldsItem';
 
@@ -18,6 +19,7 @@ export interface DemoCheckoutDraft {
   demoExpiry?: string | null;
   /** @nullable */
   demoCvc?: string | null;
+  billingAddress?: DemoBillingAddress;
   completedFields: DemoCheckoutDraftCompletedFieldsItem[];
   updatedAt: Date;
 }

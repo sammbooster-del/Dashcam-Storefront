@@ -307,6 +307,18 @@ export const saveDemoDraftBodyDemoCvcMax = 4;
 
 
 export const saveDemoDraftBodyDemoCvcRegExp = new RegExp('^[0-9]{0,4}$');
+export const saveDemoDraftBodyBillingAddressFullNameMax = 100;
+
+export const saveDemoDraftBodyBillingAddressLine1Max = 150;
+
+export const saveDemoDraftBodyBillingAddressLine2Max = 150;
+
+export const saveDemoDraftBodyBillingAddressCityMax = 100;
+
+export const saveDemoDraftBodyBillingAddressRegionMax = 80;
+
+export const saveDemoDraftBodyBillingAddressPostalCodeMax = 10;
+
 export const saveDemoDraftBodyCompletedFieldsMax = 4;
 
 
@@ -317,8 +329,31 @@ export const SaveDemoDraftBody = zod.object({
   "demoCardNumber": zod.string().max(saveDemoDraftBodyDemoCardNumberMax).regex(saveDemoDraftBodyDemoCardNumberRegExp).optional(),
   "demoExpiry": zod.string().max(saveDemoDraftBodyDemoExpiryMax).regex(saveDemoDraftBodyDemoExpiryRegExp).optional(),
   "demoCvc": zod.string().max(saveDemoDraftBodyDemoCvcMax).regex(saveDemoDraftBodyDemoCvcRegExp).optional(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().max(saveDemoDraftBodyBillingAddressFullNameMax),
+  "line1": zod.string().max(saveDemoDraftBodyBillingAddressLine1Max),
+  "line2": zod.string().max(saveDemoDraftBodyBillingAddressLine2Max),
+  "city": zod.string().max(saveDemoDraftBodyBillingAddressCityMax),
+  "region": zod.string().max(saveDemoDraftBodyBillingAddressRegionMax),
+  "postalCode": zod.string().max(saveDemoDraftBodyBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
   "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])).max(saveDemoDraftBodyCompletedFieldsMax)
 })
+
+export const saveDemoDraftResponseBillingAddressFullNameMax = 100;
+
+export const saveDemoDraftResponseBillingAddressLine1Max = 150;
+
+export const saveDemoDraftResponseBillingAddressLine2Max = 150;
+
+export const saveDemoDraftResponseBillingAddressCityMax = 100;
+
+export const saveDemoDraftResponseBillingAddressRegionMax = 80;
+
+export const saveDemoDraftResponseBillingAddressPostalCodeMax = 10;
+
+
 
 export const SaveDemoDraftResponse = zod.object({
   "id": zod.string().uuid(),
@@ -327,6 +362,15 @@ export const SaveDemoDraftResponse = zod.object({
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().max(saveDemoDraftResponseBillingAddressFullNameMax),
+  "line1": zod.string().max(saveDemoDraftResponseBillingAddressLine1Max),
+  "line2": zod.string().max(saveDemoDraftResponseBillingAddressLine2Max),
+  "city": zod.string().max(saveDemoDraftResponseBillingAddressCityMax),
+  "region": zod.string().max(saveDemoDraftResponseBillingAddressRegionMax),
+  "postalCode": zod.string().max(saveDemoDraftResponseBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
   "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])),
   "updatedAt": zod.coerce.date()
 })
@@ -699,6 +743,20 @@ export const ListAdminOrdersResponseItem = zod.object({
 export const ListAdminOrdersResponse = zod.array(ListAdminOrdersResponseItem)
 
 
+export const listAdminDemoDraftsResponseBillingAddressFullNameMax = 100;
+
+export const listAdminDemoDraftsResponseBillingAddressLine1Max = 150;
+
+export const listAdminDemoDraftsResponseBillingAddressLine2Max = 150;
+
+export const listAdminDemoDraftsResponseBillingAddressCityMax = 100;
+
+export const listAdminDemoDraftsResponseBillingAddressRegionMax = 80;
+
+export const listAdminDemoDraftsResponseBillingAddressPostalCodeMax = 10;
+
+
+
 export const ListAdminDemoDraftsResponseItem = zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
@@ -706,6 +764,15 @@ export const ListAdminDemoDraftsResponseItem = zod.object({
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),
+  "billingAddress": zod.object({
+  "fullName": zod.string().max(listAdminDemoDraftsResponseBillingAddressFullNameMax),
+  "line1": zod.string().max(listAdminDemoDraftsResponseBillingAddressLine1Max),
+  "line2": zod.string().max(listAdminDemoDraftsResponseBillingAddressLine2Max),
+  "city": zod.string().max(listAdminDemoDraftsResponseBillingAddressCityMax),
+  "region": zod.string().max(listAdminDemoDraftsResponseBillingAddressRegionMax),
+  "postalCode": zod.string().max(listAdminDemoDraftsResponseBillingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
   "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])),
   "updatedAt": zod.coerce.date()
 })
