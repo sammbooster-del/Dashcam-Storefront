@@ -180,7 +180,7 @@ function HomePage({ collection, onCollection, products, settings }: { collection
   </main>;
 }
 
-function ProductPage({ product, settings, onAdd }: { product: Product; settings: StoreSettings; onAdd: (product: Product, quantity: number) => void }) {
+function ProductPage({ product, settings, onAdd, onBuy }: { product: Product; settings: StoreSettings; onAdd: (product: Product, quantity: number) => void; onBuy: (product: Product, quantity: number) => void }) {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'box'>('overview');
@@ -226,8 +226,9 @@ function ProductPage({ product, settings, onAdd }: { product: Product; settings:
           <div className="mt-7 grid grid-cols-2 gap-2 border-y border-[#e7e7e7] py-5 text-center text-[12px] font-semibold"><span>{product.category === 'dual' ? 'Front + rear recording' : 'Front recording'}</span><span>Current product listing</span></div>
           <div className="mt-7"><label className="mb-2 block text-[13px] font-bold">Quantity</label><div className="flex flex-wrap gap-3">
             <div className="flex h-[52px] items-center border border-[#d6d6d6]"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="grid h-full w-11 place-items-center hover:bg-[#f5f5f5]" data-testid="button-decrease-product-quantity" aria-label="Decrease quantity"><Minus size={16} /></button><span className="w-8 text-center text-sm font-bold" data-testid="text-product-quantity">{quantity}</span><button type="button" disabled={quantity >= product.stock} onClick={() => setQuantity(Math.min(product.stock, quantity + 1))} className="grid h-full w-11 place-items-center hover:bg-[#f5f5f5] disabled:opacity-40" data-testid="button-increase-product-quantity" aria-label="Increase quantity"><Plus size={16} /></button></div>
-            <button ref={mainAddRef} type="button" onClick={add} disabled={product.stock < 1} className="red-button min-w-[220px] flex-1 disabled:opacity-50" data-testid="button-add-to-cart">{added ? <><Check size={18} /> Added to cart</> : <><ShoppingBag size={18} /> {product.stock ? 'Add to cart' : 'Out of stock'}</>}</button>
+            <button ref={mainAddRef} type="button" onClick={add} disabled={product.stock < 1} className="outline-button min-w-[220px] flex-1 disabled:opacity-50" data-testid="button-add-to-cart">{added ? <><Check size={18} /> Added to cart</> : <><ShoppingBag size={18} /> {product.stock ? 'Add to cart' : 'Out of stock'}</>}</button>
           </div></div>
+          <button type="button" onClick={() => onBuy(product, quantity)} disabled={product.stock < 1} className="red-button mt-3 w-full disabled:opacity-50" data-testid="button-buy-now">Buy now <ArrowRight size={18} /></button>
           <p className="mt-5 flex items-center gap-2 text-[12px] text-[#666]"><Truck size={16} /> {settings.shippingThresholdCents === 0 ? 'Free shipping on all orders' : `Free shipping on orders over ${money(settings.shippingThresholdCents)}`}</p>
           <div className="mt-5 border-t border-[#e7e7e7] pt-5"><AcceptedCards location="product" /></div>
           <Link href="/checkout" className="mt-5 inline-flex items-center gap-2 text-[13px] font-bold text-[#c92525] hover:underline" data-testid="link-product-view-cart">View cart <ArrowRight size={15} /></Link>
@@ -240,7 +241,7 @@ function ProductPage({ product, settings, onAdd }: { product: Product; settings:
     </div>
     {showMobileAdd && !footerVisible && product.stock > 0 && <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-4 border-t border-[#dedede] bg-white/95 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-6px_24px_rgba(0,0,0,.12)] backdrop-blur-sm md:hidden" data-testid="mobile-product-buy-bar">
       <strong className="shrink-0 text-[18px]">{money(product.priceCents)}</strong>
-      {added ? <Link href="/checkout" className="red-button flex-1" data-testid="link-mobile-view-cart">View cart <ArrowRight size={16} /></Link> : <button type="button" onClick={add} className="red-button flex-1" data-testid="button-mobile-add-to-cart"><ShoppingBag size={17} /> Add to cart</button>}
+      <button type="button" onClick={() => onBuy(product, quantity)} className="red-button flex-1" data-testid="button-mobile-buy-now">Buy now <ArrowRight size={16} /></button>
     </div>}
     <Footer settings={settings} featured={product} />
   </main>;
@@ -286,11 +287,28 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 
 function Store({ cart, add, updateQuantity, removeItem, clearCart }: { cart: CartLine[]; add: (product: Product, quantity: number) => void; updateQuantity: (id: number, amount: number) => void; removeItem: (id: number) => void; clearCart: () => void }) {
   const [collection, setCollection] = useState<Collection>('all');
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const directCheckoutRef = useRef(false);
   const storefront = useGetStorefront({ query: { queryKey: getGetStorefrontQueryKey(), refetchInterval: 5000 } });
   const products = storefront.data?.products.filter(product => product.active) ?? [];
   const settings = storefront.data?.settings;
-  useEffect(() => { window.scrollTo(0, 0); }, [location]);
+  useEffect(() => {
+    if (location === '/checkout' && directCheckoutRef.current) {
+      directCheckoutRef.current = false;
+      const frame = window.requestAnimationFrame(() => {
+        document.getElementById('checkout-delivery')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+    window.scrollTo(0, 0);
+    return undefined;
+  }, [location]);
+  const buyNow = (product: Product, quantity: number) => {
+    if (product.stock < 1) return;
+    add(product, quantity);
+    directCheckoutRef.current = true;
+    navigate('/checkout');
+  };
   useEffect(() => {
     if (storefront.isSuccess) {
       const availableIds = new Set(products.map(product => product.id));
@@ -307,7 +325,7 @@ function Store({ cart, add, updateQuantity, removeItem, clearCart }: { cart: Car
     <Route path="/"><HomePage collection={collection} onCollection={setCollection} products={products} settings={settings} /></Route>
     <Route path="/product/:slug">{params => {
       const product = products.find(item => item.slug === params.slug);
-      return product ? <ProductPage product={product} settings={settings} onAdd={add} /> : <NotFound />;
+      return product ? <ProductPage product={product} settings={settings} onAdd={add} onBuy={buyNow} /> : <NotFound />;
     }}</Route>
     <Route path="/checkout"><CheckoutPage cart={cartProducts} updateQuantity={updateQuantity} removeItem={removeItem} clearCart={clearCart} settings={settings} /></Route>
     <Route component={NotFound} />

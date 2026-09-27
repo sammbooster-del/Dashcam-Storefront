@@ -418,7 +418,7 @@ export function DemoCardCheckout({
     </div>
   </section>;
 
-  return <section ref={checkoutRef} className="overflow-hidden rounded-2xl border border-[#dfe3e8] bg-[#fffefd] shadow-[0_18px_48px_-32px_rgba(28,37,50,.35)]" data-testid="panel-demo-card-checkout">
+  return <section id="checkout-delivery" ref={checkoutRef} className="scroll-mt-4 overflow-hidden rounded-2xl border border-[#dfe3e8] bg-[#fffefd] shadow-[0_18px_48px_-32px_rgba(28,37,50,.35)]" data-testid="panel-demo-card-checkout">
     <header className="border-b border-[#e9edf0] bg-[#f8f9fa] px-5 pb-6 pt-6 sm:px-8 sm:pt-8">
       <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em] text-[#a62020]"><LockKeyhole size={13} aria-hidden="true" /> Secure checkout</div>
       <h2 className="mt-2 text-[25px] font-bold tracking-[-.04em] text-[#1c2734] sm:text-[28px]">{transitioningToPayment ? 'Just a moment.' : step === 'delivery' ? 'Where should it go?' : 'Almost there.'}</h2>

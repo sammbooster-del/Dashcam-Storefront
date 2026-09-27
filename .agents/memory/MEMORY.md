@@ -1,5 +1,5 @@
 - [Storefront reference fidelity](storefront-reference-fidelity.md) — Match the supplied retail layout closely; keep original branding and assets unless reproduction rights are confirmed.
 - [Demo checkout boundaries](demo-order-inventory.md) — Demo orders do not affect stock; live previews never transmit typed card values.
 - [OpenAPI inline-body collision](openapi-inline-body.md) — Name request-body schemas for parameterized operations to avoid duplicate generated TypeScript exports.
-- [Checkout cart visibility](checkout-cart-visibility.md) — Keep products visible on mobile checkout without an extra expand step.
+- [Checkout path and cart visibility](checkout-cart-visibility.md) — Keep products visible on mobile; Buy now skips cart navigation and opens delivery.
 - [Checkout arrival alert](checkout-arrival-alert.md) — Use a repeating Pushover notification, not a phone call, for the start of delivery entry.
