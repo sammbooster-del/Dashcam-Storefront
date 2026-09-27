@@ -350,8 +350,8 @@ router.post("/delivery-alerts", requireSameOriginWrite, async (req, res): Promis
     res.status(400).json({ error: "Invalid delivery alert" });
     return;
   }
-  const token = process.env.PUSHOVER_APP_TOKEN;
-  const user = process.env.PUSHOVER_USER_KEY;
+  const token = process.env.PUSHOVER_APP_TOKEN?.trim();
+  const user = process.env.PUSHOVER_USER_KEY?.trim();
   if (!token || !user) {
     req.log.warn("Pushover delivery alerts are not configured");
     res.status(503).json({ error: "Delivery alerts are not configured" });
@@ -390,7 +390,9 @@ router.post("/delivery-alerts", requireSameOriginWrite, async (req, res): Promis
         ? result.errors.filter((item): item is string => typeof item === "string").map(item => {
           const error = item.toLowerCase();
           if (error.includes("token") || error.includes("application")) return "application token";
-          if (error.includes("user") || error.includes("recipient") || error.includes("group")) return "recipient key";
+          if (error.includes("no active device") || error.includes("not registered")) return "no registered recipient device";
+          if (error.includes("invalid") && (error.includes("user") || error.includes("recipient") || error.includes("group"))) return "invalid recipient key";
+          if (error.includes("user") || error.includes("recipient") || error.includes("group")) return "recipient account";
           if (error.includes("priority") || error.includes("retry") || error.includes("expire")) return "emergency parameters";
           if (error.includes("sound")) return "sound";
           if (error.includes("limit") || error.includes("quota")) return "rate limit";
