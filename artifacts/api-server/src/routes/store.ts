@@ -384,8 +384,23 @@ router.post("/delivery-alerts", requireSameOriginWrite, async (req, res): Promis
       }),
       signal: AbortSignal.timeout(6000),
     });
-    const result = await response.json() as { status?: number };
-    if (!response.ok || result.status !== 1) throw new Error(`Pushover returned HTTP ${response.status}`);
+    const result = await response.json() as { status?: number; errors?: unknown };
+    if (!response.ok || result.status !== 1) {
+      const categories = Array.isArray(result.errors)
+        ? result.errors.filter((item): item is string => typeof item === "string").map(item => {
+          const error = item.toLowerCase();
+          if (error.includes("token") || error.includes("application")) return "application token";
+          if (error.includes("user") || error.includes("recipient") || error.includes("group")) return "recipient key";
+          if (error.includes("priority") || error.includes("retry") || error.includes("expire")) return "emergency parameters";
+          if (error.includes("sound")) return "sound";
+          if (error.includes("limit") || error.includes("quota")) return "rate limit";
+          return "other";
+        })
+        : [];
+      req.log.warn({ status: response.status, categories }, "Pushover rejected delivery alert");
+      res.status(503).json({ error: "Pushover rejected delivery alert" });
+      return;
+    }
     res.status(202).json(SendDeliveryAlertResponse.parse({ accepted: true }));
   } catch (error) {
     req.log.error({ err: error }, "Could not send Pushover delivery alert");
