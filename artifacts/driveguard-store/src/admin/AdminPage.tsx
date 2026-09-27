@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type ChangeEvent, type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetAdminOverviewQueryKey,
@@ -26,9 +26,9 @@ import {
 } from '@workspace/api-client-react';
 import type { DemoCheckoutDraft, DemoOrder, OrderAddress, Product, ProductInput, StoreSettingsInput } from '@workspace/api-client-react';
 import {
-  ArrowDownRight, ArrowRight, Boxes, ChevronDown, ChevronRight,
+  ArrowDownRight, ArrowRight, ArrowUp, ArrowDown, Boxes, ChevronDown, ChevronRight,
   CircleAlert, ClipboardList, Eye, EyeOff, ImageOff, LayoutDashboard,
-  Package, Pencil, Plus, RefreshCw, Search, Settings2, ShieldCheck,
+  ImagePlus, Package, Pencil, Plus, RefreshCw, Search, Settings2, ShieldCheck,
   ShoppingBag, Trash2, X,
 } from 'lucide-react';
 import './AdminPage.css';
@@ -46,7 +46,7 @@ const date = (value: string) => new Date(value).toLocaleDateString('en-US', { mo
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
 const blankProduct = (): ProductDraft => ({ name: '', slug: '', description: '', imageUrl: '', price: '', stock: '0', category: 'front', featured: false, active: true });
 const productDraft = (product: Product): ProductDraft => ({
-  name: product.name, slug: product.slug, description: product.description, imageUrl: product.imageUrl,
+  name: product.name, slug: product.slug, description: product.description, imageUrl: '',
   price: dollars(product.priceCents), stock: String(product.stock), category: product.category,
   featured: product.featured, active: product.active,
 });
@@ -98,24 +98,150 @@ function ProductImage({ url, name }: { url: string; name: string }) {
   return <span className="dg-thumb">{url && !broken ? <img src={url} alt="" onError={() => setBroken(true)} /> : <ImageOff size={18} aria-label={`No image for ${name}`} />}</span>;
 }
 
+type EditorImage = {
+  id: string;
+  url: string;
+  preview?: string;
+  file?: File;
+  name: string;
+  status: 'ready' | 'uploading' | 'error';
+  progress: number;
+  error?: string;
+};
+const MAX_PRODUCT_IMAGES = 15;
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const initialProductImages = (product: Product | null): EditorImage[] => {
+  if (!product) return [];
+  const urls = (product as Product & { imageUrls?: string[] }).imageUrls;
+  return (Array.isArray(urls) && urls.length ? urls : product.imageUrl ? [product.imageUrl] : [])
+    .filter((url): url is string => typeof url === 'string' && !!url.trim())
+    .slice(0, MAX_PRODUCT_IMAGES)
+    .map((url, index) => ({ id: `existing-${index}`, url, name: `Image ${index + 1}`, status: 'ready' as const, progress: 100 }));
+};
+
 function ProductEditor({ product, onClose, onSave, pending }: {
   product: Product | null; onClose: () => void; onSave: (draft: ProductInput) => Promise<void>; pending: boolean;
 }) {
   const [draft, setDraft] = useState<ProductDraft>(() => product ? productDraft(product) : blankProduct());
+  const [images, setImages] = useState<EditorImage[]>(() => initialProductImages(product));
   const [error, setError] = useState('');
+  const [imageError, setImageError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadsRef = useRef(new Map<string, XMLHttpRequest>());
+  const activeImagesRef = useRef(new Set<string>());
+  const previewsRef = useRef(new Set<string>());
+  const nextIdRef = useRef(0);
+  useEffect(() => () => {
+    activeImagesRef.current.clear();
+    uploadsRef.current.forEach(request => request.abort());
+    previewsRef.current.forEach(url => URL.revokeObjectURL(url));
+  }, []);
   const set = <K extends keyof ProductDraft>(key: K, value: ProductDraft[K]) => setDraft(previous => ({ ...previous, [key]: value }));
+  const uploadImage = async (id: string, file: File) => {
+    try {
+      const response = await fetch('/api/admin/product-images/upload-url', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      });
+      if (!response.ok) throw new Error(`Could not prepare upload (${response.status}).`);
+      const result: { uploadURL: string; objectPath: string } = await response.json();
+      if (!result.uploadURL || !result.objectPath || !result.objectPath.startsWith('/')) throw new Error('The upload service returned an invalid image location.');
+      if (!activeImagesRef.current.has(id)) return;
+      // The signed URL may be on another origin; never send application cookies to it.
+      await new Promise<void>((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        uploadsRef.current.set(id, request);
+        request.open('PUT', result.uploadURL);
+        request.setRequestHeader('Content-Type', file.type);
+        request.upload.onprogress = event => {
+          if (event.lengthComputable) setImages(previous => previous.map(image => image.id === id ? { ...image, progress: Math.min(99, Math.round(event.loaded / event.total * 100)) } : image));
+        };
+        request.onload = () => request.status >= 200 && request.status < 300 ? resolve() : reject(new Error(`Upload failed (${request.status}). Please retry.`));
+        request.onerror = () => reject(new Error('Network error during upload. Please retry.'));
+        request.onabort = () => reject(new Error('Upload cancelled.'));
+        request.send(file);
+      });
+      setImages(previous => previous.map(image => image.id === id ? { ...image, url: result.objectPath, status: 'ready', progress: 100, error: undefined } : image));
+    } catch (reason) {
+      setImages(previous => previous.map(image => image.id === id ? { ...image, status: 'error', progress: 0, error: errorMessage(reason) } : image));
+    } finally {
+      uploadsRef.current.delete(id);
+    }
+  };
+  const addFiles = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = '';
+    if (!files.length) return;
+    const remaining = MAX_PRODUCT_IMAGES - images.length - (draft.imageUrl.trim() ? 1 : 0);
+    if (files.length > remaining) {
+      setImageError(`Only ${MAX_PRODUCT_IMAGES} images are allowed. ${remaining > 0 ? `Choose ${remaining} or fewer files.` : 'Remove an image first.'}`);
+      return;
+    }
+    const invalid = files.find(file => !allowedImageTypes.has(file.type) || file.size > MAX_IMAGE_BYTES);
+    if (invalid) {
+      setImageError(!allowedImageTypes.has(invalid.type) ? `${invalid.name}: choose a JPEG, PNG or WebP file.` : `${invalid.name}: images must be 10 MB or smaller.`);
+      return;
+    }
+    setImageError('');
+    const incoming = files.map(file => {
+      const preview = URL.createObjectURL(file);
+      previewsRef.current.add(preview);
+      return { id: `upload-${++nextIdRef.current}`, url: '', preview, file, name: file.name, status: 'uploading' as const, progress: 0 };
+    });
+    incoming.forEach(image => activeImagesRef.current.add(image.id));
+    setImages(previous => [...previous, ...incoming]);
+    incoming.forEach(image => uploadImage(image.id, image.file));
+  };
+  const removeImage = (image: EditorImage) => {
+    activeImagesRef.current.delete(image.id);
+    uploadsRef.current.get(image.id)?.abort();
+    if (image.preview) {
+      URL.revokeObjectURL(image.preview);
+      previewsRef.current.delete(image.preview);
+    }
+    setImages(previous => previous.filter(item => item.id !== image.id));
+    setImageError('');
+  };
+  const moveImage = (index: number, direction: -1 | 1) => {
+    setImages(previous => {
+      const next = [...previous];
+      [next[index], next[index + direction]] = [next[index + direction], next[index]];
+      return next;
+    });
+  };
+  const addImageUrl = () => {
+    const url = draft.imageUrl.trim();
+    if (!url) return;
+    if (images.length >= MAX_PRODUCT_IMAGES) { setImageError(`A product can have up to ${MAX_PRODUCT_IMAGES} images.`); return; }
+    if (!/^(https?:\/\/|\/(?!\/))/.test(url)) { setImageError('Enter a full http(s) URL or a path beginning with /.'); return; }
+    setImages(previous => [...previous, { id: `url-${++nextIdRef.current}`, url, name: 'Image URL', status: 'ready', progress: 100 }]);
+    set('imageUrl', '');
+    setImageError('');
+  };
+  const uploading = images.some(image => image.status === 'uploading');
+  const failed = images.some(image => image.status === 'error');
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
+    if (uploading || failed) { setImageError(uploading ? 'Wait for uploads to finish before saving.' : 'Retry or remove failed images before saving.'); return; }
     const stock = Number(draft.stock);
     if (!Number.isInteger(stock) || stock < 0) { setError('Stock must be a whole number of zero or more.'); return; }
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(draft.slug)) { setError('Slug must use lowercase letters, numbers and hyphens.'); return; }
+    const urls = images.map(image => image.url);
+    const extraUrl = draft.imageUrl.trim();
+    if (extraUrl) {
+      if (urls.length >= MAX_PRODUCT_IMAGES) { setImageError(`A product can have up to ${MAX_PRODUCT_IMAGES} images.`); return; }
+      if (!/^(https?:\/\/|\/(?!\/))/.test(extraUrl)) { setImageError('Enter a full http(s) URL or a path beginning with /.'); return; }
+      urls.push(extraUrl);
+    }
     try {
       await onSave({
         name: draft.name.trim(), slug: draft.slug.trim(), description: draft.description.trim(),
-        imageUrl: draft.imageUrl.trim(), priceCents: toCents(draft.price), stock,
+        imageUrls: urls, imageUrl: urls[0] ?? '', priceCents: toCents(draft.price), stock,
         category: draft.category, featured: draft.featured, active: draft.active,
-      });
+      } as ProductInput);
     } catch (reason) { setError(errorMessage(reason)); }
   };
   return <div className="dg-overlay" onMouseDown={event => { if (event.target === event.currentTarget && !pending) onClose(); }}>
@@ -129,8 +255,30 @@ function ProductEditor({ product, onClose, onSave, pending }: {
           <Field label="Product name" name="product-name" value={draft.name} onChange={value => set('name', value)} required maxLength={150} placeholder="e.g. RoadView 4K Dual" />
           <Field label="URL slug" name="product-slug" value={draft.slug} onChange={value => set('slug', value.toLowerCase().replace(/\s+/g, '-'))} required maxLength={100} placeholder="roadview-4k-dual" hint="Lowercase letters, numbers and hyphens only." />
           <label className="dg-field">Description<textarea name="description" data-testid="input-admin-product-description" value={draft.description} maxLength={3000} onChange={event => set('description', event.target.value)} placeholder="Tell customers what makes this camera useful." /></label>
-          <Field label="Image URL" name="product-image" value={draft.imageUrl} onChange={value => set('imageUrl', value)} maxLength={2048} placeholder="https://... or /images/..." hint="Use a direct image link or an /images/ path. Leave blank if photography is not ready." />
         </div>
+        <section className="dg-image-editor" aria-label="Product images">
+          <div className="dg-image-editor-heading"><div><h3>Product images <span>{images.length} / {MAX_PRODUCT_IMAGES}</span></h3><p>First image is the cover. JPEG, PNG or WebP, up to 10 MB each.</p></div></div>
+          {images.length > 0 && <div className="dg-image-list" data-testid="list-admin-product-images">
+            {images.map((image, index) => <div className={`dg-image-item ${image.status}`} key={image.id} data-testid={`item-admin-product-image-${index}`}>
+              <div className="dg-image-preview">{image.preview || image.url ? <img src={image.preview || image.url} alt="" /> : <ImageOff size={19} />}
+                {image.status !== 'ready' && <span className="dg-image-preview-status">{image.status === 'uploading' ? `${image.progress}%` : 'Failed'}</span>}
+              </div>
+              <div className="dg-image-details"><strong title={image.name}>{image.name}</strong><span>{image.status === 'uploading' ? 'Uploading — not saved yet' : image.status === 'error' ? image.error : index === 0 ? 'Cover image' : `Image ${index + 1}`}</span>
+                {image.status === 'uploading' && <div className="dg-image-progress" role="progressbar" aria-label={`Uploading ${image.name}`} aria-valuenow={image.progress} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${image.progress}%` }} /></div>}
+              </div>
+              <div className="dg-image-actions">
+                {image.status === 'error' && <button type="button" className="dg-image-retry" onClick={() => { setImages(previous => previous.map(item => item.id === image.id ? { ...item, status: 'uploading', progress: 0, error: undefined } : item)); if (image.file) uploadImage(image.id, image.file); }} data-testid={`button-admin-retry-image-${index}`}>Retry</button>}
+                <button type="button" className="dg-icon-button" onClick={() => moveImage(index, -1)} disabled={index === 0 || pending} aria-label={`Move ${image.name} up`} data-testid={`button-admin-image-up-${index}`}><ArrowUp size={16} /></button>
+                <button type="button" className="dg-icon-button" onClick={() => moveImage(index, 1)} disabled={index === images.length - 1 || pending} aria-label={`Move ${image.name} down`} data-testid={`button-admin-image-down-${index}`}><ArrowDown size={16} /></button>
+                <button type="button" className="dg-icon-button dg-icon-danger" onClick={() => removeImage(image)} disabled={pending} aria-label={`Remove ${image.name}`} data-testid={`button-admin-remove-image-${index}`}><Trash2 size={16} /></button>
+              </div>
+            </div>)}
+          </div>}
+          <input ref={fileInputRef} className="dg-image-file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addFiles} data-testid="input-admin-product-images" aria-label="Choose product images from device" />
+          <button type="button" className="dg-image-pick" onClick={() => fileInputRef.current?.click()} disabled={pending || images.length >= MAX_PRODUCT_IMAGES} data-testid="button-admin-add-product-images"><ImagePlus size={19} /><span><strong>Choose images from device</strong><small>{images.length ? 'Add more product photos' : 'Select up to 15 product photos'}</small></span><Plus size={17} /></button>
+          <div className="dg-image-url"><Field label="Or add an image URL" name="product-image" value={draft.imageUrl} onChange={value => { set('imageUrl', value); setImageError(''); }} maxLength={2048} placeholder="https://... or /images/..." hint="Optional alternative. Add it to the gallery, or save with the URL entered." /><button type="button" className="dg-secondary" onClick={addImageUrl} disabled={!draft.imageUrl.trim() || pending || images.length >= MAX_PRODUCT_IMAGES} data-testid="button-admin-add-image-url">Add URL</button></div>
+          {imageError && <p className="dg-image-error" role="alert" data-testid="status-admin-image-error"><CircleAlert size={15} />{imageError}</p>}
+        </section>
         <div className="dg-fields two">
           <MoneyField label="Price" name="product-price" value={draft.price} onChange={value => set('price', value)} max={1000000} />
           <Field label="Units in stock" name="product-stock" value={draft.stock} onChange={value => set('stock', value)} type="number" required min="0" step="1" />
@@ -145,7 +293,7 @@ function ProductEditor({ product, onClose, onSave, pending }: {
           <Switch id="product-featured" label="Featured product" detail="Give this camera priority in featured placements." checked={draft.featured} onChange={() => set('featured', !draft.featured)} />
         </div>
         <div className="dg-form-footer"><button type="button" className="dg-secondary" onClick={onClose} disabled={pending} data-testid="button-admin-cancel-product">Cancel</button>
-          <button type="submit" className="dg-primary" disabled={pending} data-testid="button-admin-save-product">{pending ? 'Saving…' : product ? 'Save changes' : 'Create product'} <ArrowRight size={15} /></button></div>
+           <button type="submit" className="dg-primary" disabled={pending || uploading || failed} data-testid="button-admin-save-product">{pending ? 'Saving…' : uploading ? 'Uploading images…' : failed ? 'Resolve image errors' : product ? 'Save changes' : 'Create product'} <ArrowRight size={15} /></button></div>
       </form>
     </aside>
   </div>;

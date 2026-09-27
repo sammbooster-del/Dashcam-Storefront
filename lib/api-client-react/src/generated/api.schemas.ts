@@ -34,6 +34,11 @@ export interface Product {
   name: string;
   description: string;
   imageUrl: string;
+  /**
+     * @maxItems 15
+     * @items.maxLength 2048
+     */
+  imageUrls: string[];
   priceCents: number;
   stock: number;
   category: ProductCategory;
@@ -64,6 +69,11 @@ export interface ProductInput {
   description: string;
   /** @maxLength 2048 */
   imageUrl: string;
+  /**
+     * @maxItems 15
+     * @items.maxLength 2048
+     */
+  imageUrls?: string[];
   /**
      * @minimum 0
      * @maximum 100000000
@@ -100,6 +110,11 @@ export interface ProductUpdate {
   /** @maxLength 2048 */
   imageUrl?: string;
   /**
+     * @maxItems 15
+     * @items.maxLength 2048
+     */
+  imageUrls?: string[];
+  /**
      * @minimum 0
      * @maximum 100000000
      */
@@ -109,6 +124,34 @@ export interface ProductUpdate {
   category?: ProductUpdateCategory;
   featured?: boolean;
   active?: boolean;
+}
+
+export type ProductImageUploadInputContentType = typeof ProductImageUploadInputContentType[keyof typeof ProductImageUploadInputContentType];
+
+
+export const ProductImageUploadInputContentType = {
+  'image/jpeg': 'image/jpeg',
+  'image/png': 'image/png',
+  'image/webp': 'image/webp',
+} as const;
+
+export interface ProductImageUploadInput {
+  /**
+     * @minLength 1
+     * @maxLength 255
+     */
+  name: string;
+  /**
+     * @minimum 1
+     * @maximum 10485760
+     */
+  size: number;
+  contentType: ProductImageUploadInputContentType;
+}
+
+export interface ProductImageUpload {
+  uploadURL: string;
+  objectPath: string;
 }
 
 export interface StoreSettings {

@@ -18,6 +18,8 @@ import {
   ConfirmAdminCodeSharedParams,
   ConfirmAdminCodeSharedResponse,
   CreateAdminProductBody,
+  CreateAdminProductImageUploadUrlBody,
+  CreateAdminProductImageUploadUrlResponse,
   CreateAdminProductResponse,
   CreateDemoOrderBody,
   CreateDemoOrderResponse,
@@ -53,6 +55,12 @@ import {
   UpdateAdminSettingsBody,
   UpdateAdminSettingsResponse,
 } from "@workspace/api-zod";
+import {
+  createProductImageUpload,
+  isProductImageObjectPath,
+  productImageIdFromPath,
+  validateProductImageObject,
+} from "../lib/productImageStorage";
 
 const router: IRouter = Router();
 
@@ -118,13 +126,38 @@ async function ensureStore() {
 
 function isSafeImageUrl(value: string) {
   if (value === "") return true;
-  if (/^\/images\/[a-zA-Z0-9/_\-.]+$/.test(value)) return true;
+  if (/^\/images\/[a-zA-Z0-9/_\-.]+$/.test(value) &&
+    value.slice("/images/".length).split("/").every(segment => segment && segment !== "." && segment !== "..")) return true;
+  if (isProductImageObjectPath(value)) return true;
   try {
     const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
+    return (url.protocol === "https:" || url.protocol === "http:") &&
+      !url.username && !url.password;
   } catch {
     return false;
   }
+}
+
+function productResponse(product: typeof storeProductsTable.$inferSelect) {
+  const imageUrls = product.imageUrls?.length
+    ? product.imageUrls
+    : product.imageUrl ? [product.imageUrl] : [];
+  return { ...product, imageUrls };
+}
+
+async function validateProductImageUrls(urls: string[]): Promise<boolean> {
+  for (const url of urls) {
+    if (!isSafeImageUrl(url)) return false;
+    const id = productImageIdFromPath(url);
+    if (id) {
+      try {
+        await validateProductImageObject(id);
+      } catch {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 const requireAdmin: RequestHandler = async (req, res, next) => {
@@ -252,7 +285,7 @@ router.get("/storefront", async (_req, res): Promise<void> => {
   const products = await db.select().from(storeProductsTable)
     .where(eq(storeProductsTable.active, true))
     .orderBy(desc(storeProductsTable.featured), desc(storeProductsTable.id));
-  res.json(GetStorefrontResponse.parse({ settings, products }));
+  res.json(GetStorefrontResponse.parse({ settings, products: products.map(productResponse) }));
 });
 
 router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
@@ -456,6 +489,45 @@ router.post("/demo-orders/:id/verification-code", async (req, res): Promise<void
 
 router.use("/admin", requireSameOriginWrite, requireAdmin);
 
+router.post("/admin/product-images/upload-url", async (req, res): Promise<void> => {
+  const parsed = CreateAdminProductImageUploadUrlBody.safeParse(req.body);
+  if (!parsed.success || !hasOnlyFields(req.body, ["name", "size", "contentType"]) ||
+    parsed.data.size < 1 || parsed.data.size > 10 * 1024 * 1024) {
+    res.status(400).json({ error: "Provide a supported image type and a size from 1 byte to 10 MB" });
+    return;
+  }
+  try {
+    const result = await createProductImageUpload(parsed.data.contentType);
+    res.json(CreateAdminProductImageUploadUrlResponse.parse(result));
+  } catch (error) {
+    req.log.error({ err: error }, "Could not create product image upload URL");
+    res.status(503).json({ error: "Product image storage is unavailable" });
+  }
+});
+
+router.get("/storage/objects/uploads/:id", async (req, res): Promise<void> => {
+  const id = typeof req.params.id === "string" ? req.params.id : "";
+  if (!productImageIdFromPath(`/api/storage/objects/uploads/${id}`)) {
+    res.status(404).json({ error: "Image not found" });
+    return;
+  }
+  try {
+    const { file, contentType } = await validateProductImageObject(id);
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    const stream = file.createReadStream();
+    stream.on("error", error => {
+      req.log.error({ err: error }, "Could not stream product image");
+      if (!res.headersSent) res.status(500).json({ error: "Could not serve product image" });
+      else res.destroy(error);
+    });
+    stream.pipe(res);
+  } catch {
+    res.status(404).json({ error: "Image not found or is not a supported image" });
+  }
+});
+
 router.get("/admin/me", async (_req, res): Promise<void> => {
   res.json(GetAdminMeResponse.parse({ isAdmin: true }));
 });
@@ -482,13 +554,18 @@ router.get("/admin/overview", async (_req, res): Promise<void> => {
 router.get("/admin/products", async (_req, res): Promise<void> => {
   await ensureStore();
   const products = await db.select().from(storeProductsTable).orderBy(desc(storeProductsTable.id));
-  res.json(ListAdminProductsResponse.parse(products));
+  res.json(ListAdminProductsResponse.parse(products.map(productResponse)));
 });
 
 router.post("/admin/products", async (req, res): Promise<void> => {
   const parsed = CreateAdminProductBody.safeParse(req.body);
-  if (!parsed.success || !isSafeImageUrl(parsed.data?.imageUrl ?? "")) {
+  if (!parsed.success) {
     res.status(400).json({ error: "Check the product fields and image URL" });
+    return;
+  }
+  const gallery = parsed.data.imageUrls ?? (parsed.data.imageUrl ? [parsed.data.imageUrl] : []);
+  if (!(await validateProductImageUrls(gallery))) {
+    res.status(400).json({ error: "Check the product fields and image URLs" });
     return;
   }
   const [existing] = await db.select({ id: storeProductsTable.id }).from(storeProductsTable).where(eq(storeProductsTable.slug, parsed.data.slug));
@@ -496,16 +573,36 @@ router.post("/admin/products", async (req, res): Promise<void> => {
     res.status(409).json({ error: "That product URL is already in use" });
     return;
   }
-  const [product] = await db.insert(storeProductsTable).values(parsed.data).returning();
-  res.status(201).json(CreateAdminProductResponse.parse(product));
+  const [product] = await db.insert(storeProductsTable).values({
+    ...parsed.data,
+    imageUrls: parsed.data.imageUrls ?? [],
+    imageUrl: parsed.data.imageUrls !== undefined
+      ? parsed.data.imageUrls[0] ?? ""
+      : parsed.data.imageUrl,
+  }).returning();
+  res.status(201).json(CreateAdminProductResponse.parse(productResponse(product)));
 });
 
 router.patch("/admin/products/:id", async (req, res): Promise<void> => {
   const params = UpdateAdminProductParams.safeParse(req.params);
   const parsed = UpdateAdminProductBody.safeParse(req.body);
-  if (!params.success || !parsed.success || (parsed.data.imageUrl !== undefined && !isSafeImageUrl(parsed.data.imageUrl))) {
+  if (!params.success || !parsed.success) {
     res.status(400).json({ error: "Check the product fields and image URL" });
     return;
+  }
+  if (parsed.data.imageUrls !== undefined) {
+    if (!(await validateProductImageUrls(parsed.data.imageUrls))) {
+      res.status(400).json({ error: "Check the product image URLs" });
+      return;
+    }
+    parsed.data.imageUrl = parsed.data.imageUrls[0] ?? "";
+  } else if (parsed.data.imageUrl !== undefined) {
+    if (!(await validateProductImageUrls([parsed.data.imageUrl]))) {
+      res.status(400).json({ error: "Check the product image URL" });
+      return;
+    }
+    // A legacy primary-image edit replaces the gallery with that single image.
+    parsed.data.imageUrls = [];
   }
   if (!Object.keys(parsed.data).length) {
     res.status(400).json({ error: "No changes provided" });
@@ -524,7 +621,7 @@ router.patch("/admin/products/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Product not found" });
     return;
   }
-  res.json(UpdateAdminProductResponse.parse(product));
+  res.json(UpdateAdminProductResponse.parse(productResponse(product)));
 });
 
 router.delete("/admin/products/:id", async (req, res): Promise<void> => {

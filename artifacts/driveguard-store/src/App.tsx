@@ -8,7 +8,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
-import { ArrowRight, Check, ChevronDown, ChevronLeft, CreditCard, Headphones, LockKeyhole, Menu, Minus, Package, Plus, Search, ShieldCheck, ShoppingBag, Trash2, Truck, Video, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, ChevronLeft, ChevronRight, CreditCard, Headphones, LockKeyhole, Menu, Minus, Package, Plus, Search, ShieldCheck, ShoppingBag, Trash2, Truck, Video, X } from 'lucide-react';
 import { Link, Route, Router as WouterRouter, Switch, useLocation } from 'wouter';
 
 type CartLine = { productId: number; quantity: number };
@@ -101,9 +101,10 @@ function Header({ cartCount, onCollection, products, settings }: { cartCount: nu
   </header>;
 }
 
-function ProductImage({ product, small = false }: { product: Product; small?: boolean }) {
+function ProductImage({ product, small = false, src }: { product: Product; small?: boolean; src?: string }) {
+  const imageUrl = src ?? product.imageUrl;
   return <div className={`relative flex items-center justify-center overflow-hidden bg-[#f8f8f8] ${small ? 'h-24 w-28 shrink-0' : 'h-[320px] w-full sm:h-[430px]'}`} data-testid={small ? 'img-cart-product' : 'img-product-sample'}>
-    {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="h-full w-full object-contain" /> : <div className="px-4 text-center text-sm text-[#777]">Product image unavailable</div>}
+    {imageUrl ? <img src={imageUrl} alt={product.name} className="h-full w-full object-contain" /> : <div className="px-4 text-center text-sm text-[#777]">Product image unavailable</div>}
   </div>;
 }
 
@@ -181,12 +182,13 @@ function HomePage({ collection, onCollection, products, settings }: { collection
 
 function ProductPage({ product, settings, onAdd }: { product: Product; settings: StoreSettings; onAdd: (product: Product, quantity: number) => void }) {
   const [quantity, setQuantity] = useState(1);
+  const [activeImage, setActiveImage] = useState(0);
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'box'>('overview');
   const [added, setAdded] = useState(false);
   const [showMobileAdd, setShowMobileAdd] = useState(false);
   const [footerVisible, setFooterVisible] = useState(false);
   const mainAddRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => { setQuantity(1); setAdded(false); }, [product.id]);
+  useEffect(() => { setQuantity(1); setAdded(false); setActiveImage(0); }, [product.id]);
   useEffect(() => {
     const button = mainAddRef.current;
     if (!button || typeof IntersectionObserver === 'undefined') return;
@@ -198,11 +200,23 @@ function ProductPage({ product, settings, onAdd }: { product: Product; settings:
     return () => { buttonObserver.disconnect(); footerObserver.disconnect(); };
   }, [product.id]);
   const add = () => { onAdd(product, quantity); setAdded(true); window.setTimeout(() => setAdded(false), 2200); };
+  const images = product.imageUrls?.length ? product.imageUrls : product.imageUrl ? [product.imageUrl] : [];
   return <main className="bg-white">
     <div className="container-store py-7">
       <div className="mb-7 text-[12px] text-[#777]"><Link href="/" className="hover:text-[#c92525]" data-testid="link-breadcrumb-home">Home</Link><span className="mx-2">/</span><span data-testid="text-breadcrumb-product">{product.name}</span></div>
       <div className="grid gap-9 lg:grid-cols-[1.07fr_.93fr] lg:gap-14">
-        <div><ProductImage product={product} /></div>
+        <div>
+          <div className="relative">
+            <ProductImage product={product} src={images[activeImage] ?? images[0]} />
+            {images.length > 1 && <div className="pointer-events-none absolute inset-x-3 top-1/2 flex -translate-y-1/2 justify-between">
+              <button type="button" onClick={() => setActiveImage(index => (index - 1 + images.length) % images.length)} className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-[#ddd] bg-white/95 shadow-sm hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c92525]" aria-label="Previous product photo" data-testid="button-product-photo-previous"><ChevronLeft size={20} /></button>
+              <button type="button" onClick={() => setActiveImage(index => (index + 1) % images.length)} className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-[#ddd] bg-white/95 shadow-sm hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c92525]" aria-label="Next product photo" data-testid="button-product-photo-next"><ChevronRight size={20} /></button>
+            </div>}
+          </div>
+          {images.length > 1 && <div className="mt-3 flex gap-2 overflow-x-auto pb-2" role="group" aria-label="Product photos">
+            {images.map((image, index) => <button key={`${image}-${index}`} type="button" onClick={() => setActiveImage(index)} aria-label={`View product photo ${index + 1} of ${images.length}`} aria-pressed={activeImage === index} className={`h-[72px] w-[72px] shrink-0 overflow-hidden rounded-sm border-2 bg-[#f8f8f8] p-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] ${activeImage === index ? 'border-[#c92525]' : 'border-[#e1e1e1] hover:border-[#888]'}`} data-testid={`button-product-photo-${index + 1}`}><img src={image} alt="" className="h-full w-full object-contain" /></button>)}
+          </div>}
+        </div>
         <div className="lg:py-3">
           <h1 className="mt-4 text-[34px] font-extrabold leading-[1.13] tracking-[-.04em] sm:text-[45px]" data-testid="text-detail-name">{product.name}</h1>
           <p className="mt-4 text-[27px] font-extrabold" data-testid="text-detail-price">{money(product.priceCents)}</p>

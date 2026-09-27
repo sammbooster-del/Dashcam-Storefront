@@ -196,6 +196,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Product"
+  /admin/product-images/upload-url:
+    post:
+      operationId: createAdminProductImageUploadUrl
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductImageUploadInput"
+      responses:
+        "200":
+          description: Presigned upload URL and public application object path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductImageUpload"
+  /storage/objects/uploads/{id}:
+    get:
+      operationId: getProductImageObject
+      tags: [store]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Product image
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+            image/png:
+              schema: { type: string, format: binary }
+            image/webp:
+              schema: { type: string, format: binary }
   /admin/products/{id}:
     parameters:
       - name: id
@@ -411,13 +447,17 @@ components:
         simulatedRevenueCents: { type: integer }
     Product:
       type: object
-      required: [id, slug, name, description, imageUrl, priceCents, stock, category, featured, active]
+      required: [id, slug, name, description, imageUrl, imageUrls, priceCents, stock, category, featured, active]
       properties:
         id: { type: integer }
         slug: { type: string }
         name: { type: string }
         description: { type: string }
         imageUrl: { type: string }
+        imageUrls:
+          type: array
+          maxItems: 15
+          items: { type: string, maxLength: 2048 }
         priceCents: { type: integer }
         stock: { type: integer }
         category: { type: string, enum: [front, dual] }
@@ -432,6 +472,10 @@ components:
         name: { type: string, minLength: 1, maxLength: 150 }
         description: { type: string, maxLength: 3000 }
         imageUrl: { type: string, maxLength: 2048 }
+        imageUrls:
+          type: array
+          maxItems: 15
+          items: { type: string, maxLength: 2048 }
         priceCents: { type: integer, minimum: 0, maximum: 100000000 }
         stock: { type: integer, minimum: 0 }
         category: { type: string, enum: [front, dual] }
@@ -445,11 +489,29 @@ components:
         name: { type: string, minLength: 1, maxLength: 150 }
         description: { type: string, maxLength: 3000 }
         imageUrl: { type: string, maxLength: 2048 }
+        imageUrls:
+          type: array
+          maxItems: 15
+          items: { type: string, maxLength: 2048 }
         priceCents: { type: integer, minimum: 0, maximum: 100000000 }
         stock: { type: integer, minimum: 0 }
         category: { type: string, enum: [front, dual] }
         featured: { type: boolean }
         active: { type: boolean }
+    ProductImageUploadInput:
+      type: object
+      additionalProperties: false
+      required: [name, size, contentType]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        size: { type: integer, minimum: 1, maximum: 10485760 }
+        contentType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+    ProductImageUpload:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL: { type: string, format: uri }
+        objectPath: { type: string }
     StoreSettings:
       type: object
       required: [brandName, announcement, heroTitle, heroDescription, heroImageUrl, trustTitle, trustDescription, shippingThresholdCents, shippingCents, supportEmail, fictionalDemoMode, verificationTitle, verificationMerchantName, verificationCountry, verificationPrompt, verificationEmailLabel, verificationPhoneLabel, verificationNextLabel, verificationAccentColor, verificationButtonColor]

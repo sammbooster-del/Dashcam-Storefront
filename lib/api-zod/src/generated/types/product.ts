@@ -13,6 +13,11 @@ export interface Product {
   name: string;
   description: string;
   imageUrl: string;
+  /**
+     * @maxItems 15
+     * @items.maxLength 2048
+     */
+  imageUrls: string[];
   priceCents: number;
   stock: number;
   category: ProductCategory;

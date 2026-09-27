@@ -8,6 +8,7 @@ export const storeProductsTable = pgTable("store_products", {
   name: text("name").notNull(),
   description: text("description").notNull(),
   imageUrl: text("image_url").notNull(),
+  imageUrls: text("image_urls").array().notNull().default([]),
   priceCents: integer("price_cents").notNull(),
   stock: integer("stock").notNull().default(0),
   category: text("category", { enum: ["front", "dual"] }).notNull(),

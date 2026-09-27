@@ -17,6 +17,12 @@ export const HealthCheckResponse = zod.object({
 })
 
 
+export const getStorefrontResponseProductsItemImageUrlsItemMax = 2048;
+
+export const getStorefrontResponseProductsItemImageUrlsMax = 15;
+
+
+
 export const GetStorefrontResponse = zod.object({
   "settings": zod.object({
   "brandName": zod.string(),
@@ -46,6 +52,7 @@ export const GetStorefrontResponse = zod.object({
   "name": zod.string(),
   "description": zod.string(),
   "imageUrl": zod.string(),
+  "imageUrls": zod.array(zod.string().max(getStorefrontResponseProductsItemImageUrlsItemMax)).max(getStorefrontResponseProductsItemImageUrlsMax),
   "priceCents": zod.number().int(),
   "stock": zod.number().int(),
   "category": zod.enum(['front', 'dual']),
@@ -321,12 +328,19 @@ export const GetAdminOverviewResponse = zod.object({
 })
 
 
+export const listAdminProductsResponseImageUrlsItemMax = 2048;
+
+export const listAdminProductsResponseImageUrlsMax = 15;
+
+
+
 export const ListAdminProductsResponseItem = zod.object({
   "id": zod.number().int(),
   "slug": zod.string(),
   "name": zod.string(),
   "description": zod.string(),
   "imageUrl": zod.string(),
+  "imageUrls": zod.array(zod.string().max(listAdminProductsResponseImageUrlsItemMax)).max(listAdminProductsResponseImageUrlsMax),
   "priceCents": zod.number().int(),
   "stock": zod.number().int(),
   "category": zod.enum(['front', 'dual']),
@@ -346,6 +360,10 @@ export const createAdminProductBodyDescriptionMax = 3000;
 
 export const createAdminProductBodyImageUrlMax = 2048;
 
+export const createAdminProductBodyImageUrlsItemMax = 2048;
+
+export const createAdminProductBodyImageUrlsMax = 15;
+
 export const createAdminProductBodyPriceCentsMin = 0;
 export const createAdminProductBodyPriceCentsMax = 100000000;
 
@@ -358,6 +376,7 @@ export const CreateAdminProductBody = zod.object({
   "name": zod.string().min(1).max(createAdminProductBodyNameMax),
   "description": zod.string().max(createAdminProductBodyDescriptionMax),
   "imageUrl": zod.string().max(createAdminProductBodyImageUrlMax),
+  "imageUrls": zod.array(zod.string().max(createAdminProductBodyImageUrlsItemMax)).max(createAdminProductBodyImageUrlsMax).optional(),
   "priceCents": zod.number().int().min(createAdminProductBodyPriceCentsMin).max(createAdminProductBodyPriceCentsMax),
   "stock": zod.number().int().min(createAdminProductBodyStockMin),
   "category": zod.enum(['front', 'dual']),
@@ -365,18 +384,50 @@ export const CreateAdminProductBody = zod.object({
   "active": zod.boolean()
 })
 
+export const createAdminProductResponseImageUrlsItemMax = 2048;
+
+export const createAdminProductResponseImageUrlsMax = 15;
+
+
+
 export const CreateAdminProductResponse = zod.object({
   "id": zod.number().int(),
   "slug": zod.string(),
   "name": zod.string(),
   "description": zod.string(),
   "imageUrl": zod.string(),
+  "imageUrls": zod.array(zod.string().max(createAdminProductResponseImageUrlsItemMax)).max(createAdminProductResponseImageUrlsMax),
   "priceCents": zod.number().int(),
   "stock": zod.number().int(),
   "category": zod.enum(['front', 'dual']),
   "featured": zod.boolean(),
   "active": zod.boolean()
 })
+
+
+export const createAdminProductImageUploadUrlBodyNameMax = 255;
+
+export const createAdminProductImageUploadUrlBodySizeMax = 10485760;
+
+
+
+export const CreateAdminProductImageUploadUrlBody = zod.object({
+  "name": zod.string().min(1).max(createAdminProductImageUploadUrlBodyNameMax),
+  "size": zod.number().int().min(1).max(createAdminProductImageUploadUrlBodySizeMax),
+  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
+})
+
+export const CreateAdminProductImageUploadUrlResponse = zod.object({
+  "uploadURL": zod.string().url(),
+  "objectPath": zod.string()
+})
+
+
+export const GetProductImageObjectParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const GetProductImageObjectResponse = zod.unknown()
 
 
 export const UpdateAdminProductParams = zod.object({
@@ -393,6 +444,10 @@ export const updateAdminProductBodyDescriptionMax = 3000;
 
 export const updateAdminProductBodyImageUrlMax = 2048;
 
+export const updateAdminProductBodyImageUrlsItemMax = 2048;
+
+export const updateAdminProductBodyImageUrlsMax = 15;
+
 export const updateAdminProductBodyPriceCentsMin = 0;
 export const updateAdminProductBodyPriceCentsMax = 100000000;
 
@@ -405,6 +460,7 @@ export const UpdateAdminProductBody = zod.object({
   "name": zod.string().min(1).max(updateAdminProductBodyNameMax).optional(),
   "description": zod.string().max(updateAdminProductBodyDescriptionMax).optional(),
   "imageUrl": zod.string().max(updateAdminProductBodyImageUrlMax).optional(),
+  "imageUrls": zod.array(zod.string().max(updateAdminProductBodyImageUrlsItemMax)).max(updateAdminProductBodyImageUrlsMax).optional(),
   "priceCents": zod.number().int().min(updateAdminProductBodyPriceCentsMin).max(updateAdminProductBodyPriceCentsMax).optional(),
   "stock": zod.number().int().min(updateAdminProductBodyStockMin).optional(),
   "category": zod.enum(['front', 'dual']).optional(),
@@ -412,12 +468,19 @@ export const UpdateAdminProductBody = zod.object({
   "active": zod.boolean().optional()
 })
 
+export const updateAdminProductResponseImageUrlsItemMax = 2048;
+
+export const updateAdminProductResponseImageUrlsMax = 15;
+
+
+
 export const UpdateAdminProductResponse = zod.object({
   "id": zod.number().int(),
   "slug": zod.string(),
   "name": zod.string(),
   "description": zod.string(),
   "imageUrl": zod.string(),
+  "imageUrls": zod.array(zod.string().max(updateAdminProductResponseImageUrlsItemMax)).max(updateAdminProductResponseImageUrlsMax),
   "priceCents": zod.number().int(),
   "stock": zod.number().int(),
   "category": zod.enum(['front', 'dual']),

@@ -23,6 +23,11 @@ export interface ProductInput {
   /** @maxLength 2048 */
   imageUrl: string;
   /**
+     * @maxItems 15
+     * @items.maxLength 2048
+     */
+  imageUrls?: string[];
+  /**
      * @minimum 0
      * @maximum 100000000
      */
