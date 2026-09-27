@@ -9,14 +9,14 @@ The user wants this storefront to resemble the provided BlackboxMyCar reference 
 
 **How to apply:** For future storefront UI changes, compare the rendered desktop first fold with the reference: utility bar, wide white search-led header, category navigation, photo-led road hero with left-aligned text and red shopping actions, followed by a compact white trust/benefits section. Preserve working cart and demo-only checkout while editing. Do not infer permission to reuse trademarks, images, product data, or business claims.
 
-For checkout-verification references that depict real banks or payment networks, match the visual hierarchy but retain DriveGuard identity and unmistakable demo/no-delivery disclosure. Treat amounts, card digits, and order dates as factual order values, not editable promotional copy.
+For checkout-verification references that depict real banks or payment networks, match the visual hierarchy but retain DriveGuard identity. Treat amounts, card digits, and order dates as factual order values, not editable promotional copy.
 
 **Why:** A bank screenshot was supplied as a layout reference for a simulated OTP flow. Reproducing third-party issuer identity or fabricated delivery/timeout claims on a code-collection page would misrepresent the test checkout.
 
-**How to apply:** Let admins adjust DriveGuard-specific copy and appearance, but not the immutable disclosure, third-party logos, or truthful transaction facts unless the product genuinely changes to an authorized payment flow.
+**How to apply:** Let admins adjust DriveGuard-specific copy and appearance, but do not add third-party logos or alter truthful transaction facts unless the product genuinely changes to an authorized payment flow.
 
-The user explicitly chose demo verification with no real charge, while asking for the transition to feel like a familiar bank-verification handoff. Keep the full-screen loading and code-entry experience polished, but never imply a real bank redirect or payment-provider connection.
+The user explicitly chose demo verification with no real charge, while asking for the transition to feel like a familiar bank-verification handoff. They later asked to remove disclosure lines from the waiting and verification screens, without changing checkout access. Keep the full-screen loading and code-entry experience polished, but never imply a real bank redirect or payment-provider connection.
 
 **Why:** Realistic payment presentation matters to this user, but the app currently has no bank or payment-provider integration.
 
-**How to apply:** Describe the actual handoff to the in-app verification step, and keep a concise no-charge disclosure visible on the verification flow.
+**How to apply:** Describe the actual handoff to the in-app verification step without adding disclosure lines to those screens or implying that a third-party bank or payment provider is connected.

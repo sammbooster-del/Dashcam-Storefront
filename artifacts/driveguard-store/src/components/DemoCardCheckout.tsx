@@ -367,7 +367,6 @@ export function DemoCardCheckout({
       <button type="button" className="mt-6 min-h-11 rounded-lg border border-[#d5dbe3] bg-white px-5 py-2.5 text-[13px] font-semibold text-[#263241] hover:bg-[#f5f6f8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" onClick={() => stopWaiting('You stopped waiting for this order. The order has not been cancelled.')} data-testid="button-stop-waiting">
         Stop waiting
       </button>
-      <p className="mt-6 border-t border-[#edf0f3] pt-5 text-[11px] leading-4 text-[#798594]">Demo verification · No bank connection or charge</p>
     </div>
   </section>;
 
