@@ -221,7 +221,9 @@ export function TestVerificationScreen({
             </div>
           )}
         </main>
-
+        <footer className="border-t border-[#e6e8ec] pt-5 text-center text-[11px] leading-5 text-[#737d89]">
+          Demo verification · No bank is contacted and no charge is made.
+        </footer>
       </div>
     </section>
   );

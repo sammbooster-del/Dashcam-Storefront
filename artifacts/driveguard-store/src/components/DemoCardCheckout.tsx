@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type OrderAddress, type Product, type StoreSettings } from '@workspace/api-client-react';
-import { ArrowLeft, ArrowRight, Check, CircleX, CreditCard, LoaderCircle, LockKeyhole, Pencil } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CircleX, CreditCard, LockKeyhole, Pencil } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
 import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
 import { CheckoutBillingFields } from './CheckoutBillingFields';
@@ -353,15 +353,22 @@ export function DemoCardCheckout({
     clearCart();
     onSubmitted(pending.cardType);
   }} />;
-  if (pending) return <section className="flex min-h-[340px] flex-col items-center justify-center rounded-xl border border-[#dfe3e8] bg-white px-6 py-10 text-center shadow-sm" role="status" data-testid="status-waiting-for-admin">
-    <LoaderCircle size={38} className="animate-spin text-[#c92525]" aria-hidden="true" />
-    <h2 className="mt-5 text-[22px] font-bold text-[#1c2734]">Processing your order</h2>
-    <p className="mt-1 text-[12px] font-semibold text-[#637082]">Order #{pending.id}</p>
-    <p className="mt-2 max-w-sm text-[13px] leading-6 text-[#637082]">Please wait a moment. This page will update automatically.</p>
-    {pollError && <p className="mt-4 text-[12px] text-[#a61c1c]">{pollError}</p>}
-    <button type="button" className="mt-6 rounded-lg border border-[#d5dbe3] bg-white px-5 py-2.5 text-[13px] font-semibold text-[#263241] hover:bg-[#f5f6f8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" onClick={() => stopWaiting('You stopped waiting for this order. The order has not been cancelled.')} data-testid="button-stop-waiting">
-      Stop waiting
-    </button>
+  if (pending) return <section className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#f8f9fa] px-5 py-8 text-center" role="status" aria-live="polite" data-testid="status-waiting-for-admin">
+    <div className="flex w-full max-w-[380px] flex-col items-center rounded-xl border border-[#e4e8ed] bg-white px-7 py-10 shadow-[0_20px_70px_-35px_rgba(28,37,50,.38)]">
+      <div className="relative grid h-16 w-16 place-items-center" aria-hidden="true">
+        <span className="absolute inset-0 rounded-full border-[3px] border-[#e3e8ed]" />
+        <span className="absolute inset-0 animate-spin rounded-full border-[3px] border-transparent border-r-[#c92525] border-t-[#c92525] [animation-duration:700ms] motion-reduce:animate-none" />
+        <LockKeyhole size={19} className="text-[#536172]" />
+      </div>
+      <h2 className="mt-7 text-[19px] font-bold tracking-[-.025em] text-[#263241]">Waiting for verification</h2>
+      <p className="mt-2 text-[13px] leading-5 text-[#637082]">Keep this page open. The next step will appear here when it’s ready.</p>
+      <p className="mt-4 text-[12px] font-medium text-[#798594]">Order #{pending.id}</p>
+      {pollError && <p className="mt-4 text-[12px] text-[#a61c1c]">{pollError}</p>}
+      <button type="button" className="mt-6 min-h-11 rounded-lg border border-[#d5dbe3] bg-white px-5 py-2.5 text-[13px] font-semibold text-[#263241] hover:bg-[#f5f6f8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" onClick={() => stopWaiting('You stopped waiting for this order. The order has not been cancelled.')} data-testid="button-stop-waiting">
+        Stop waiting
+      </button>
+      <p className="mt-6 border-t border-[#edf0f3] pt-5 text-[11px] leading-4 text-[#798594]">Demo verification · No bank connection or charge</p>
+    </div>
   </section>;
 
   return <section ref={checkoutRef} className="overflow-hidden rounded-2xl border border-[#dfe3e8] bg-[#fffefd] shadow-[0_18px_48px_-32px_rgba(28,37,50,.35)]" data-testid="panel-demo-card-checkout">
@@ -381,7 +388,7 @@ export function DemoCardCheckout({
         </div>
       </div>
     </header>
-    {placingOrder && <CheckoutTransition title="Preparing payment verification" description="Please keep this page open. You'll be prompted when verification is ready." testId="status-placing-order" />}
+    {placingOrder && <CheckoutTransition title={fictionalDemoMode ? 'Connecting to verification' : 'Completing your order'} description="Please keep this page open while we prepare the next step." testId="status-placing-order" />}
     {transitioningToPayment ? <CheckoutTransition title="Opening payment details" description="Your delivery details are ready." testId="status-opening-payment" /> : step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
       <div>
         <div className="mb-4 flex items-baseline justify-between gap-3"><h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Contact details</h3><span className="text-[11px] text-[#818b97]">For order updates</span></div>

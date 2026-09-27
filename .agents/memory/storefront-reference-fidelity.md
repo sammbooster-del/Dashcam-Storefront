@@ -14,3 +14,9 @@ For checkout-verification references that depict real banks or payment networks,
 **Why:** A bank screenshot was supplied as a layout reference for a simulated OTP flow. Reproducing third-party issuer identity or fabricated delivery/timeout claims on a code-collection page would misrepresent the test checkout.
 
 **How to apply:** Let admins adjust DriveGuard-specific copy and appearance, but not the immutable disclosure, third-party logos, or truthful transaction facts unless the product genuinely changes to an authorized payment flow.
+
+The user explicitly chose demo verification with no real charge, while asking for the transition to feel like a familiar bank-verification handoff. Keep the full-screen loading and code-entry experience polished, but never imply a real bank redirect or payment-provider connection.
+
+**Why:** Realistic payment presentation matters to this user, but the app currently has no bank or payment-provider integration.
+
+**How to apply:** Describe the actual handoff to the in-app verification step, and keep a concise no-charge disclosure visible on the verification flow.
