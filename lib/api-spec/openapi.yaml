@@ -78,6 +78,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoVerification"
+  /demo-orders/{id}/cancel:
+    post:
+      operationId: cancelDemoOrder
+      tags: [store]
+      summary: Cancel a pending simulated order and return to checkout
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoVerificationCheck"
+      responses:
+        "200":
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoVerification"
   /demo-orders/{id}/verification-method:
     post:
       operationId: chooseDemoVerificationMethod

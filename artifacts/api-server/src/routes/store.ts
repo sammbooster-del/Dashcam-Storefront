@@ -9,6 +9,9 @@ import {
   type DemoOrder,
 } from "@workspace/db";
 import {
+  CancelDemoOrderBody,
+  CancelDemoOrderParams,
+  CancelDemoOrderResponse,
   CheckDemoOrderVerificationBody,
   CheckDemoOrderVerificationParams,
   CheckDemoOrderVerificationResponse,
@@ -436,6 +439,28 @@ router.post("/demo-orders/:id/verification", async (req, res): Promise<void> => 
     : order.verificationState === "requested" && order.verificationMethod ? "method_selected" : order.verificationState;
   res.setHeader("Cache-Control", "no-store");
   res.json(CheckDemoOrderVerificationResponse.parse({ state, method: order.verificationMethod }));
+});
+
+router.post("/demo-orders/:id/cancel", async (req, res): Promise<void> => {
+  const params = CancelDemoOrderParams.safeParse(req.params);
+  const body = CancelDemoOrderBody.safeParse(req.body);
+  if (!params.success || !body.success || !hasOnlyFields(req.body, ["draftId"])) {
+    res.status(400).json({ error: "Invalid cancellation request" });
+    return;
+  }
+  const [order] = await db.update(demoOrdersTable).set({ status: "cancelled", demoCode: null })
+    .where(and(
+      eq(demoOrdersTable.id, params.data.id),
+      eq(demoOrdersTable.demoId, body.data.draftId),
+      eq(demoOrdersTable.status, "new"),
+      inArray(demoOrdersTable.verificationState, ["waiting", "requested", "method_selected", "code_ready", "code_submitted", "invalid_code"]),
+    )).returning({ id: demoOrdersTable.id });
+  if (!order) {
+    res.status(409).json({ error: "This order can no longer be cancelled. Refresh to check its status." });
+    return;
+  }
+  res.setHeader("Cache-Control", "no-store");
+  res.json(CancelDemoOrderResponse.parse({ state: "cancelled", method: null }));
 });
 
 router.post("/demo-orders/:id/verification-method", async (req, res): Promise<void> => {

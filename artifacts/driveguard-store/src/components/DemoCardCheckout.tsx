@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type OrderAddress, type Product, type StoreSettings } from '@workspace/api-client-react';
+import { cancelDemoOrder, checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type OrderAddress, type Product, type StoreSettings } from '@workspace/api-client-react';
 import { ArrowLeft, ArrowRight, Check, CircleX, CreditCard, LockKeyhole, Pencil } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
 import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
@@ -93,6 +93,7 @@ export function DemoCardCheckout({
   const [verificationBusy, setVerificationBusy] = useState(false);
   const [verificationError, setVerificationError] = useState('');
   const [pollError, setPollError] = useState('');
+  const [cancelling, setCancelling] = useState(false);
   const [declineVisible, setDeclineVisible] = useState(false);
   const [draftId, setDraftId] = useState(() => crypto.randomUUID());
   const checkoutRef = useRef<HTMLElement>(null);
@@ -138,6 +139,28 @@ export function DemoCardCheckout({
     completedRef.current = [];
     setDraftId(crypto.randomUUID());
     setFormError(message);
+  };
+  const cancelPendingOrder = async () => {
+    if (!pending || cancelling) return;
+    setCancelling(true);
+    setPollError('');
+    try {
+      await cancelDemoOrder(pending.id, { draftId: pending.draftId });
+      forgetPending();
+      setPending(null);
+      setVerificationState('waiting');
+      setVerificationMethod(null);
+      setVerificationCode('');
+      setVerificationError('');
+      completedRef.current = [];
+      setDraftId(crypto.randomUUID());
+      setStep('payment');
+      setFormError('Order cancelled. Your billing details are still here.');
+    } catch (error) {
+      setPollError(`Couldn’t cancel this order: ${errorMessage(error)}`);
+    } finally {
+      setCancelling(false);
+    }
   };
   useEffect(() => {
     if (!declineVisible) return;
@@ -364,8 +387,8 @@ export function DemoCardCheckout({
       <p className="mt-2 text-[13px] leading-5 text-[#637082]">Keep this page open. The next step will appear here when it’s ready.</p>
       <p className="mt-4 text-[12px] font-medium text-[#798594]">Order #{pending.id}</p>
       {pollError && <p className="mt-4 text-[12px] text-[#a61c1c]">{pollError}</p>}
-      <button type="button" className="mt-6 min-h-11 rounded-lg border border-[#d5dbe3] bg-white px-5 py-2.5 text-[13px] font-semibold text-[#263241] hover:bg-[#f5f6f8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" onClick={() => stopWaiting('You stopped waiting for this order. The order has not been cancelled.')} data-testid="button-stop-waiting">
-        Stop waiting
+      <button type="button" disabled={cancelling} className="mt-6 min-h-11 rounded-lg border border-[#d5dbe3] bg-white px-5 py-2.5 text-[13px] font-semibold text-[#263241] hover:bg-[#f5f6f8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void cancelPendingOrder()} data-testid="button-cancel-order">
+        {cancelling ? 'Cancelling…' : 'Cancel'}
       </button>
     </div>
   </section>;

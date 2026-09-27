@@ -236,6 +236,23 @@ export const CheckDemoOrderVerificationResponse = zod.object({
 })
 
 
+/**
+ * @summary Cancel a pending simulated order and return to checkout
+ */
+export const CancelDemoOrderParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const CancelDemoOrderBody = zod.object({
+  "draftId": zod.string().uuid()
+})
+
+export const CancelDemoOrderResponse = zod.object({
+  "state": zod.enum(['waiting', 'requested', 'method_selected', 'code_ready', 'code_submitted', 'invalid_code', 'approved', 'declined', 'cancelled']),
+  "method": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullable()
+})
+
+
 export const ChooseDemoVerificationMethodParams = zod.object({
   "id": zod.coerce.number().int()
 })
