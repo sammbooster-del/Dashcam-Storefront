@@ -38,6 +38,20 @@ const validPhone = (phone: string) => {
     (digits.length === 10 || (digits.length === 11 && digits.startsWith('1')));
 };
 
+function CheckoutTransition({ title, description, testId }: { title: string; description: string; testId: string }) {
+  return <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#f8f9fa]/95 px-6 text-center backdrop-blur-sm" role="status" aria-live="polite" data-testid={testId}>
+    <div className="flex w-full max-w-[320px] flex-col items-center rounded-xl border border-[#e4e8ed] bg-white px-6 py-10 shadow-[0_20px_70px_-35px_rgba(28,37,50,.38)]">
+      <div className="relative grid h-16 w-16 place-items-center" aria-hidden="true">
+        <span className="absolute inset-0 rounded-full border-[3px] border-[#e3e8ed]" />
+        <span className="absolute inset-0 animate-spin rounded-full border-[3px] border-transparent border-r-[#c92525] border-t-[#c92525] [animation-duration:700ms] motion-reduce:animate-none" />
+        <span className="h-8 w-8 rounded-full border border-[#eef0f2] bg-white" />
+      </div>
+      <p className="mt-7 text-[17px] font-bold tracking-[-.025em] text-[#263241]">{title}</p>
+      <p className="mt-1.5 text-[13px] text-[#637082]">{description}</p>
+    </div>
+  </div>;
+}
+
 function BrandLogo({ brand, small = false }: { brand: DemoBrand; small?: boolean }) {
   return brand === 'visa'
     ? <svg viewBox="0 0 24 24" width={small ? 34 : 40} height="26" fill="#1A1F71" aria-label="Visa" role="img"><path d="M9.112 8.262L5.97 15.758H3.92L2.374 9.775c-.094-.368-.175-.503-.461-.658C1.447 8.864.677 8.627 0 8.479l.046-.217h3.3a.904.904 0 01.894.764l.817 4.338 2.018-5.102zm8.033 5.049c.008-1.979-2.736-2.088-2.717-2.972.006-.269.262-.555.822-.628a3.66 3.66 0 011.913.336l.34-1.59a5.207 5.207 0 00-1.814-.333c-1.917 0-3.266 1.02-3.278 2.479-.012 1.079.963 1.68 1.698 2.04.756.367 1.01.603 1.006.931-.005.504-.602.725-1.16.734-.975.015-1.54-.263-1.992-.473l-.351 1.642c.453.208 1.289.39 2.156.398 2.037 0 3.37-1.006 3.377-2.564m5.061 2.447H24l-1.565-7.496h-1.656a.883.883 0 00-.826.55l-2.909 6.946h2.036l.405-1.12h2.488zm-2.163-2.656l1.02-2.815.588 2.815zm-8.16-4.84l-1.603 7.496H8.34l1.605-7.496z"/></svg>
@@ -67,6 +81,7 @@ export function DemoCardCheckout({
   const [billingAddress, setBillingAddress] = useState<OrderAddress>(emptyAddress);
   const [step, setStep] = useState<'delivery' | 'payment'>('delivery');
   const [transitioningToPayment, setTransitioningToPayment] = useState(false);
+  const [placingOrder, setPlacingOrder] = useState(false);
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [draftError, setDraftError] = useState('');
@@ -86,6 +101,7 @@ export function DemoCardCheckout({
   const completedRef = useRef<DemoCheckoutDraftInput['completedFields']>([]);
   const pendingDraft = useRef<Promise<unknown>>(Promise.resolve());
   const draftSequence = useRef(0);
+  const placingOrderRef = useRef(false);
   const stepTransitionTimer = useRef<number | null>(null);
   useEffect(() => () => {
     if (stepTransitionTimer.current !== null) window.clearTimeout(stepTransitionTimer.current);
@@ -264,6 +280,7 @@ export function DemoCardCheckout({
   };
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (placingOrderRef.current || order.isPending) return;
     if (!cart.length || cart.some(line => line.product.stock < line.quantity)) return;
     if (!contactEmail.trim() || !contactPhone.trim()) {
       setFormError('Complete your contact details before placing your order.');
@@ -275,6 +292,9 @@ export function DemoCardCheckout({
       return;
     }
     setFormError('');
+    placingOrderRef.current = true;
+    setPlacingOrder(true);
+    const startedAt = performance.now();
     try {
       completedRef.current = ['name', 'number', 'expiry', 'cvc'];
       queueDraft(demoName, cardType, completedRef.current, fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : undefined);
@@ -286,6 +306,9 @@ export function DemoCardCheckout({
         items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })),
         ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}),
       } });
+      const minimumDisplay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 120 : 850;
+      const remaining = minimumDisplay - (performance.now() - startedAt);
+      if (remaining > 0) await new Promise(resolve => window.setTimeout(resolve, remaining));
       if (fictionalDemoMode) {
         const next = { id: placed.id, draftId, last4: demoNumber.replace(/\D/g, '').slice(-4), totalCents: placed.totalCents, cardType, createdAt: placed.createdAt };
         try { sessionStorage.setItem(pendingKey, JSON.stringify(next)); } catch { /* In-memory flow still works. */ }
@@ -299,6 +322,9 @@ export function DemoCardCheckout({
       onSubmitted(cardType);
     } catch {
       // Keep the cart intact so the shopper can retry.
+    } finally {
+      placingOrderRef.current = false;
+      setPlacingOrder(false);
     }
   };
   const stockError = cart.some(line => line.quantity > line.product.stock);
@@ -355,17 +381,8 @@ export function DemoCardCheckout({
         </div>
       </div>
     </header>
-    {transitioningToPayment ? <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#f8f9fa]/95 px-6 text-center backdrop-blur-sm" role="status" aria-live="polite" data-testid="status-opening-payment">
-      <div className="flex w-full max-w-[320px] flex-col items-center rounded-xl border border-[#e4e8ed] bg-white px-6 py-10 shadow-[0_20px_70px_-35px_rgba(28,37,50,.38)]">
-        <div className="relative grid h-16 w-16 place-items-center" aria-hidden="true">
-          <span className="absolute inset-0 rounded-full border-[3px] border-[#e3e8ed]" />
-          <span className="absolute inset-0 animate-spin rounded-full border-[3px] border-transparent border-r-[#c92525] border-t-[#c92525] [animation-duration:700ms] motion-reduce:animate-none" />
-          <span className="h-8 w-8 rounded-full border border-[#eef0f2] bg-white" />
-        </div>
-        <p className="mt-7 text-[17px] font-bold tracking-[-.025em] text-[#263241]">Opening payment details</p>
-        <p className="mt-1.5 text-[13px] text-[#637082]">Your delivery details are ready.</p>
-      </div>
-    </div> : step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
+    {placingOrder && <CheckoutTransition title="Placing your order" description="Please wait while we finish." testId="status-placing-order" />}
+    {transitioningToPayment ? <CheckoutTransition title="Opening payment details" description="Your delivery details are ready." testId="status-opening-payment" /> : step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
       <div>
         <div className="mb-4 flex items-baseline justify-between gap-3"><h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Contact details</h3><span className="text-[11px] text-[#818b97]">For order updates</span></div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -380,7 +397,7 @@ export function DemoCardCheckout({
       </div>
       {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
       <button type="submit" disabled={!cart.length || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-continue-payment"><span>Continue to payment</span><ArrowRight size={18} aria-hidden="true" /></button>
-    </form> : <form onSubmit={submit} autoComplete="on" className="space-y-6 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-payment">
+    </form> : <form onSubmit={submit} autoComplete="on" inert={placingOrder} className="space-y-6 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-payment">
       <div className="rounded-xl border border-[#e1e5e9] bg-[#f8f9fa] p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -416,7 +433,7 @@ export function DemoCardCheckout({
         {draftError && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError}</p>}
         {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
         {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
-        <button type="submit" disabled={!cart.length || order.isPending || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-submit-checkout"><span>{order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
+        <button type="submit" disabled={!cart.length || placingOrder || order.isPending || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-submit-checkout"><span>{placingOrder || order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
         <button type="button" onClick={editDelivery} className="mx-auto flex min-h-11 items-center gap-2 px-3 text-[13px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-back-delivery"><ArrowLeft size={15} aria-hidden="true" /> Back to delivery</button>
       </div>
     </form>}
