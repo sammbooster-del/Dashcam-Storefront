@@ -168,6 +168,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoCheckoutDraft"
+  /delivery-alerts:
+    post:
+      operationId: sendDeliveryAlert
+      tags: [store]
+      summary: Notify the store when delivery entry begins
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryAlertInput"
+      responses:
+        "202":
+          description: Notification accepted or suppressed by alert limits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeliveryAlertResult"
+        "503":
+          description: Notification service unavailable
   /admin/me:
     get:
       operationId: getAdminMe
@@ -448,6 +468,17 @@ paths:
                 $ref: "#/components/schemas/DemoOrder"
 components:
   schemas:
+    DeliveryAlertInput:
+      type: object
+      additionalProperties: false
+      required: [draftId]
+      properties:
+        draftId: { type: string, format: uuid }
+    DeliveryAlertResult:
+      type: object
+      required: [accepted]
+      properties:
+        accepted: { type: boolean }
     HealthStatus:
       type: object
       properties:

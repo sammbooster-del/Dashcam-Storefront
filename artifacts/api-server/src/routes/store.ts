@@ -46,6 +46,8 @@ import {
   SaveDemoDraftBody,
   SaveDemoDraftParams,
   SaveDemoDraftResponse,
+  SendDeliveryAlertBody,
+  SendDeliveryAlertResponse,
   SubmitDemoVerificationCodeBody,
   SubmitDemoVerificationCodeParams,
   SubmitDemoVerificationCodeResponse,
@@ -269,6 +271,13 @@ const demoDrafts = new Map<string, DemoDraft>();
 const DRAFT_LIFETIME_MS = 15 * 60 * 1000;
 const MAX_DRAFTS = 100;
 
+// Anonymous storefront traffic can trigger alerts, so bound sends even if a
+// client changes its draft ID or resubmits while the upstream request is in flight.
+const deliveryAlertDrafts = new Map<string, number>();
+const deliveryAlertIps = new Map<string, number>();
+const deliveryAlertAttempts: number[] = [];
+const ALERT_WINDOW_MS = 60 * 60 * 1000;
+
 function pruneDemoDrafts() {
   const cutoff = Date.now() - DRAFT_LIFETIME_MS;
   for (const [id, draft] of demoDrafts) {
@@ -333,6 +342,55 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
   demoDrafts.set(draft.id, draft);
   pruneDemoDrafts();
   res.json(SaveDemoDraftResponse.parse(draft));
+});
+
+router.post("/delivery-alerts", requireSameOriginWrite, async (req, res): Promise<void> => {
+  const parsed = SendDeliveryAlertBody.safeParse(req.body);
+  if (!parsed.success || !hasOnlyFields(req.body, ["draftId"])) {
+    res.status(400).json({ error: "Invalid delivery alert" });
+    return;
+  }
+  const token = process.env.PUSHOVER_APP_TOKEN;
+  const user = process.env.PUSHOVER_USER_KEY;
+  if (!token || !user) {
+    req.log.warn("Pushover delivery alerts are not configured");
+    res.status(503).json({ error: "Delivery alerts are not configured" });
+    return;
+  }
+  const now = Date.now();
+  for (const [id, time] of deliveryAlertDrafts) if (now - time > ALERT_WINDOW_MS) deliveryAlertDrafts.delete(id);
+  for (const [ip, time] of deliveryAlertIps) if (now - time > 5 * 60 * 1000) deliveryAlertIps.delete(ip);
+  while (deliveryAlertAttempts.length && now - deliveryAlertAttempts[0] > ALERT_WINDOW_MS) deliveryAlertAttempts.shift();
+  const ip = req.get("x-forwarded-for")?.split(",")[0]?.trim() || req.ip || "unknown";
+  if (deliveryAlertDrafts.has(parsed.data.draftId) || deliveryAlertIps.has(ip) || deliveryAlertAttempts.length >= 12) {
+    res.status(202).json(SendDeliveryAlertResponse.parse({ accepted: false }));
+    return;
+  }
+  deliveryAlertDrafts.set(parsed.data.draftId, now);
+  deliveryAlertIps.set(ip, now);
+  deliveryAlertAttempts.push(now);
+  try {
+    const response = await fetch("https://api.pushover.net/1/messages.json", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        token, user,
+        title: "DriveGuard checkout started",
+        message: "A customer has started entering delivery details.",
+        priority: "2",
+        retry: "30",
+        expire: "300",
+        sound: "siren",
+      }),
+      signal: AbortSignal.timeout(6000),
+    });
+    const result = await response.json() as { status?: number };
+    if (!response.ok || result.status !== 1) throw new Error(`Pushover returned HTTP ${response.status}`);
+    res.status(202).json(SendDeliveryAlertResponse.parse({ accepted: true }));
+  } catch (error) {
+    req.log.error({ err: error }, "Could not send Pushover delivery alert");
+    res.status(503).json({ error: "Could not send delivery alert" });
+  }
 });
 
 router.post("/demo-orders", async (req, res): Promise<void> => {

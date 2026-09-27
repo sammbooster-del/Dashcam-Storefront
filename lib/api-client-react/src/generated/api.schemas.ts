@@ -5,6 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface DeliveryAlertInput {
+  draftId: string;
+}
+
+export interface DeliveryAlertResult {
+  accepted: boolean;
+}
+
 export interface HealthStatus {
   status: string;
 }

@@ -22,6 +22,8 @@ import type {
 import type {
   AdminIdentity,
   AdminOverview,
+  DeliveryAlertInput,
+  DeliveryAlertResult,
   DemoCheckoutDraft,
   DemoCheckoutDraftInput,
   DemoOrder,
@@ -725,6 +727,94 @@ export const useSaveDemoDraft = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getSaveDemoDraftMutationOptions(options));
+    }
+
+export const getSendDeliveryAlertUrl = () => {
+
+
+
+
+  return `/api/delivery-alerts`
+}
+
+/**
+ * @summary Notify the store when delivery entry begins
+ */
+export const sendDeliveryAlert = async (deliveryAlertInput: DeliveryAlertInput, options?: Parameters<typeof customFetch>[1]): Promise<DeliveryAlertResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DeliveryAlertResult>(getSendDeliveryAlertUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(deliveryAlertInput)
+  }
+);}
+
+
+
+
+
+export const getSendDeliveryAlertMutationKey = () => ['sendDeliveryAlert'] as const;
+
+export const getSendDeliveryAlertMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendDeliveryAlert>>, TError,SendDeliveryAlertMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendDeliveryAlert>>, TError,SendDeliveryAlertMutationVariables, TContext> => {
+
+const mutationKey = getSendDeliveryAlertMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendDeliveryAlert>>, SendDeliveryAlertMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  sendDeliveryAlert(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendDeliveryAlertMutationResult = NonNullable<Awaited<ReturnType<typeof sendDeliveryAlert>>>
+    export type SendDeliveryAlertMutationBody = BodyType<DeliveryAlertInput>
+    export type SendDeliveryAlertMutationError = ErrorType<void>
+    export type SendDeliveryAlertMutationVariables = {data: BodyType<DeliveryAlertInput>}
+
+    /**
+ * @summary Notify the store when delivery entry begins
+ */
+export const useSendDeliveryAlert = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendDeliveryAlert>>, TError,SendDeliveryAlertMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendDeliveryAlert>>,
+        TError,
+        SendDeliveryAlertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSendDeliveryAlertMutationOptions(options));
     }
 
 export const getGetAdminMeUrl = () => {

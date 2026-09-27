@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { cancelDemoOrder, checkDemoOrderVerification, chooseDemoVerificationMethod, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type OrderAddress, type Product, type StoreSettings } from '@workspace/api-client-react';
+import { cancelDemoOrder, checkDemoOrderVerification, chooseDemoVerificationMethod, sendDeliveryAlert, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type OrderAddress, type Product, type StoreSettings } from '@workspace/api-client-react';
 import { ArrowLeft, ArrowRight, Check, CircleX, CreditCard, LockKeyhole, Pencil } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
 import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
@@ -104,6 +104,7 @@ export function DemoCardCheckout({
   const pendingDraft = useRef<Promise<unknown>>(Promise.resolve());
   const draftSequence = useRef(0);
   const placingOrderRef = useRef(false);
+  const deliveryAlertSentRef = useRef(false);
   const stepTransitionTimer = useRef<number | null>(null);
   useEffect(() => () => {
     if (stepTransitionTimer.current !== null) window.clearTimeout(stepTransitionTimer.current);
@@ -140,6 +141,7 @@ export function DemoCardCheckout({
     setStep('delivery');
     completedRef.current = [];
     setDraftId(crypto.randomUUID());
+    deliveryAlertSentRef.current = false;
     setFormError(message);
   };
   const cancelPendingOrder = async () => {
@@ -292,6 +294,19 @@ export function DemoCardCheckout({
     completedRef.current = next;
     if (next.length || hadCompletedField) queueDraft(demoName, cardType, next);
   };
+  const alertDeliveryStarted = (hasText: boolean) => {
+    if (!hasText || !cart.length || pending || deliveryAlertSentRef.current) return;
+    deliveryAlertSentRef.current = true;
+    // Alert failures are logged by the API and must not interrupt checkout.
+    void sendDeliveryAlert({ draftId }).catch(() => {});
+  };
+  const updateShippingAddress = (value: OrderAddress) => {
+    setShippingAddress(value);
+    alertDeliveryStarted(Boolean(
+      value.fullName.trim() || value.line1.trim() || value.line2.trim() ||
+      value.city.trim() || value.region.trim() || value.postalCode.trim(),
+    ));
+  };
   const continueToPayment = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (transitioningToPayment || !cart.length || cart.some(line => line.quantity > line.product.stock)) return;
@@ -425,14 +440,14 @@ export function DemoCardCheckout({
       <div>
         <div className="mb-4 flex items-baseline justify-between gap-3"><h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Contact details</h3><span className="text-[11px] text-[#818b97]">For order updates</span></div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-[12px] font-semibold text-[#344255]">Email address<input type="email" required maxLength={254} autoComplete="email" value={contactEmail} onChange={event => setContactEmail(event.target.value)} className={fieldClass} data-testid="input-contact-email" placeholder="you@example.com" /></label>
-          <label className="block text-[12px] font-semibold text-[#344255]">Phone number<input type="tel" required maxLength={30} inputMode="tel" autoComplete="tel" value={contactPhone} onChange={event => { setContactPhone(event.target.value); setFormError(''); }} className={fieldClass} data-testid="input-contact-phone" placeholder="(555) 123-4567" /></label>
+          <label className="block text-[12px] font-semibold text-[#344255]">Email address<input type="email" required maxLength={254} autoComplete="email" value={contactEmail} onChange={event => { setContactEmail(event.target.value); alertDeliveryStarted(Boolean(event.target.value.trim())); }} className={fieldClass} data-testid="input-contact-email" placeholder="you@example.com" /></label>
+          <label className="block text-[12px] font-semibold text-[#344255]">Phone number<input type="tel" required maxLength={30} inputMode="tel" autoComplete="tel" value={contactPhone} onChange={event => { setContactPhone(event.target.value); setFormError(''); alertDeliveryStarted(Boolean(event.target.value.trim())); }} className={fieldClass} data-testid="input-contact-phone" placeholder="(555) 123-4567" /></label>
         </div>
         {formError && <p role="alert" className="mt-3 text-[12px] font-semibold text-[#a61c1c]">{formError}</p>}
       </div>
       <div className="border-t border-[#e9edf0] pt-6">
         <h3 className="mb-4 text-[16px] font-bold tracking-[-.02em] text-[#263241]">Shipping address</h3>
-        <CheckoutAddressFields kind="shipping" value={shippingAddress} onChange={setShippingAddress} />
+        <CheckoutAddressFields kind="shipping" value={shippingAddress} onChange={updateShippingAddress} />
       </div>
       {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
       <button type="submit" disabled={!cart.length || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-continue-payment"><span>Continue to payment</span><ArrowRight size={18} aria-hidden="true" /></button>

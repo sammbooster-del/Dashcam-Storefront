@@ -376,6 +376,18 @@ export const SaveDemoDraftResponse = zod.object({
 })
 
 
+/**
+ * @summary Notify the store when delivery entry begins
+ */
+export const SendDeliveryAlertBody = zod.object({
+  "draftId": zod.string().uuid()
+})
+
+export const SendDeliveryAlertResponse = zod.object({
+  "accepted": zod.boolean()
+})
+
+
 export const GetAdminMeResponse = zod.object({
   "isAdmin": zod.boolean()
 })
