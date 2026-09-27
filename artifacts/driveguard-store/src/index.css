@@ -124,4 +124,6 @@ button:disabled { cursor: not-allowed; }
 @media (max-width: 767px) {
   .container-store { width: min(100% - 32px, 1560px); }
   .hero-road { background-position: 61% center; background-image: linear-gradient(90deg, rgba(9,12,16,.86), rgba(9,12,16,.38)); }
+  .hero-actions .red-button:nth-child(n+3) { background: rgba(9,12,16,.48); border-color: rgba(255,255,255,.55); }
+  .hero-actions .red-button:nth-child(n+3):hover { background: rgba(9,12,16,.75); }
 }

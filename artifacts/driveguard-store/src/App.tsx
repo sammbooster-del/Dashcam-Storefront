@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getGetStorefrontQueryKey, useGetStorefront, type Product, type StoreSettings } from '@workspace/api-client-react';
 import { DemoCardCheckout } from '@/components/DemoCardCheckout';
@@ -81,7 +81,7 @@ function Header({ cartCount, onCollection, products, settings }: { cartCount: nu
       <div className="ml-auto flex shrink-0 items-center gap-4 lg:gap-7">
         <a href="#support" className="hidden items-center gap-2 text-[13px] font-semibold hover:text-[#c92525] lg:flex" data-testid="link-header-support"><Headphones size={20} strokeWidth={1.7} /> Support</a>
         <Link href="/checkout" className="relative flex items-center gap-2 text-[13px] font-semibold hover:text-[#c92525]" data-testid="link-cart"><ShoppingBag size={22} strokeWidth={1.8} /><span className="hidden sm:inline">Cart</span>{cartCount > 0 && <span className="absolute -right-2 -top-3 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#c92525] px-1 text-[10px] font-bold text-white" data-testid="text-cart-count">{cartCount}</span>}</Link>
-        <button type="button" className="p-1 md:hidden" onClick={() => setMobileOpen(!mobileOpen)} data-testid="button-mobile-menu" aria-label={mobileOpen ? 'Close menu' : 'Open menu'}>{mobileOpen ? <X size={24} /> : <Menu size={24} />}</button>
+        <button type="button" className="grid h-11 w-11 place-items-center md:hidden" onClick={() => setMobileOpen(!mobileOpen)} data-testid="button-mobile-menu" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="store-mobile-menu">{mobileOpen ? <X size={24} /> : <Menu size={24} />}</button>
       </div>
     </div>
     <nav className="hidden border-y border-[#e6e6e6] md:block">
@@ -93,10 +93,10 @@ function Header({ cartCount, onCollection, products, settings }: { cartCount: nu
         <button type="button" onClick={() => goToSection('why-driveguard')} className="hover:text-[#c92525]" data-testid="button-nav-about">Why {settings.brandName}</button>
       </div>
     </nav>
-    {mobileOpen && <div className="border-t border-[#eee] bg-white px-4 pb-5 md:hidden">
+    {mobileOpen && <div id="store-mobile-menu" className="border-t border-[#eee] bg-white px-4 pb-5 md:hidden">
       <form onSubmit={submitSearch} className="mt-4 flex"><input type="search" value={search} onChange={event => { setSearch(event.target.value); setSearchOpen(Boolean(event.target.value.trim())); }} placeholder="Search the store" aria-label="Search catalog" className="field-input" data-testid="input-mobile-search" /><button type="submit" className="grid w-12 shrink-0 place-items-center bg-[#c92525] text-white" data-testid="button-mobile-search" aria-label="Search"><Search size={19} /></button></form>
       {search.trim() && <div className="border border-[#eee] p-3 text-sm" data-testid="mobile-search-results">{matches.length ? matches.map(product => <Link key={product.id} href={`/product/${product.slug}`} onClick={() => setMobileOpen(false)} className="block py-2">{product.name} — {money(product.priceCents)}</Link>) : <span data-testid="text-mobile-search-empty">No products match “{search}”.</span>}</div>}
-       <div className="mt-4 grid gap-1 text-sm font-semibold">{([['all', 'Shop all cameras'], ['front', 'Front cameras'], ['dual', 'Dual-channel cameras']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => selectCollection(value)} className="border-b border-[#eee] py-3 text-left" data-testid={`button-mobile-nav-${value}`}>{label}</button>)}{featured && <Link href={`/product/${featured.slug}`} onClick={() => setMobileOpen(false)} className="py-3" data-testid="link-mobile-featured">Featured camera</Link>}</div>
+       <div className="mt-4 grid gap-1 text-sm font-semibold">{([['all', 'Shop all cameras'], ['front', 'Front cameras'], ['dual', 'Dual-channel cameras']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => selectCollection(value)} className="min-h-11 border-b border-[#eee] py-3 text-left" data-testid={`button-mobile-nav-${value}`}>{label}</button>)}{featured && <Link href={`/product/${featured.slug}`} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center border-b border-[#eee] py-3" data-testid="link-mobile-featured">Featured camera</Link>}<Link href="/checkout" onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center border-b border-[#eee] py-3">Cart &amp; checkout</Link><button type="button" onClick={() => { setMobileOpen(false); document.getElementById('support')?.scrollIntoView({ behavior: 'smooth' }); }} className="min-h-11 py-3 text-left">Help &amp; support</button></div>
     </div>}
   </header>;
 }
@@ -183,7 +183,20 @@ function ProductPage({ product, settings, onAdd }: { product: Product; settings:
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'box'>('overview');
   const [added, setAdded] = useState(false);
+  const [showMobileAdd, setShowMobileAdd] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
+  const mainAddRef = useRef<HTMLButtonElement>(null);
   useEffect(() => { setQuantity(1); setAdded(false); }, [product.id]);
+  useEffect(() => {
+    const button = mainAddRef.current;
+    if (!button || typeof IntersectionObserver === 'undefined') return;
+    const buttonObserver = new IntersectionObserver(([entry]) => setShowMobileAdd(!entry.isIntersecting), { threshold: 0.25 });
+    buttonObserver.observe(button);
+    const footer = document.getElementById('support');
+    const footerObserver = new IntersectionObserver(([entry]) => setFooterVisible(entry.isIntersecting));
+    if (footer) footerObserver.observe(footer);
+    return () => { buttonObserver.disconnect(); footerObserver.disconnect(); };
+  }, [product.id]);
   const add = () => { onAdd(product, quantity); setAdded(true); window.setTimeout(() => setAdded(false), 2200); };
   return <main className="bg-white">
     <div className="container-store py-7">
@@ -199,7 +212,7 @@ function ProductPage({ product, settings, onAdd }: { product: Product; settings:
           <div className="mt-7 grid grid-cols-2 gap-2 border-y border-[#e7e7e7] py-5 text-center text-[12px] font-semibold"><span>{product.category === 'dual' ? 'Front + rear recording' : 'Front recording'}</span><span>Current product listing</span></div>
           <div className="mt-7"><label className="mb-2 block text-[13px] font-bold">Quantity</label><div className="flex flex-wrap gap-3">
             <div className="flex h-[52px] items-center border border-[#d6d6d6]"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="grid h-full w-11 place-items-center hover:bg-[#f5f5f5]" data-testid="button-decrease-product-quantity" aria-label="Decrease quantity"><Minus size={16} /></button><span className="w-8 text-center text-sm font-bold" data-testid="text-product-quantity">{quantity}</span><button type="button" disabled={quantity >= product.stock} onClick={() => setQuantity(Math.min(product.stock, quantity + 1))} className="grid h-full w-11 place-items-center hover:bg-[#f5f5f5] disabled:opacity-40" data-testid="button-increase-product-quantity" aria-label="Increase quantity"><Plus size={16} /></button></div>
-            <button type="button" onClick={add} disabled={product.stock < 1} className="red-button min-w-[220px] flex-1 disabled:opacity-50" data-testid="button-add-to-cart">{added ? <><Check size={18} /> Added to cart</> : <><ShoppingBag size={18} /> {product.stock ? 'Add to cart' : 'Out of stock'}</>}</button>
+            <button ref={mainAddRef} type="button" onClick={add} disabled={product.stock < 1} className="red-button min-w-[220px] flex-1 disabled:opacity-50" data-testid="button-add-to-cart">{added ? <><Check size={18} /> Added to cart</> : <><ShoppingBag size={18} /> {product.stock ? 'Add to cart' : 'Out of stock'}</>}</button>
           </div></div>
           <p className="mt-5 flex items-center gap-2 text-[12px] text-[#666]"><Truck size={16} /> {settings.shippingThresholdCents === 0 ? 'Free shipping on all orders' : `Free shipping on orders over ${money(settings.shippingThresholdCents)}`}</p>
           <div className="mt-5 border-t border-[#e7e7e7] pt-5"><AcceptedCards location="product" /></div>
@@ -210,7 +223,12 @@ function ProductPage({ product, settings, onAdd }: { product: Product; settings:
         <div className="flex gap-7 overflow-x-auto border-b border-[#ddd]">{([['overview', 'Overview'], ['details', 'Specifications'], ['box', 'What’s included']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => setActiveTab(value)} className={`shrink-0 border-b-2 py-5 text-[13px] font-bold ${activeTab === value ? 'border-[#c92525] text-[#c92525]' : 'border-transparent text-[#666]'}`} data-testid={`button-product-tab-${value}`}>{label}</button>)}</div>
         <div className="max-w-[760px] py-9 text-[15px] leading-7 text-[#555]" data-testid={`text-product-tab-${activeTab}`}>{activeTab === 'overview' ? product.description : activeTab === 'details' ? `${product.category === 'dual' ? 'Dual-channel' : 'Front-channel'} dash camera. See the product description for available details.` : 'Refer to the product listing for included accessories and package details.'}</div>
       </div>
-    </div><Footer settings={settings} featured={product} />
+    </div>
+    {showMobileAdd && !footerVisible && product.stock > 0 && <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-4 border-t border-[#dedede] bg-white/95 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-6px_24px_rgba(0,0,0,.12)] backdrop-blur-sm md:hidden" data-testid="mobile-product-buy-bar">
+      <strong className="shrink-0 text-[18px]">{money(product.priceCents)}</strong>
+      {added ? <Link href="/checkout" className="red-button flex-1" data-testid="link-mobile-view-cart">View cart <ArrowRight size={16} /></Link> : <button type="button" onClick={add} className="red-button flex-1" data-testid="button-mobile-add-to-cart"><ShoppingBag size={17} /> Add to cart</button>}
+    </div>}
+    <Footer settings={settings} featured={product} />
   </main>;
 }
 
@@ -220,23 +238,38 @@ function CartSummary({ cart, updateQuantity, removeItem, settings }: { cart: { p
   return <div className="border border-[#dedede] bg-white p-5 sm:p-7">
     <div className="flex items-center justify-between border-b border-[#e8e8e8] pb-5"><h2 className="text-[22px] font-extrabold">Your cart</h2><span className="text-[12px] text-[#666]" data-testid="text-cart-item-count">{cart.reduce((sum, item) => sum + item.quantity, 0)} item(s)</span></div>
     {cart.length ? cart.map(({ product, quantity }) => <div key={product.id} className="flex gap-4 border-b border-[#e8e8e8] py-6" data-testid={`row-cart-item-${product.id}`}><ProductImage product={product} small /><div className="min-w-0 flex-1"><div className="flex justify-between gap-3"><div><Link href={`/product/${product.slug}`} className="text-[14px] font-bold hover:text-[#c92525]" data-testid={`link-cart-product-${product.id}`}>{product.name}</Link><p className="mt-1 text-[11px] text-[#777]">{product.stock} available · {money(product.priceCents)} each</p></div><button type="button" onClick={() => removeItem(product.id)} className="self-start text-[#777] hover:text-[#c92525]" aria-label={`Remove ${product.name}`} data-testid={`button-remove-cart-item-${product.id}`}><Trash2 size={17} /></button></div><div className="mt-4 flex items-center justify-between gap-2"><div className="flex h-8 items-center border border-[#ddd]"><button type="button" onClick={() => updateQuantity(product.id, -1)} className="grid h-full w-8 place-items-center" aria-label="Decrease quantity" data-testid={`button-decrease-cart-item-${product.id}`}><Minus size={13} /></button><span className="w-7 text-center text-xs font-bold" data-testid={`text-cart-item-quantity-${product.id}`}>{quantity}</span><button type="button" disabled={quantity >= product.stock} onClick={() => updateQuantity(product.id, 1)} className="grid h-full w-8 place-items-center disabled:opacity-40" aria-label="Increase quantity" data-testid={`button-increase-cart-item-${product.id}`}><Plus size={13} /></button></div><strong className="text-[14px]" data-testid={`text-cart-item-total-${product.id}`}>{money(product.priceCents * quantity)}</strong></div></div></div>) : <div className="py-12 text-center" data-testid="text-empty-cart"><ShoppingBag className="mx-auto text-[#777]" size={33} /><h3 className="mt-4 text-[21px] font-bold">Your cart is empty</h3><p className="mt-2 text-[13px] text-[#666]">Explore the current camera collection to get started.</p><Link href="/" className="red-button mt-6" data-testid="link-empty-cart-shop">Shop cameras</Link></div>}
-    <div className="space-y-3 pt-6 text-[14px]"><div className="flex justify-between"><span className="text-[#666]">Subtotal</span><span data-testid="text-cart-subtotal">{money(subtotal)}</span></div><div className="flex justify-between"><span className="text-[#666]">Shipping</span><span data-testid="text-cart-shipping">{shipping ? money(shipping) : 'Free'}</span></div><div className="flex justify-between border-t border-[#ddd] pt-4 text-[18px] font-extrabold"><span>Total</span><span data-testid="text-cart-total">{money(subtotal + shipping)}</span></div></div>
+    {cart.length > 0 && <div className="space-y-3 pt-6 text-[14px]"><div className="flex justify-between"><span className="text-[#666]">Subtotal</span><span data-testid="text-cart-subtotal">{money(subtotal)}</span></div><div className="flex justify-between"><span className="text-[#666]">Shipping</span><span data-testid="text-cart-shipping">{shipping ? money(shipping) : 'Free'}</span></div><div className="flex justify-between border-t border-[#ddd] pt-4 text-[18px] font-extrabold"><span>Total</span><span data-testid="text-cart-total">{money(subtotal + shipping)}</span></div></div>}
     {cart.length > 0 && <div className="mt-6 border-t border-[#e8e8e8] pt-5"><AcceptedCards location="cart" /></div>}
   </div>;
 }
 
 function CheckoutPage({ cart, updateQuantity, removeItem, clearCart, settings }: { cart: { product: Product; quantity: number }[]; updateQuantity: (id: number, amount: number) => void; removeItem: (id: number) => void; clearCart: () => void; settings: StoreSettings }) {
   const [submittedType, setSubmittedType] = useState<'credit' | 'debit' | null>(null);
+  const [smallScreen, setSmallScreen] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches);
+  const [cartExpanded, setCartExpanded] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 1023px)');
+    const update = () => setSmallScreen(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
   if (submittedType) return <><main className="min-h-[60dvh] bg-[#f7f7f7] py-20"><div className="container-store"><div className="mx-auto max-w-[600px] border border-[#ddd] bg-white p-8 text-center sm:p-12" data-testid="status-demo-success"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#c92525] text-white"><Check size={28} /></div><p className="mt-5 text-[12px] font-bold uppercase tracking-[.14em] text-[#c92525]">Order confirmation</p><h1 className="mt-3 text-[34px] font-extrabold tracking-[-.04em]">Order received</h1><p className="mt-4 text-[14px] leading-7 text-[#666]">Your order has been recorded.</p><Link href="/" className="red-button mt-7" data-testid="link-success-store">Continue shopping <ArrowRight size={17} /></Link></div></div></main><Footer settings={settings} featured={cart[0]?.product} /></>;
   const subtotal = cart.reduce((sum, item) => sum + item.product.priceCents * item.quantity, 0);
   const totalCents = subtotal + (subtotal > 0 && subtotal < settings.shippingThresholdCents ? settings.shippingCents : 0);
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   return <main className="bg-[#f7f7f7] py-9 sm:py-14"><div className="container-store">
     <Link href="/" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#666] hover:text-[#c92525]" data-testid="link-continue-shopping"><ChevronLeft size={15} /> Continue shopping</Link>
     <h1 className="mt-5 text-[35px] font-extrabold tracking-[-.04em] sm:text-[43px]">Cart &amp; checkout</h1>
-    <p className="mt-2 text-[14px] text-[#666]">Review your cart, then add delivery and payment details.</p>
-    <div className="mt-8 grid items-start gap-7 lg:grid-cols-[1fr_.85fr]">
-      <CartSummary cart={cart} updateQuantity={updateQuantity} removeItem={removeItem} settings={settings} />
-      <DemoCardCheckout key={String(settings.fictionalDemoMode)} cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} totalCents={totalCents} fictionalDemoMode={settings.fictionalDemoMode} settings={settings} />
+    <p className="mt-2 text-[14px] text-[#666]">{cart.length ? 'Review your cart, then add delivery and payment details.' : 'Your cart is empty. Choose a camera to get started.'}</p>
+    {smallScreen && cart.length > 0 && <button type="button" onClick={() => setCartExpanded(open => !open)} aria-expanded={cartExpanded} aria-controls="mobile-cart-details" className="mt-6 flex min-h-14 w-full items-center justify-between gap-3 rounded-lg border border-[#dedede] bg-white px-4 text-left shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-mobile-order-summary">
+      <span className="flex min-w-0 items-center gap-2 text-[13px] font-bold text-[#263241]"><ShoppingBag size={18} aria-hidden="true" /> Order summary <span className="text-[11px] font-medium text-[#637082]">({itemCount} {itemCount === 1 ? 'item' : 'items'})</span></span>
+      <span className="flex shrink-0 items-center gap-2 text-[13px] font-bold">{money(totalCents)} <ChevronDown size={17} className={`transition-transform ${cartExpanded ? 'rotate-180' : ''}`} aria-hidden="true" /></span>
+    </button>}
+    <div className={`${cart.length ? 'mt-4 grid items-start gap-7 lg:mt-8 lg:grid-cols-[1fr_.85fr]' : 'mx-auto mt-8 max-w-[700px]'}`}>
+      <div id="mobile-cart-details" className={smallScreen && cart.length > 0 && !cartExpanded ? 'hidden' : undefined}>
+        <CartSummary cart={cart} updateQuantity={updateQuantity} removeItem={removeItem} settings={settings} />
+      </div>
+      {cart.length > 0 && <DemoCardCheckout key={String(settings.fictionalDemoMode)} cart={cart} clearCart={clearCart} onSubmitted={setSubmittedType} totalCents={totalCents} fictionalDemoMode={settings.fictionalDemoMode} settings={settings} />}
     </div>
   </div><Footer settings={settings} /></main>;
 }

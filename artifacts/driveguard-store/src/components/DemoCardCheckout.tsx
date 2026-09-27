@@ -79,10 +79,22 @@ export function DemoCardCheckout({
   const [pollError, setPollError] = useState('');
   const [declineVisible, setDeclineVisible] = useState(false);
   const [draftId, setDraftId] = useState(() => crypto.randomUUID());
+  const checkoutRef = useRef<HTMLElement>(null);
+  const previousStepRef = useRef(step);
   const declineRef = useRef<HTMLDivElement>(null);
   const completedRef = useRef<DemoCheckoutDraftInput['completedFields']>([]);
   const pendingDraft = useRef<Promise<unknown>>(Promise.resolve());
   const draftSequence = useRef(0);
+  useEffect(() => {
+    if (previousStepRef.current === step) return;
+    previousStepRef.current = step;
+    if (!window.matchMedia('(max-width: 767px)').matches) return;
+    const frame = window.requestAnimationFrame(() => checkoutRef.current?.scrollIntoView({
+      block: 'start',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [step]);
   const order = useCreateDemoOrder();
   const saveDemoDraft = useSaveDemoDraft();
   const stopWaiting = (message: string) => {
@@ -315,7 +327,7 @@ export function DemoCardCheckout({
     </button>
   </section>;
 
-  return <section className="overflow-hidden rounded-2xl border border-[#dfe3e8] bg-[#fffefd] shadow-[0_18px_48px_-32px_rgba(28,37,50,.35)]" data-testid="panel-demo-card-checkout">
+  return <section ref={checkoutRef} className="overflow-hidden rounded-2xl border border-[#dfe3e8] bg-[#fffefd] shadow-[0_18px_48px_-32px_rgba(28,37,50,.35)]" data-testid="panel-demo-card-checkout">
     <header className="border-b border-[#e9edf0] bg-[#f8f9fa] px-5 pb-6 pt-6 sm:px-8 sm:pt-8">
       <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em] text-[#a62020]"><LockKeyhole size={13} aria-hidden="true" /> Secure checkout</div>
       <h2 className="mt-2 text-[25px] font-bold tracking-[-.04em] text-[#1c2734] sm:text-[28px]">{step === 'delivery' ? 'Where should it go?' : 'Almost there.'}</h2>
@@ -356,7 +368,7 @@ export function DemoCardCheckout({
             <p className="mt-0.5 text-[12px] leading-5 text-[#637082]" data-testid="text-delivery-address">{deliverySummary}</p>
             <p className="mt-2 break-words text-[12px] text-[#637082]" data-testid="text-delivery-contact">{contactEmail} · {contactPhone}</p>
           </div>
-          <button type="button" onClick={editDelivery} className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-[12px] font-bold text-[#b52121] hover:text-[#861717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-edit-delivery"><Pencil size={12} aria-hidden="true" /> Edit</button>
+          <button type="button" onClick={editDelivery} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-[13px] font-bold text-[#b52121] hover:text-[#861717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-edit-delivery"><Pencil size={13} aria-hidden="true" /> Edit</button>
         </div>
       </div>
       <div className="mx-auto w-full max-w-[440px] space-y-4">
@@ -384,7 +396,7 @@ export function DemoCardCheckout({
         {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
         {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
         <button type="submit" disabled={!cart.length || order.isPending || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-submit-checkout"><span>{order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
-        <button type="button" onClick={editDelivery} className="mx-auto flex items-center gap-2 text-[12px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-back-delivery"><ArrowLeft size={15} aria-hidden="true" /> Back to delivery</button>
+        <button type="button" onClick={editDelivery} className="mx-auto flex min-h-11 items-center gap-2 px-3 text-[13px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-back-delivery"><ArrowLeft size={15} aria-hidden="true" /> Back to delivery</button>
       </div>
     </form>}
   </section>;
