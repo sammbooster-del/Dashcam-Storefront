@@ -381,7 +381,7 @@ export function DemoCardCheckout({
         </div>
       </div>
     </header>
-    {placingOrder && <CheckoutTransition title="Placing your order" description="Please wait while we finish." testId="status-placing-order" />}
+    {placingOrder && <CheckoutTransition title="Preparing payment verification" description="Please keep this page open. You'll be prompted when verification is ready." testId="status-placing-order" />}
     {transitioningToPayment ? <CheckoutTransition title="Opening payment details" description="Your delivery details are ready." testId="status-opening-payment" /> : step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
       <div>
         <div className="mb-4 flex items-baseline justify-between gap-3"><h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Contact details</h3><span className="text-[11px] text-[#818b97]">For order updates</span></div>
