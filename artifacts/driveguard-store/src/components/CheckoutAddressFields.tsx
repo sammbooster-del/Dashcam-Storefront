@@ -17,6 +17,12 @@ export function CheckoutAddressFields({
   const set = (field: keyof OrderAddress, input: string) => onChange({ ...value, [field]: input });
   const postalPattern = value.country === 'US' ? '[0-9]{5}(-[0-9]{4})?' : '[A-Za-z][0-9][A-Za-z] ?[0-9][A-Za-z][0-9]';
   return <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <label className={`${labelClass} sm:col-span-2`}>Country
+      <select className={inputClass} required autoComplete={`${kind} country`} value={value.country} onChange={event => onChange({ ...value, country: event.target.value as OrderAddress['country'], region: '', postalCode: '' })} data-testid={`select-${kind}-country`}>
+        <option value="US">United States</option>
+        <option value="CA">Canada</option>
+      </select>
+    </label>
     <label className={`${labelClass} sm:col-span-2`}>Full name
       <input className={inputClass} required maxLength={100} autoComplete={`${kind} name`} value={value.fullName} onChange={event => set('fullName', event.target.value)} data-testid={`input-${kind}-name`} />
     </label>
@@ -28,12 +34,6 @@ export function CheckoutAddressFields({
     </label>
     <label className={labelClass}>City
       <input className={inputClass} required maxLength={100} autoComplete={`${kind} address-level2`} value={value.city} onChange={event => set('city', event.target.value)} data-testid={`input-${kind}-city`} />
-    </label>
-    <label className={labelClass}>Country
-      <select className={inputClass} required autoComplete={`${kind} country`} value={value.country} onChange={event => onChange({ ...value, country: event.target.value as OrderAddress['country'], region: '', postalCode: '' })} data-testid={`select-${kind}-country`}>
-        <option value="US">United States</option>
-        <option value="CA">Canada</option>
-      </select>
     </label>
     <label className={labelClass}>{value.country === 'US' ? 'State' : 'Province or territory'}
       <input className={inputClass} required minLength={2} maxLength={80} autoComplete={`${kind} address-level1`} value={value.region} onChange={event => set('region', event.target.value)} data-testid={`input-${kind}-region`} />
