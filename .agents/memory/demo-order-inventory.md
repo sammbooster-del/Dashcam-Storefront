@@ -23,9 +23,9 @@ The checkout may adopt the familiar layout of a modern payment form, but it must
 
 Express wallets are previews only: keep Apple Pay and Google Pay clearly marked Coming soon and disabled. Only the existing card checkout should be usable.
 
-**Why:** The owner explicitly requested future express-payment options without enabling them or changing the current card flow.
+**Why:** The owner explicitly requested future express-payment options without enabling them or changing the current card flow. They rejected plain-text logo substitutes and asked for actual payment-brand artwork.
 
-**How to apply:** Do not activate wallet payments or add a real-payment integration without a new request. Coming-soon controls must not submit the card form or launch a payment.
+**How to apply:** Use authentic brand-logo assets, not text or generic wallet icons as substitutes. Do not activate wallet payments or add a real-payment integration without a new request. Coming-soon controls must not submit the card form or launch a payment.
 
 The email and phone choices describe how the team shared a code outside this app. They are not delivery channels operated by the app. The app receives the shopper's submitted code for manual admin review, rather than generating or validating it against an app-issued code.
 
