@@ -14,3 +14,9 @@ Offer a direct Buy now path from the product page that adds the selected item an
 **Why:** The user found adding an item, scrolling to the cart icon, opening the cart, and scrolling back to the form stressful. They explicitly chose a separate Buy now action rather than changing what Add to cart does.
 
 **How to apply:** Preserve the direct path without hiding the cart contents or removing the browsing path. Do not replace an existing cart without asking.
+
+Keep delivery first. At payment, let the shopper select a payment method and click Next before revealing card and billing fields. Back navigation must preserve entered delivery details.
+
+**Why:** The owner requested selection before payment details, rejected a new payment-selection screen before delivery, and asked for a modern checkout rather than another upfront step.
+
+**How to apply:** Keep card fields out of the method-selection view; show the disabled coming-soon wallets there alongside the usable card choice. Do not move this selector ahead of delivery without clarification.

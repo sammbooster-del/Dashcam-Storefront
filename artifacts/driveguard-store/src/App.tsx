@@ -266,7 +266,7 @@ function CheckoutPage({ cart, updateQuantity, removeItem, clearCart, settings }:
   return <main className="bg-[#f7f7f7] py-9 sm:py-14"><div className="container-store">
     <Link href="/" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#666] hover:text-[#c92525]" data-testid="link-continue-shopping"><ChevronLeft size={15} /> Continue shopping</Link>
     <h1 className="mt-5 text-[35px] font-extrabold tracking-[-.04em] sm:text-[43px]">Cart &amp; checkout</h1>
-    <p className="mt-2 text-[14px] text-[#666]">{cart.length ? 'Review your cart, then add delivery and payment details.' : 'Your cart is empty. Choose a camera to get started.'}</p>
+    <p className="mt-2 text-[14px] text-[#666]">{cart.length ? 'Review your cart, add delivery details, then choose how to pay.' : 'Your cart is empty. Choose a camera to get started.'}</p>
     <div className={`${cart.length ? 'mt-6 grid items-start gap-7 lg:mt-8 lg:grid-cols-[1fr_.85fr]' : 'mx-auto mt-8 max-w-[700px]'}`}>
       <div>
         <CartSummary cart={cart} updateQuantity={updateQuantity} removeItem={removeItem} settings={settings} />
@@ -296,7 +296,7 @@ function Store({ cart, add, updateQuantity, removeItem, clearCart }: { cart: Car
     if (location === '/checkout' && directCheckoutRef.current) {
       directCheckoutRef.current = false;
       const frame = window.requestAnimationFrame(() => {
-        document.getElementById('checkout-delivery')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+        document.getElementById('checkout-start')?.scrollIntoView({ block: 'start', behavior: 'auto' });
       });
       return () => window.cancelAnimationFrame(frame);
     }

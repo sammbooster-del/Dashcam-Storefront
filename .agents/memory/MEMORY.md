@@ -3,3 +3,4 @@
 - [OpenAPI inline-body collision](openapi-inline-body.md) — Name request-body schemas for parameterized operations to avoid duplicate generated TypeScript exports.
 - [Checkout path and cart visibility](checkout-cart-visibility.md) — Keep products visible on mobile; Buy now skips cart navigation and opens delivery.
 - [Checkout arrival alert](checkout-arrival-alert.md) — Use a repeating Pushover notification, not a phone call, for the start of delivery entry.
+- [Payment brand asset contrast](payment-brand-assets.md) — Google Pay’s light/dark SVG names refer to the button background, not the lettering color.

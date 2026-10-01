@@ -82,7 +82,7 @@ export function DemoCardCheckout({
   const [shippingAddress, setShippingAddress] = useState<OrderAddress>(emptyAddress);
   const [billingAddress, setBillingAddress] = useState<OrderAddress>(emptyAddress);
   const [billingStarted, setBillingStarted] = useState(false);
-  const [step, setStep] = useState<CheckoutStep>('method');
+  const [step, setStep] = useState<CheckoutStep>('delivery');
   const [cardSelected, setCardSelected] = useState(false);
   const [transitioningToPayment, setTransitioningToPayment] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
@@ -142,7 +142,7 @@ export function DemoCardCheckout({
     setContactEmail('');
     setContactPhone('');
     setCardSelected(false);
-    setStep('method');
+    setStep('delivery');
     completedRef.current = [];
     setDraftId(crypto.randomUUID());
     deliveryAlertSentRef.current = false;
@@ -322,7 +322,7 @@ export function DemoCardCheckout({
     setTransitioningToPayment(true);
     stepTransitionTimer.current = window.setTimeout(() => {
       stepTransitionTimer.current = null;
-      setStep('payment');
+      setStep('method');
       setTransitioningToPayment(false);
     }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 120 : 850);
   };
@@ -426,12 +426,11 @@ export function DemoCardCheckout({
     <header className="border-b border-[#e9edf0] bg-[#f8f9fa] px-5 pb-6 pt-6 sm:px-8 sm:pt-8">
       <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em] text-[#a62020]"><LockKeyhole size={13} aria-hidden="true" /> Secure checkout</div>
       <h2 className="mt-2 text-[25px] font-bold tracking-[-.04em] text-[#1c2734] sm:text-[28px]">{transitioningToPayment ? 'Just a moment.' : step === 'method' ? 'How would you like to pay?' : step === 'delivery' ? 'Where should it go?' : 'Almost there.'}</h2>
-      <p className="mt-1 text-[13px] leading-5 text-[#637082]">{transitioningToPayment ? 'Opening your payment details.' : step === 'method' ? 'Choose a payment method, then click Next.' : step === 'delivery' ? 'Add your contact and delivery details.' : 'Review your delivery and complete your order.'}</p>
+      <p className="mt-1 text-[13px] leading-5 text-[#637082]">{transitioningToPayment ? 'Opening your payment options.' : step === 'method' ? 'Choose a payment method, then click Next.' : step === 'delivery' ? 'Add your contact and delivery details.' : 'Review your delivery and complete your order.'}</p>
       <CheckoutProgress step={step} />
     </header>
     {placingOrder && <CheckoutTransition title={fictionalDemoMode ? 'Connecting to verification' : 'Completing your order'} description="Please keep this page open while we prepare the next step." testId="status-placing-order" />}
-    {transitioningToPayment ? <CheckoutTransition title="Opening payment details" description="Your delivery details are ready." testId="status-opening-payment" /> : step === 'method' ? <CheckoutPaymentMethod selected={cardSelected} onSelect={() => setCardSelected(true)} onContinue={() => { setFormError(''); setStep('delivery'); }} unavailable={!cart.length || stockError} /> : step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
-      <button type="button" onClick={() => { setFormError(''); setStep('method'); }} className="inline-flex min-h-11 items-center gap-2 text-[13px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c92525]" data-testid="button-change-payment-method"><ArrowLeft size={15} aria-hidden="true" /> Change payment method</button>
+    {transitioningToPayment ? <CheckoutTransition title="Opening payment options" description="Your delivery details are ready." testId="status-opening-payment" /> : step === 'method' ? <CheckoutPaymentMethod selected={cardSelected} onSelect={() => setCardSelected(true)} onContinue={() => { setFormError(''); setStep('payment'); }} onBack={editDelivery} unavailable={!cart.length || stockError} /> : step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
       <div>
         <div className="mb-4 flex items-baseline justify-between gap-3"><h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Contact details</h3><span className="text-[11px] text-[#818b97]">For order updates</span></div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -483,7 +482,7 @@ export function DemoCardCheckout({
         {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
         {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
         <button type="submit" disabled={!cart.length || placingOrder || order.isPending || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-submit-checkout"><span>{placingOrder || order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
-        <button type="button" onClick={editDelivery} className="mx-auto flex min-h-11 items-center gap-2 px-3 text-[13px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-back-delivery"><ArrowLeft size={15} aria-hidden="true" /> Back to delivery</button>
+        <button type="button" onClick={() => { setFormError(''); setStep('method'); }} className="mx-auto flex min-h-11 items-center gap-2 px-3 text-[13px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-change-payment-method"><ArrowLeft size={15} aria-hidden="true" /> Change payment method</button>
       </div>
     </form>}
   </section>;

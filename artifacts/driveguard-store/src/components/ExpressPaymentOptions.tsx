@@ -18,7 +18,7 @@ export function ExpressPaymentOptions() {
         <p className="text-[11px] font-medium text-[#637082]">Coming soon</p>
       </div>
     </div>
-    <p className="text-[12px] leading-5 text-[#637082]">Continue with credit or debit card below.</p>
+    <p className="text-[12px] leading-5 text-[#637082]">Digital wallets are not available yet. Pay with a card below.</p>
     <div className="flex items-center gap-3 pt-2" aria-hidden="true">
       <div className="h-px flex-1 bg-[#e1e5e9]" />
       <span className="text-[11px] font-semibold text-[#637082]">Pay by card</span>
