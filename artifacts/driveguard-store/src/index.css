@@ -112,9 +112,37 @@ button:disabled { cursor: not-allowed; }
   background-size: cover;
   background-position: center center;
 }
-.red-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 12px 22px; background: #c92525; color: white; font-weight: 700; font-size: 14px; text-align: center; border: 1px solid #c92525; border-radius: 2px; transition: background .2s, transform .2s; }
+.red-button, .red-button-surface {
+  background: linear-gradient(180deg, #d62c2c 0%, #bd2020 100%);
+  color: white;
+  border: 1px solid #b91e1e;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 3px 8px rgba(151,25,25,.14);
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.red-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 12px 22px; font-weight: 700; font-size: 14px; letter-spacing: -.01em; text-align: center; }
+.red-button--wide { width: 100%; justify-content: space-between; padding-inline: 18px; }
 .hero-actions .red-button { min-height: 64px; justify-content: space-between; text-align: left; }
-.red-button:hover { background: #ab1717; transform: translateY(-2px); }
+.red-button:focus-visible, .red-button-surface:focus-visible { outline: 3px solid #c92525; outline-offset: 3px; }
+.red-button:active:not(:disabled), .red-button-surface:active:not(:disabled) {
+  background: #ad1d1d;
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 3px rgba(93,9,9,.16);
+}
+.red-button:disabled, .red-button-surface:disabled { cursor: not-allowed; opacity: .5; box-shadow: none; }
+@media (hover: hover) {
+  .red-button:hover:not(:disabled):not(:active), .red-button-surface:hover:not(:disabled):not(:active) {
+    background: linear-gradient(180deg, #c92525 0%, #ac1b1b 100%);
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 5px 12px rgba(151,25,25,.2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .red-button, .red-button-surface { transition: none; }
+  .red-button:hover:not(:disabled):not(:active), .red-button:active:not(:disabled),
+  .red-button-surface:hover:not(:disabled):not(:active), .red-button-surface:active:not(:disabled) { transform: none; }
+}
 .outline-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 10px 20px; border: 1px solid #242424; border-radius: 2px; font-weight: 700; font-size: 14px; transition: background .2s, color .2s; }
 .outline-button:hover { background: #242424; color: white; }
 .field-input { display: block; width: 100%; height: 48px; padding: 0 14px; border: 1px solid #d6d6d6; border-radius: 2px; background: white; color: #202020; outline: none; }

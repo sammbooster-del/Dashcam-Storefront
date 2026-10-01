@@ -444,7 +444,7 @@ export function DemoCardCheckout({
         <CheckoutAddressFields kind="shipping" value={shippingAddress} onChange={updateShippingAddress} />
       </div>
       {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
-      <button type="submit" disabled={!cart.length || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-continue-payment"><span>Continue to payment</span><ArrowRight size={18} aria-hidden="true" /></button>
+      <button type="submit" disabled={!cart.length || stockError} className="red-button red-button--wide" data-testid="button-continue-payment"><span>Continue to payment</span><ArrowRight size={18} aria-hidden="true" /></button>
     </form> : <form onSubmit={submit} autoComplete="on" inert={placingOrder} className="space-y-6 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-payment">
       <div className="rounded-xl border border-[#e1e5e9] bg-[#f8f9fa] p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
@@ -481,7 +481,7 @@ export function DemoCardCheckout({
         {draftError && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError}</p>}
         {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
         {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
-        <button type="submit" disabled={!cart.length || placingOrder || order.isPending || stockError} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-submit-checkout"><span>{placingOrder || order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
+        <button type="submit" disabled={!cart.length || placingOrder || order.isPending || stockError} className="red-button red-button--wide" data-testid="button-submit-checkout"><span>{placingOrder || order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
         <button type="button" onClick={() => { setFormError(''); setStep('method'); }} className="mx-auto flex min-h-11 items-center gap-2 px-3 text-[13px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-change-payment-method"><ArrowLeft size={15} aria-hidden="true" /> Change payment method</button>
       </div>
     </form>}

@@ -31,7 +31,7 @@ export function CheckoutPaymentMethod({ selected, onSelect, onContinue, onBack, 
     <div className="mx-auto w-full max-w-[440px] space-y-3">
       <p className="text-[12px] leading-5 text-[#637082]">{selected ? 'Card selected. Click Next to enter your card and billing details.' : 'Select credit or debit card to continue.'}</p>
       {unavailable && <p role="alert" className="text-[12px] text-[#a61c1c]">Update your cart before continuing. One or more items are unavailable.</p>}
-      <button type="submit" disabled={!selected || unavailable} className="flex min-h-[52px] w-full items-center justify-between rounded-lg bg-[#c92525] px-4 text-[14px] font-bold text-white transition hover:bg-[#ac1b1b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-payment-method-next">
+      <button type="submit" disabled={!selected || unavailable} className="red-button red-button--wide" data-testid="button-payment-method-next">
         <span>Next</span><ArrowRight size={18} aria-hidden="true" />
       </button>
     </div>
