@@ -21,6 +21,12 @@ The checkout may adopt the familiar layout of a modern payment form, but it must
 
 **How to apply:** Do not claim a charge or reservation happened. Preserve the short no-charge caution even when the shopper-facing layout otherwise looks like a standard checkout. Only introduce payment-provider claims after a real integration is implemented and verified.
 
+Express wallets are previews only: keep Apple Pay and Google Pay clearly marked Coming soon and disabled. Only the existing card checkout should be usable.
+
+**Why:** The owner explicitly requested future express-payment options without enabling them or changing the current card flow.
+
+**How to apply:** Do not activate wallet payments or add a real-payment integration without a new request. Coming-soon controls must not submit the card form or launch a payment.
+
 The email and phone choices describe how the team shared a code outside this app. They are not delivery channels operated by the app. The app receives the shopper's submitted code for manual admin review, rather than generating or validating it against an app-issued code.
 
 **Why:** The user clarified that their team already generates codes elsewhere and gives them to testers. They want the code entered by the shopper visible to the admin, not an admin-configured or app-generated code.

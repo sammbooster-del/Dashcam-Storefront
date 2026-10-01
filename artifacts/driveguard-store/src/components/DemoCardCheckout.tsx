@@ -5,6 +5,7 @@ import { TestVerificationScreen } from './TestVerificationScreen';
 import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
 import { CheckoutBillingFields } from './CheckoutBillingFields';
 import { AcceptedCards, CardBrandLogo, detectCardBrand } from './AcceptedCards';
+import { ExpressPaymentOptions } from './ExpressPaymentOptions';
 
 type DemoBrand = 'visa' | 'mastercard';
 type CardType = 'credit' | 'debit';
@@ -464,7 +465,8 @@ export function DemoCardCheckout({
         </div>
       </div>
       <div className="mx-auto w-full max-w-[440px] space-y-4">
-        <h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Payment and billing details</h3>
+        <ExpressPaymentOptions />
+        <h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Credit or debit card</h3>
         <AcceptedCards location="payment" />
         <label className="relative block">
           <span className="sr-only">Card number</span>
