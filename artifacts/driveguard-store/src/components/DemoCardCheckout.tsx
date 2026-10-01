@@ -5,7 +5,8 @@ import { TestVerificationScreen } from './TestVerificationScreen';
 import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
 import { CheckoutBillingFields } from './CheckoutBillingFields';
 import { AcceptedCards, CardBrandLogo, detectCardBrand } from './AcceptedCards';
-import { ExpressPaymentOptions } from './ExpressPaymentOptions';
+import { CheckoutPaymentMethod } from './CheckoutPaymentMethod';
+import { CheckoutProgress, type CheckoutStep } from './CheckoutProgress';
 
 type DemoBrand = 'visa' | 'mastercard';
 type CardType = 'credit' | 'debit';
@@ -81,7 +82,8 @@ export function DemoCardCheckout({
   const [shippingAddress, setShippingAddress] = useState<OrderAddress>(emptyAddress);
   const [billingAddress, setBillingAddress] = useState<OrderAddress>(emptyAddress);
   const [billingStarted, setBillingStarted] = useState(false);
-  const [step, setStep] = useState<'delivery' | 'payment'>('delivery');
+  const [step, setStep] = useState<CheckoutStep>('method');
+  const [cardSelected, setCardSelected] = useState(false);
   const [transitioningToPayment, setTransitioningToPayment] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [contactEmail, setContactEmail] = useState('');
@@ -139,7 +141,8 @@ export function DemoCardCheckout({
     setBillingStarted(false);
     setContactEmail('');
     setContactPhone('');
-    setStep('delivery');
+    setCardSelected(false);
+    setStep('method');
     completedRef.current = [];
     setDraftId(crypto.randomUUID());
     deliveryAlertSentRef.current = false;
@@ -419,25 +422,16 @@ export function DemoCardCheckout({
     </div>
   </section>;
 
-  return <section id="checkout-delivery" ref={checkoutRef} className="scroll-mt-4 overflow-hidden rounded-2xl border border-[#dfe3e8] bg-[#fffefd] shadow-[0_18px_48px_-32px_rgba(28,37,50,.35)]" data-testid="panel-demo-card-checkout">
+  return <section id="checkout-start" ref={checkoutRef} className="scroll-mt-4 overflow-hidden rounded-2xl border border-[#dfe3e8] bg-[#fffefd] shadow-[0_18px_48px_-32px_rgba(28,37,50,.35)]" data-testid="panel-demo-card-checkout">
     <header className="border-b border-[#e9edf0] bg-[#f8f9fa] px-5 pb-6 pt-6 sm:px-8 sm:pt-8">
       <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em] text-[#a62020]"><LockKeyhole size={13} aria-hidden="true" /> Secure checkout</div>
-      <h2 className="mt-2 text-[25px] font-bold tracking-[-.04em] text-[#1c2734] sm:text-[28px]">{transitioningToPayment ? 'Just a moment.' : step === 'delivery' ? 'Where should it go?' : 'Almost there.'}</h2>
-      <p className="mt-1 text-[13px] leading-5 text-[#637082]">{transitioningToPayment ? 'Opening your payment details.' : step === 'delivery' ? 'Add your contact and delivery details.' : 'Review your delivery and complete your order.'}</p>
-      <div className="mt-7 flex items-center" aria-label={`Checkout progress: step ${step === 'delivery' ? '1' : '2'} of 2`}>
-        <div className="flex items-center gap-2.5">
-          <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-[12px] font-bold ${step === 'payment' ? 'bg-[#263241] text-white' : 'bg-[#c92525] text-white'}`}>{step === 'payment' ? <Check size={16} aria-hidden="true" /> : '01'}</span>
-          <span className={`text-[12px] font-bold sm:text-[13px] ${step === 'delivery' ? 'text-[#1c2734]' : 'text-[#536172]'}`}>Delivery</span>
-        </div>
-        <div className={`mx-3 h-px min-w-4 flex-1 sm:mx-5 ${step === 'payment' ? 'bg-[#c92525]' : 'bg-[#d9dee4]'}`} aria-hidden="true" />
-        <div className="flex items-center gap-2.5">
-          <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-[12px] font-bold ${step === 'payment' ? 'bg-[#c92525] text-white' : 'border border-[#cbd2da] bg-white text-[#758190]'}`}>02</span>
-          <span className={`text-[12px] font-bold sm:text-[13px] ${step === 'payment' ? 'text-[#1c2734]' : 'text-[#758190]'}`}>Payment</span>
-        </div>
-      </div>
+      <h2 className="mt-2 text-[25px] font-bold tracking-[-.04em] text-[#1c2734] sm:text-[28px]">{transitioningToPayment ? 'Just a moment.' : step === 'method' ? 'How would you like to pay?' : step === 'delivery' ? 'Where should it go?' : 'Almost there.'}</h2>
+      <p className="mt-1 text-[13px] leading-5 text-[#637082]">{transitioningToPayment ? 'Opening your payment details.' : step === 'method' ? 'Choose a payment method, then click Next.' : step === 'delivery' ? 'Add your contact and delivery details.' : 'Review your delivery and complete your order.'}</p>
+      <CheckoutProgress step={step} />
     </header>
     {placingOrder && <CheckoutTransition title={fictionalDemoMode ? 'Connecting to verification' : 'Completing your order'} description="Please keep this page open while we prepare the next step." testId="status-placing-order" />}
-    {transitioningToPayment ? <CheckoutTransition title="Opening payment details" description="Your delivery details are ready." testId="status-opening-payment" /> : step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
+    {transitioningToPayment ? <CheckoutTransition title="Opening payment details" description="Your delivery details are ready." testId="status-opening-payment" /> : step === 'method' ? <CheckoutPaymentMethod selected={cardSelected} onSelect={() => setCardSelected(true)} onContinue={() => { setFormError(''); setStep('delivery'); }} unavailable={!cart.length || stockError} /> : step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
+      <button type="button" onClick={() => { setFormError(''); setStep('method'); }} className="inline-flex min-h-11 items-center gap-2 text-[13px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c92525]" data-testid="button-change-payment-method"><ArrowLeft size={15} aria-hidden="true" /> Change payment method</button>
       <div>
         <div className="mb-4 flex items-baseline justify-between gap-3"><h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Contact details</h3><span className="text-[11px] text-[#818b97]">For order updates</span></div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -465,7 +459,6 @@ export function DemoCardCheckout({
         </div>
       </div>
       <div className="mx-auto w-full max-w-[440px] space-y-4">
-        <ExpressPaymentOptions />
         <h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Credit or debit card</h3>
         <AcceptedCards location="payment" />
         <label className="relative block">
