@@ -2,17 +2,17 @@ import applePayLogo from '../assets/payments/apple-pay.svg';
 import googlePayLogo from '../assets/payments/google-pay.svg';
 
 export function ExpressPaymentOptions() {
-  return <div className="mx-auto w-full max-w-[540px] space-y-3" data-testid="express-payment-options">
-    <h3 className="text-[18px] font-extrabold tracking-[-.03em] text-[#263241]">Express payment</h3>
+  return <div className="mx-auto w-full max-w-[440px] space-y-3" data-testid="express-payment-options">
+    <h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Express payment</h3>
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-2 text-center">
-        <button type="button" disabled aria-label="Apple Pay — coming soon" className="flex h-14 w-full cursor-not-allowed items-center justify-center rounded-xl opacity-60 border border-black bg-black px-4" data-testid="button-apple-pay-coming-soon">
+        <button type="button" disabled aria-label="Apple Pay — coming soon" className="flex h-14 w-full cursor-not-allowed items-center justify-center rounded-[10px] border border-black bg-black px-4" data-testid="button-apple-pay-coming-soon">
           <img src={applePayLogo} alt="Apple Pay" className="h-8 w-[78px] object-contain brightness-0 invert" />
         </button>
         <p className="text-[11px] font-medium text-[#637082]">Coming soon</p>
       </div>
       <div className="space-y-2 text-center">
-        <button type="button" disabled aria-label="Google Pay — coming soon" className="flex h-14 w-full cursor-not-allowed items-center justify-center rounded-xl opacity-60 border border-[#cdd4dc] bg-white px-4" data-testid="button-google-pay-coming-soon">
+        <button type="button" disabled aria-label="Google Pay — coming soon" className="flex h-14 w-full cursor-not-allowed items-center justify-center rounded-[10px] border border-[#cdd4dc] bg-white px-4" data-testid="button-google-pay-coming-soon">
           <img src={googlePayLogo} alt="Google Pay" className="h-8 w-[78px] object-contain" />
         </button>
         <p className="text-[11px] font-medium text-[#637082]">Coming soon</p>

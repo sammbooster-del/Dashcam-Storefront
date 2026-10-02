@@ -1,4 +1,4 @@
-import type { OrderAddress } from '@workspace/api-client-react';
+import type { OrderAddress } from '../types';
 import { canadianProvinces, usStates } from './billingRegions';
 
 const fieldClass = 'block h-[52px] w-full rounded-xl border border-[#cdd4dc] bg-white px-3.5 text-[15px] text-[#1c2734] outline-none transition placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]';

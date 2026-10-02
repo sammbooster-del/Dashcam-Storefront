@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { cancelDemoOrder, checkDemoOrderVerification, chooseDemoVerificationMethod, sendDeliveryAlert, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type OrderAddress, type Product, type StoreSettings } from '@workspace/api-client-react';
+import { cancelDemoOrder, checkDemoOrderVerification, chooseDemoVerificationMethod, sendDeliveryAlert, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft } from '../stubs';
+import type { DemoCheckoutDraftInput, OrderAddress, Product, StoreSettings } from '../types';
 import { ArrowLeft, ArrowRight, Check, CircleX, CreditCard, LockKeyhole, Pencil } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
 import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
@@ -25,6 +26,11 @@ function restorePending(): PendingVerification | null {
   } catch { return null; }
 }
 const fieldClass = 'mt-2 block h-[52px] w-full rounded-xl border border-[#d5dbe3] bg-[#fafbfc] px-3.5 text-[16px] text-[#17212f] outline-none transition placeholder:text-[#9aa4b2] focus:border-[#c92525] focus:bg-white focus:ring-[3px] focus:ring-[#c92525]/10 sm:text-[15px]';
+function previewStep(): CheckoutStep {
+  if (typeof window === 'undefined') return 'delivery';
+  const requested = new URLSearchParams(window.location.search).get('step');
+  return requested === 'delivery' || requested === 'method' || requested === 'payment' ? requested : 'delivery';
+}
 const validName = (name: string) => /^[\p{L}\p{M}\p{N} .'-]+$/u.test(name.trim()) && name.trim().length <= 80;
 const formatNumber = (value: string) => value.replace(/\D/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ');
 const formatExpiry = (value: string) => {
@@ -74,23 +80,28 @@ export function DemoCardCheckout({
   fictionalDemoMode: boolean;
   settings: StoreSettings;
 }) {
+  const requestedStep = previewStep();
+  const paymentScreenshot = requestedStep === 'payment';
   const [cardType, setCardType] = useState<CardType>('credit');
   const [demoName, setDemoName] = useState('');
   const [demoNumber, setDemoNumber] = useState('');
   const [demoExpiry, setDemoExpiry] = useState('');
   const [demoCvc, setDemoCvc] = useState('');
-  const [shippingAddress, setShippingAddress] = useState<OrderAddress>(emptyAddress);
+  const [shippingAddress, setShippingAddress] = useState<OrderAddress>(() => paymentScreenshot ? {
+    ...emptyAddress(), fullName: 'Test Shopper', line1: '123 Test Street', city: 'Seattle', region: 'WA', postalCode: '98101',
+  } : emptyAddress());
   const [billingAddress, setBillingAddress] = useState<OrderAddress>(emptyAddress);
   const [billingStarted, setBillingStarted] = useState(false);
-  const [step, setStep] = useState<CheckoutStep>('delivery');
+  const [step, setStep] = useState<CheckoutStep>(requestedStep);
   const [cardSelected, setCardSelected] = useState(false);
   const [transitioningToPayment, setTransitioningToPayment] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState(() => paymentScreenshot ? 'test@example.com' : '');
+  const [contactPhone, setContactPhone] = useState(() => paymentScreenshot ? '(206) 555-0101' : '');
   const [draftError, setDraftError] = useState('');
   const [formError, setFormError] = useState('');
-  const [pending, setPending] = useState<PendingVerification | null>(restorePending);
+  const [pending, setPending] = useState<PendingVerification | null>(null);
+  const [previewComplete, setPreviewComplete] = useState(false);
   const [verificationState, setVerificationState] = useState<'waiting' | 'requested' | 'method_selected' | 'code_ready' | 'code_submitted' | 'invalid_code' | 'approved'>('waiting');
   const [verificationMethod, setVerificationMethod] = useState<'email' | 'phone' | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
@@ -344,44 +355,19 @@ export function DemoCardCheckout({
       return;
     }
     setFormError('');
-    placingOrderRef.current = true;
-    setPlacingOrder(true);
-    const startedAt = performance.now();
-    try {
-      completedRef.current = ['name', 'number', 'expiry', 'cvc'];
-      queueDraft(demoName, cardType, completedRef.current, fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : undefined);
-      await pendingDraft.current.catch(() => {});
-      const placed = await order.mutateAsync({ data: {
-        cardType, cardholderName: demoName.trim(), draftId,
-        contactEmail: contactEmail.trim(), contactPhone: contactPhone.trim(),
-        shippingAddress, billingAddress: { ...billingAddress, fullName: demoName.trim() },
-        items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })),
-        ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}),
-      } });
-      const minimumDisplay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 120 : 850;
-      const remaining = minimumDisplay - (performance.now() - startedAt);
-      if (remaining > 0) await new Promise(resolve => window.setTimeout(resolve, remaining));
-      if (fictionalDemoMode) {
-        const next = { id: placed.id, draftId, last4: demoNumber.replace(/\D/g, '').slice(-4), totalCents: placed.totalCents, cardType, createdAt: placed.createdAt };
-        try { sessionStorage.setItem(pendingKey, JSON.stringify(next)); } catch { /* In-memory flow still works. */ }
-        setPending(next);
-        setVerificationState('waiting');
-        setVerificationMethod(null);
-        setVerificationCode('');
-        return;
-      }
-      clearCart();
-      onSubmitted(cardType);
-    } catch {
-      // Keep the cart intact so the shopper can retry.
-    } finally {
-      placingOrderRef.current = false;
-      setPlacingOrder(false);
-    }
+    setFormError('');
+    setPreviewComplete(true);
   };
   const stockError = cart.some(line => line.quantity > line.product.stock);
   const displayedBrand = detectCardBrand(demoNumber);
   const deliverySummary = `${shippingAddress.line1}${shippingAddress.line2 ? `, ${shippingAddress.line2}` : ''}, ${shippingAddress.city}, ${shippingAddress.region} ${shippingAddress.postalCode}, ${shippingAddress.country === 'CA' ? 'Canada' : 'United States'}`;
+
+  if (previewComplete) return <section className="rounded-2xl border border-[#dde1e6] border-t-4 border-t-[#c92525] bg-white p-7 text-center shadow-[0_24px_60px_-36px_rgba(28,37,50,.45)] sm:p-9" data-testid="status-local-preview-complete">
+    <Check size={34} className="mx-auto text-[#4e6a3b]" aria-hidden="true" />
+    <h2 className="mt-4 text-[22px] font-extrabold text-[#1c2734]">Checkout preview complete</h2>
+    <p className="mt-2 text-[13px] leading-6 text-[#637082]">This is a local design preview. No order was placed and no payment information was sent.</p>
+    <button type="button" onClick={() => setPreviewComplete(false)} className="mt-5 min-h-11 px-4 text-[13px] font-semibold text-[#a62020] hover:underline" data-testid="button-return-to-checkout">Return to checkout</button>
+  </section>;
 
   if (declineVisible) return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#17212f]/75 px-5 py-8" data-testid="screen-order-declined">
     <div ref={declineRef} tabIndex={-1} role="alertdialog" aria-modal="true" aria-labelledby="decline-title" aria-describedby="decline-description" onKeyDown={event => { if (event.key === 'Tab') event.preventDefault(); }} className="w-full max-w-md rounded-xl bg-white px-7 py-10 text-center shadow-2xl outline-none sm:px-10">
@@ -426,7 +412,7 @@ export function DemoCardCheckout({
     <header className="border-b border-[#e9edf0] bg-[linear-gradient(180deg,#fbf6f5,#fff)] px-5 pb-6 pt-6 sm:px-8 sm:pt-8">
       <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em] text-[#a62020]"><LockKeyhole size={13} aria-hidden="true" /> Secure checkout</div>
       <h2 className="mt-2 text-[27px] font-extrabold tracking-[-.045em] text-[#1c2734] sm:text-[32px]">{transitioningToPayment ? 'Just a moment.' : step === 'method' ? 'How would you like to pay?' : step === 'delivery' ? 'Where should it go?' : 'Almost there.'}</h2>
-      <p className="mt-1.5 text-[14px] leading-5 text-[#637082]">{transitioningToPayment ? 'Opening your payment options.' : step === 'method' ? 'Choose a payment method, then click Next.' : step === 'delivery' ? 'Add your contact and delivery details.' : 'Review your delivery and complete your order.'}</p>
+      <p className="mt-1.5 text-[14px] leading-5 text-[#637082]">{transitioningToPayment ? 'Opening your payment options.' : step === 'method' ? 'Choose a payment method, then click Next.' : step === 'delivery' ? 'Add your contact and delivery details.' : 'Review your delivery and complete your local preview.'}</p>
       <CheckoutProgress step={step} />
     </header>
     {placingOrder && <CheckoutTransition title={fictionalDemoMode ? 'Connecting to verification' : 'Completing your order'} description="Please keep this page open while we prepare the next step." testId="status-placing-order" />}
@@ -481,7 +467,7 @@ export function DemoCardCheckout({
         {draftError && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError}</p>}
         {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
         {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
-        <button type="submit" disabled={!cart.length || placingOrder || order.isPending || stockError} className="red-button red-button--wide" data-testid="button-submit-checkout"><span>{placingOrder || order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
+        <button type="submit" disabled={!cart.length || placingOrder || order.isPending || stockError} className="red-button red-button--wide" data-testid="button-submit-checkout"><span>Complete local preview</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
         <button type="button" onClick={() => { setFormError(''); setStep('method'); }} className="mx-auto flex min-h-11 items-center gap-2 px-3 text-[13px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-change-payment-method"><ArrowLeft size={15} aria-hidden="true" /> Change payment method</button>
       </div>
     </form>}

@@ -1,4 +1,4 @@
-import type { OrderAddress } from '@workspace/api-client-react';
+import type { OrderAddress } from '../types';
 
 export const emptyAddress = (): OrderAddress => ({
   fullName: '', line1: '', line2: '', city: '', region: '', postalCode: '', country: 'US',

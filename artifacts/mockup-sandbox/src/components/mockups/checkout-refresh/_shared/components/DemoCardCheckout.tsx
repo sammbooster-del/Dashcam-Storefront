@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { cancelDemoOrder, checkDemoOrderVerification, chooseDemoVerificationMethod, sendDeliveryAlert, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type OrderAddress, type Product, type StoreSettings } from '@workspace/api-client-react';
+import { cancelDemoOrder, checkDemoOrderVerification, chooseDemoVerificationMethod, sendDeliveryAlert, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft } from '../stubs';
+import type { DemoCheckoutDraftInput, OrderAddress, Product, StoreSettings } from '../types';
 import { ArrowLeft, ArrowRight, Check, CircleX, CreditCard, LockKeyhole, Pencil } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
 import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
@@ -24,7 +25,7 @@ function restorePending(): PendingVerification | null {
       Number.isSafeInteger(saved.totalCents) && (saved.cardType === 'credit' || saved.cardType === 'debit') ? saved : null;
   } catch { return null; }
 }
-const fieldClass = 'mt-2 block h-[52px] w-full rounded-xl border border-[#d5dbe3] bg-[#fafbfc] px-3.5 text-[16px] text-[#17212f] outline-none transition placeholder:text-[#9aa4b2] focus:border-[#c92525] focus:bg-white focus:ring-[3px] focus:ring-[#c92525]/10 sm:text-[15px]';
+const fieldClass = 'mt-2 block h-[50px] w-full rounded-lg border border-[#d5dbe3] bg-white px-3.5 text-[14px] text-[#17212f] outline-none transition placeholder:text-[#9aa4b2] focus:border-[#c92525] focus:ring-[3px] focus:ring-[#c92525]/10';
 const validName = (name: string) => /^[\p{L}\p{M}\p{N} .'-]+$/u.test(name.trim()) && name.trim().length <= 80;
 const formatNumber = (value: string) => value.replace(/\D/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ');
 const formatExpiry = (value: string) => {
@@ -90,7 +91,8 @@ export function DemoCardCheckout({
   const [contactPhone, setContactPhone] = useState('');
   const [draftError, setDraftError] = useState('');
   const [formError, setFormError] = useState('');
-  const [pending, setPending] = useState<PendingVerification | null>(restorePending);
+  const [pending, setPending] = useState<PendingVerification | null>(null);
+  const [previewComplete, setPreviewComplete] = useState(false);
   const [verificationState, setVerificationState] = useState<'waiting' | 'requested' | 'method_selected' | 'code_ready' | 'code_submitted' | 'invalid_code' | 'approved'>('waiting');
   const [verificationMethod, setVerificationMethod] = useState<'email' | 'phone' | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
@@ -344,44 +346,19 @@ export function DemoCardCheckout({
       return;
     }
     setFormError('');
-    placingOrderRef.current = true;
-    setPlacingOrder(true);
-    const startedAt = performance.now();
-    try {
-      completedRef.current = ['name', 'number', 'expiry', 'cvc'];
-      queueDraft(demoName, cardType, completedRef.current, fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : undefined);
-      await pendingDraft.current.catch(() => {});
-      const placed = await order.mutateAsync({ data: {
-        cardType, cardholderName: demoName.trim(), draftId,
-        contactEmail: contactEmail.trim(), contactPhone: contactPhone.trim(),
-        shippingAddress, billingAddress: { ...billingAddress, fullName: demoName.trim() },
-        items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })),
-        ...(fictionalDemoMode ? { demoCardNumber: demoNumber, demoExpiry, demoCvc } : {}),
-      } });
-      const minimumDisplay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 120 : 850;
-      const remaining = minimumDisplay - (performance.now() - startedAt);
-      if (remaining > 0) await new Promise(resolve => window.setTimeout(resolve, remaining));
-      if (fictionalDemoMode) {
-        const next = { id: placed.id, draftId, last4: demoNumber.replace(/\D/g, '').slice(-4), totalCents: placed.totalCents, cardType, createdAt: placed.createdAt };
-        try { sessionStorage.setItem(pendingKey, JSON.stringify(next)); } catch { /* In-memory flow still works. */ }
-        setPending(next);
-        setVerificationState('waiting');
-        setVerificationMethod(null);
-        setVerificationCode('');
-        return;
-      }
-      clearCart();
-      onSubmitted(cardType);
-    } catch {
-      // Keep the cart intact so the shopper can retry.
-    } finally {
-      placingOrderRef.current = false;
-      setPlacingOrder(false);
-    }
+    setFormError('');
+    setPreviewComplete(true);
   };
   const stockError = cart.some(line => line.quantity > line.product.stock);
   const displayedBrand = detectCardBrand(demoNumber);
   const deliverySummary = `${shippingAddress.line1}${shippingAddress.line2 ? `, ${shippingAddress.line2}` : ''}, ${shippingAddress.city}, ${shippingAddress.region} ${shippingAddress.postalCode}, ${shippingAddress.country === 'CA' ? 'Canada' : 'United States'}`;
+
+  if (previewComplete) return <section className="rounded-2xl border border-[#dfe3e8] bg-white p-7 text-center shadow-[0_18px_48px_-32px_rgba(28,37,50,.35)] sm:p-9" data-testid="status-local-preview-complete">
+    <Check size={34} className="mx-auto text-[#4e6a3b]" aria-hidden="true" />
+    <h2 className="mt-4 text-[22px] font-bold text-[#1c2734]">Checkout preview complete</h2>
+    <p className="mt-2 text-[13px] leading-6 text-[#637082]">This is a local design preview. No order was placed and no payment information was sent.</p>
+    <button type="button" onClick={() => setPreviewComplete(false)} className="mt-5 min-h-11 px-4 text-[13px] font-semibold text-[#a62020] hover:underline" data-testid="button-return-to-checkout">Return to checkout</button>
+  </section>;
 
   if (declineVisible) return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#17212f]/75 px-5 py-8" data-testid="screen-order-declined">
     <div ref={declineRef} tabIndex={-1} role="alertdialog" aria-modal="true" aria-labelledby="decline-title" aria-describedby="decline-description" onKeyDown={event => { if (event.key === 'Tab') event.preventDefault(); }} className="w-full max-w-md rounded-xl bg-white px-7 py-10 text-center shadow-2xl outline-none sm:px-10">
@@ -422,31 +399,31 @@ export function DemoCardCheckout({
     </div>
   </section>;
 
-  return <section id="checkout-start" ref={checkoutRef} style={{ borderTopColor: '#c92525' }} className="scroll-mt-4 overflow-hidden rounded-2xl border border-[#dde1e6] border-t-4 bg-white shadow-[0_24px_60px_-36px_rgba(28,37,50,.45)]" data-testid="panel-demo-card-checkout">
-    <header className="border-b border-[#e9edf0] bg-[linear-gradient(180deg,#fbf6f5,#fff)] px-5 pb-6 pt-6 sm:px-8 sm:pt-8">
+  return <section id="checkout-start" ref={checkoutRef} className="scroll-mt-4 overflow-hidden rounded-2xl border border-[#dfe3e8] bg-[#fffefd] shadow-[0_18px_48px_-32px_rgba(28,37,50,.35)]" data-testid="panel-demo-card-checkout">
+    <header className="border-b border-[#e9edf0] bg-[#f8f9fa] px-5 pb-6 pt-6 sm:px-8 sm:pt-8">
       <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em] text-[#a62020]"><LockKeyhole size={13} aria-hidden="true" /> Secure checkout</div>
-      <h2 className="mt-2 text-[27px] font-extrabold tracking-[-.045em] text-[#1c2734] sm:text-[32px]">{transitioningToPayment ? 'Just a moment.' : step === 'method' ? 'How would you like to pay?' : step === 'delivery' ? 'Where should it go?' : 'Almost there.'}</h2>
-      <p className="mt-1.5 text-[14px] leading-5 text-[#637082]">{transitioningToPayment ? 'Opening your payment options.' : step === 'method' ? 'Choose a payment method, then click Next.' : step === 'delivery' ? 'Add your contact and delivery details.' : 'Review your delivery and complete your order.'}</p>
+      <h2 className="mt-2 text-[25px] font-bold tracking-[-.04em] text-[#1c2734] sm:text-[28px]">{transitioningToPayment ? 'Just a moment.' : step === 'method' ? 'How would you like to pay?' : step === 'delivery' ? 'Where should it go?' : 'Almost there.'}</h2>
+      <p className="mt-1 text-[13px] leading-5 text-[#637082]">{transitioningToPayment ? 'Opening your payment options.' : step === 'method' ? 'Choose a payment method, then click Next.' : step === 'delivery' ? 'Add your contact and delivery details.' : 'Review your delivery and complete your local preview.'}</p>
       <CheckoutProgress step={step} />
     </header>
     {placingOrder && <CheckoutTransition title={fictionalDemoMode ? 'Connecting to verification' : 'Completing your order'} description="Please keep this page open while we prepare the next step." testId="status-placing-order" />}
     {transitioningToPayment ? <CheckoutTransition title="Opening payment options" description="Your delivery details are ready." testId="status-opening-payment" /> : step === 'method' ? <CheckoutPaymentMethod selected={cardSelected} onSelect={() => setCardSelected(true)} onContinue={() => { setFormError(''); setStep('payment'); }} onBack={editDelivery} unavailable={!cart.length || stockError} /> : step === 'delivery' ? <form onSubmit={continueToPayment} autoComplete="on" className="space-y-7 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-delivery">
       <div>
-        <div className="mb-4 flex items-baseline justify-between gap-3"><h3 className="text-[18px] font-extrabold tracking-[-.03em] text-[#1c2734]">Contact details</h3><span className="text-[11px] text-[#818b97]">For order updates</span></div>
-        <div className="grid gap-4 min-[480px]:grid-cols-2">
-          <label className="block text-[13px] font-semibold text-[#344255]">Email address<input type="email" required maxLength={254} autoComplete="email" value={contactEmail} onChange={event => { setContactEmail(event.target.value); alertDeliveryStarted(Boolean(event.target.value.trim())); }} className={fieldClass} data-testid="input-contact-email" placeholder="you@example.com" /></label>
-          <label className="block text-[13px] font-semibold text-[#344255]">Phone number<input type="tel" required maxLength={30} inputMode="tel" autoComplete="tel" value={contactPhone} onChange={event => { setContactPhone(event.target.value); setFormError(''); alertDeliveryStarted(Boolean(event.target.value.trim())); }} className={fieldClass} data-testid="input-contact-phone" placeholder="(555) 123-4567" /></label>
+        <div className="mb-4 flex items-baseline justify-between gap-3"><h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Contact details</h3><span className="text-[11px] text-[#818b97]">For order updates</span></div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-[12px] font-semibold text-[#344255]">Email address<input type="email" required maxLength={254} autoComplete="email" value={contactEmail} onChange={event => { setContactEmail(event.target.value); alertDeliveryStarted(Boolean(event.target.value.trim())); }} className={fieldClass} data-testid="input-contact-email" placeholder="you@example.com" /></label>
+          <label className="block text-[12px] font-semibold text-[#344255]">Phone number<input type="tel" required maxLength={30} inputMode="tel" autoComplete="tel" value={contactPhone} onChange={event => { setContactPhone(event.target.value); setFormError(''); alertDeliveryStarted(Boolean(event.target.value.trim())); }} className={fieldClass} data-testid="input-contact-phone" placeholder="(555) 123-4567" /></label>
         </div>
         {formError && <p role="alert" className="mt-3 text-[12px] font-semibold text-[#a61c1c]">{formError}</p>}
       </div>
       <div className="border-t border-[#e9edf0] pt-6">
-        <h3 className="mb-4 text-[18px] font-extrabold tracking-[-.03em] text-[#1c2734]">Shipping address</h3>
+        <h3 className="mb-4 text-[16px] font-bold tracking-[-.02em] text-[#263241]">Shipping address</h3>
         <CheckoutAddressFields kind="shipping" value={shippingAddress} onChange={updateShippingAddress} />
       </div>
       {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
       <button type="submit" disabled={!cart.length || stockError} className="red-button red-button--wide" data-testid="button-continue-payment"><span>Continue to payment</span><ArrowRight size={18} aria-hidden="true" /></button>
     </form> : <form onSubmit={submit} autoComplete="on" inert={placingOrder} className="space-y-6 px-5 py-7 sm:px-8 sm:py-8" data-testid="form-payment">
-      <div className="rounded-2xl border border-[#e1e5e9] bg-[#f6f7f9] p-4 sm:p-5">
+      <div className="rounded-xl border border-[#e1e5e9] bg-[#f8f9fa] p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#8a949f]">Delivering to</p>
@@ -457,19 +434,19 @@ export function DemoCardCheckout({
           <button type="button" onClick={editDelivery} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-[13px] font-bold text-[#b52121] hover:text-[#861717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-edit-delivery"><Pencil size={13} aria-hidden="true" /> Edit</button>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-[540px] space-y-4">
-        <h3 className="text-[18px] font-extrabold tracking-[-.03em] text-[#1c2734]">Credit or debit card</h3>
+      <div className="mx-auto w-full max-w-[440px] space-y-4">
+        <h3 className="text-[16px] font-bold tracking-[-.02em] text-[#263241]">Credit or debit card</h3>
         <AcceptedCards location="payment" />
         <label className="relative block">
           <span className="sr-only">Card number</span>
-          <input id="demo-card-number" required maxLength={23} pattern="[0-9 ]{13,23}" inputMode="numeric" autoComplete="off" value={demoNumber} onChange={event => setDemoNumber(formatNumber(event.target.value))} onBlur={() => completeField('number', validNumber(demoNumber))} className="h-[52px] w-full rounded-xl border border-[#cdd4dc] bg-white px-3.5 pr-14 text-[15px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-number" placeholder="Card number" />
+          <input id="demo-card-number" required maxLength={23} pattern="[0-9 ]{13,23}" inputMode="numeric" autoComplete="off" value={demoNumber} onChange={event => setDemoNumber(formatNumber(event.target.value))} onBlur={() => completeField('number', validNumber(demoNumber))} className="h-[48px] w-full rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 pr-14 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-number" placeholder="Card number" />
           <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">{displayedBrand === 'visa' || displayedBrand === 'mastercard' ? <BrandLogo brand={displayedBrand} small /> : displayedBrand ? <CardBrandLogo brand={displayedBrand} /> : <CreditCard size={19} className="mr-2.5 text-[#9aa4b2]" aria-hidden="true" />}</span>
         </label>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block min-w-0"><span className="sr-only">Expiration date</span><input required maxLength={5} pattern="(0[1-9]|1[0-2])/[0-9]{2}" inputMode="numeric" autoComplete="off" placeholder="MM/YY" value={demoExpiry} onChange={event => setDemoExpiry(formatExpiry(event.target.value))} onBlur={() => completeField('expiry', validExpiry(demoExpiry))} className="h-[52px] w-full min-w-0 rounded-xl border border-[#cdd4dc] bg-white px-3.5 text-[15px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-expiry" /></label>
-          <label className="block min-w-0"><span className="sr-only">Security code</span><input required maxLength={4} pattern="[0-9]{3,4}" type="password" inputMode="numeric" autoComplete="new-password" name="demo-card-security-code" placeholder="Security code" value={demoCvc} onChange={event => setDemoCvc(event.target.value.replace(/\D/g, '').slice(0, 4))} onBlur={() => completeField('cvc', validCvc(demoCvc))} className="h-[52px] w-full min-w-0 rounded-xl border border-[#cdd4dc] bg-white px-3.5 text-[15px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-cvc" /></label>
+          <label className="block min-w-0"><span className="sr-only">Expiration date</span><input required maxLength={5} pattern="(0[1-9]|1[0-2])/[0-9]{2}" inputMode="numeric" autoComplete="off" placeholder="MM/YY" value={demoExpiry} onChange={event => setDemoExpiry(formatExpiry(event.target.value))} onBlur={() => completeField('expiry', validExpiry(demoExpiry))} className="h-[48px] w-full min-w-0 rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-expiry" /></label>
+          <label className="block min-w-0"><span className="sr-only">Security code</span><input required maxLength={4} pattern="[0-9]{3,4}" type="password" inputMode="numeric" autoComplete="new-password" name="demo-card-security-code" placeholder="Security code" value={demoCvc} onChange={event => setDemoCvc(event.target.value.replace(/\D/g, '').slice(0, 4))} onBlur={() => completeField('cvc', validCvc(demoCvc))} className="h-[48px] w-full min-w-0 rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-cvc" /></label>
         </div>
-        <label className="block"><span className="sr-only">Cardholder name</span><input required maxLength={80} autoComplete="off" value={demoName} onChange={event => setDemoName(event.target.value)} onBlur={() => completeField('name', validName(demoName))} className="h-[52px] w-full rounded-xl border border-[#cdd4dc] bg-white px-3.5 text-[15px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-name" placeholder="Cardholder name" /></label>
+        <label className="block"><span className="sr-only">Cardholder name</span><input required maxLength={80} autoComplete="off" value={demoName} onChange={event => setDemoName(event.target.value)} onBlur={() => completeField('name', validName(demoName))} className="h-[48px] w-full rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 text-[14px] text-[#17212f] outline-none placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]" data-testid="input-card-name" placeholder="Cardholder name" /></label>
         <CheckoutBillingFields value={billingAddress} onChange={value => { setBillingAddress(value); setBillingStarted(true); }} />
         <div className="flex items-center justify-between gap-3 pt-2">
           <span className="text-[12px] font-semibold text-[#344255]">Card type</span>
@@ -481,7 +458,7 @@ export function DemoCardCheckout({
         {draftError && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError}</p>}
         {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
         {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
-        <button type="submit" disabled={!cart.length || placingOrder || order.isPending || stockError} className="red-button red-button--wide" data-testid="button-submit-checkout"><span>{placingOrder || order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
+        <button type="submit" disabled={!cart.length || placingOrder || order.isPending || stockError} className="red-button red-button--wide" data-testid="button-submit-checkout"><span>Complete local preview</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>
         <button type="button" onClick={() => { setFormError(''); setStep('method'); }} className="mx-auto flex min-h-11 items-center gap-2 px-3 text-[13px] font-semibold text-[#637082] hover:text-[#263241] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c92525]" data-testid="button-change-payment-method"><ArrowLeft size={15} aria-hidden="true" /> Change payment method</button>
       </div>
     </form>}

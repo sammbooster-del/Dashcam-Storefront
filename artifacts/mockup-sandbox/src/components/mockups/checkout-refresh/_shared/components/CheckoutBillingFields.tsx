@@ -1,7 +1,7 @@
-import type { OrderAddress } from '@workspace/api-client-react';
+import type { OrderAddress } from '../types';
 import { canadianProvinces, usStates } from './billingRegions';
 
-const fieldClass = 'block h-[52px] w-full rounded-xl border border-[#cdd4dc] bg-white px-3.5 text-[15px] text-[#1c2734] outline-none transition placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]';
+const fieldClass = 'block h-[48px] w-full rounded-[4px] border border-[#cdd4dc] bg-white px-3.5 text-[14px] text-[#1c2734] outline-none transition placeholder:text-[#788493] focus:border-[#c92525] focus:ring-1 focus:ring-[#c92525]';
 
 export function CheckoutBillingFields({
   value, onChange,
@@ -16,7 +16,7 @@ export function CheckoutBillingFields({
 
   return <div className="space-y-4" data-testid="billing-address-fields">
     <label className="relative block">
-      <span className="absolute left-3.5 top-1.5 text-[11px] font-medium text-[#667383]">Country/region</span>
+      <span className="absolute left-3.5 top-1.5 text-[10px] font-medium text-[#667383]">Country/region</span>
       <select
         required
         value={value.country}
