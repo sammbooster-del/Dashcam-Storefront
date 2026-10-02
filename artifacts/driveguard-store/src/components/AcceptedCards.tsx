@@ -1,3 +1,6 @@
+import applePayLogo from '../assets/payments/apple-pay.svg';
+import googlePayLogo from '../assets/payments/google-pay.svg';
+
 type CardBrand = 'visa' | 'mastercard' | 'amex' | 'discover';
 
 const cardBrands: CardBrand[] = ['visa', 'mastercard', 'amex', 'discover'];
@@ -28,10 +31,26 @@ export function CardBrandLogo({ brand }: { brand: CardBrand }) {
 }
 
 export function AcceptedCards({ location, dark = false }: { location: string; dark?: boolean }) {
-  return <div className="flex flex-wrap items-center gap-x-4 gap-y-2" data-testid={`accepted-cards-${location}`}>
-    <span className={`text-[11px] font-semibold ${dark ? 'text-[#d2d5d9]' : 'text-[#617080]'}`}>Accepted cards</span>
-    <div className="flex flex-wrap gap-1.5" aria-label="Visa, Mastercard, American Express, Discover">
-      {cardBrands.map(brand => <CardBrandLogo key={brand} brand={brand} />)}
+  // Wallets belong in general payment information, not inside the card-only form.
+  const showWallets = ['product', 'cart', 'footer'].includes(location);
+  const labelClass = `text-[11px] font-semibold ${dark ? 'text-[#d2d5d9]' : 'text-[#617080]'}`;
+  return <div className="space-y-3" data-testid={`accepted-cards-${location}`}>
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <span className={labelClass}>Accepted cards</span>
+      <div className="flex flex-wrap gap-1.5" aria-label="Visa, Mastercard, American Express, Discover">
+        {cardBrands.map(brand => <CardBrandLogo key={brand} brand={brand} />)}
+      </div>
     </div>
+    {showWallets && <div className="flex flex-wrap items-center gap-x-4 gap-y-2" data-testid={`wallet-brands-${location}`}>
+      <span className={labelClass}>Wallets · Coming soon</span>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Apple Pay and Google Pay — coming soon">
+        <span className="flex h-[34px] w-[78px] items-center justify-center rounded-[5px] border border-[#dce2e8] bg-white" title="Apple Pay — coming soon">
+          <img src={applePayLogo} alt="Apple Pay" className="h-6 w-[60px] object-contain brightness-0" />
+        </span>
+        <span className="flex h-[34px] w-[78px] items-center justify-center rounded-[5px] border border-[#dce2e8] bg-white" title="Google Pay — coming soon">
+          <img src={googlePayLogo} alt="Google Pay" className="h-6 w-[60px] object-contain" />
+        </span>
+      </div>
+    </div>}
   </div>;
 }
