@@ -207,7 +207,7 @@ for (const update of [false, true]) {
           retained.add(v.id);
           const old = prior.rows.find(row => row.id === v.id && !row.deleted);
           if (!old) throw new ShopError(400, "Variant does not belong to this product.");
-          if (v.stock < old.reserved + old.simulated_sold) throw new ShopError(409, `Stock for ${v.label} cannot be below ${old.reserved + old.simulated_sold} reserved/simulated units.`);
+          if (v.stock < old.reserved + old.simulated_sold) throw new ShopError(409, `Stock for ${v.label} cannot be below ${old.reserved + old.simulated_sold} allocated units.`);
           await client.query("UPDATE shop_variants SET label=$1,sku=$2,price_cents=$3,stock=$4,active=$5 WHERE id=$6", [v.label.trim(), v.sku, v.priceCents, v.stock, v.active, v.id]);
         } else await client.query("INSERT INTO shop_variants (product_id,label,sku,price_cents,stock,active) VALUES ($1,$2,$3,$4,$5,$6)", [productId, v.label.trim(), v.sku, v.priceCents, v.stock, v.active]);
       }
@@ -274,10 +274,10 @@ router.post("/admin/physical-store/orders/:id", handled(async (req, res) => {
       d.verificationState = action === "decline" ? "declined" : action === "expire" ? "expired" : "cancelled";
     } else if (action === "fulfill") {
       if (d.status === "fulfilled") return orderResponse(row);
-      if (d.status !== "confirmed" || d.paymentStatus !== "simulated_approved") throw new ShopError(409, "Only approved simulated orders can be fulfilled.");
+      if (d.status !== "confirmed" || d.paymentStatus !== "simulated_approved") throw new ShopError(409, "Only approved orders can be fulfilled.");
       d.status = "fulfilled"; d.shippingStatus = "delivered";
     } else if (action === "update_shipping") {
-      if (!["confirmed", "fulfilled"].includes(d.status)) throw new ShopError(409, "Approve the simulated order before updating shipping.");
+      if (!["confirmed", "fulfilled"].includes(d.status)) throw new ShopError(409, "Approve the order before updating shipping.");
       if (parsed.data.trackingUrl) {
         try {
           const url = new URL(parsed.data.trackingUrl);

@@ -82,7 +82,6 @@ export default function Cart() {
           </dl>
         ) : <div className="mt-5 space-y-2"><div className="h-4 animate-pulse rounded bg-muted" /><div className="h-4 animate-pulse rounded bg-muted" /><div className="h-6 animate-pulse rounded bg-muted" /></div>}
         <Link href="/checkout" className={`btn btn-brand mt-6 w-full ${!q || qErr ? 'pointer-events-none opacity-50' : ''}`} data-testid="link-checkout">Checkout</Link>
-        <p className="mt-3 text-xs text-muted-foreground">Checkout is a simulation. No money is collected.</p>
         <div className="mt-5"><AcceptedCards location="cart" /></div>
       </aside>
     </div>

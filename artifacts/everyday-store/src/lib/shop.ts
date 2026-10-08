@@ -78,7 +78,7 @@ export function forgetOrder(id: number) {
 export const isTerminal = (o: ShopOrder) =>
   ['approved', 'declined', 'cancelled', 'expired'].includes(o.verificationState) || ['confirmed', 'cancelled', 'expired', 'fulfilled'].includes(o.status);
 
-export const label = (s: string) => s.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+export const label = (s: string) => s.replace(/^simulated_/, '').replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
 
 export function luhnCard() {
   const d = [4, 2, 4, 2]; while (d.length < 15) d.push(Math.floor(Math.random() * 10));

@@ -35,7 +35,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <footer className="mt-16 border-t py-10 text-sm text-muted-foreground">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 sm:flex-row sm:justify-between">
           <span className="display text-base text-foreground">{brand}</span>
-          <span>{s?.supportEmail ? <>Questions: {s.supportEmail}. </> : null}Checkout here is a simulation. No payment is collected.</span>
+          {s?.supportEmail && <span>Questions: {s.supportEmail}</span>}
         </div>
         <div className="mx-auto mt-6 max-w-6xl px-4"><AcceptedCards location="footer" /></div>
       </footer>

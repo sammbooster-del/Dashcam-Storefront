@@ -7,19 +7,25 @@ Demo orders are a demonstration of the checkout flow, not real sales. Keep their
 
 **Why:** Card checkout is simulation-only, with no payment or fulfillment. Decrementing real stock after a simulated checkout would make the public availability misleading for actual customers.
 
-**How to apply:** Keep the order confirmation accurate that no inventory was reserved. If real payment and fulfillment are introduced later, revisit this rule and atomically reserve or decrement stock as part of the real order transaction.
+**How to apply:** Do not claim DriveGuard inventory was reserved; use neutral order confirmation wording without stock-change notices. If real payment and fulfillment are introduced later, revisit this rule and atomically reserve or decrement stock as part of the real order transaction.
 
 Internal employee testing uses system-generated card-formatted test values. The administrator wants the exact test number, expiry, and CVC visible live while typing and on completed demo orders, without replacing them with a DEMO-prefixed identifier. This is an admin-controlled internal test mode; when off, typed values remain browser-local.
 
 **Why:** The earlier DEMO-prefixed substitute did not meet the user's stated testing need. The user clarified that employees use system-generated test cards, not real payment credentials.
 
-**How to apply:** Keep the on/off boundary enforced on the server and preserve a concise shopper-facing warning not to enter a real payment card and that no charge is made. The team requested an otherwise normal-looking storefront with no demo/test badges or repeated instructional copy; keep detailed mode information in admin. Before a real checkout launch, replace test-card collection with a payment provider's hosted collection flow rather than using this preview for real payments.
+**How to apply:** Keep the on/off boundary enforced on the server. Before a real checkout launch, replace test-card collection with a payment provider's hosted collection flow rather than using this preview for real payments. Follow the UI-wording rule below; do not reintroduce shopper-facing warnings.
 
 The checkout may adopt the familiar layout of a modern payment form, but it must not claim to be powered by Stripe or imply that a real charge is possible.
 
 **Why:** The user wants a polished, Stripe-like experience while explicitly keeping the checkout simulated. Provider branding or real-payment security claims would misrepresent what the form does.
 
-**How to apply:** Do not claim a charge or reservation happened. Preserve the short no-charge caution even when the shopper-facing layout otherwise looks like a standard checkout. Only introduce payment-provider claims after a real integration is implemented and verified.
+**How to apply:** Do not claim a real charge happened. Only introduce payment-provider claims after a real integration is implemented and verified. Use neutral order/verification wording rather than no-charge notices.
+
+Do not show simulation, demo, test-flow or no-payment/no-charge notices in either store's customer-facing pages or admin. Use neutral labels such as Order, Approved, and Verification code, while leaving backend simulation identifiers and payment behavior unchanged.
+
+**Why:** The owner explicitly repeated that their team already knows this is a simulation and asked to remove all related wording. The prior warning requirement was overridden.
+
+**How to apply:** Remove these notices from footers, carts, checkout, verification, confirmation, order history, and admin summaries. Keep disabled Apple Pay/Google Pay controls marked Coming soon; do not claim actual funds were collected or enable live payments.
 
 Express wallets are previews only: keep Apple Pay and Google Pay clearly marked Coming soon and disabled. Only the existing card checkout should be usable.
 

@@ -53,7 +53,7 @@ export default function Orders() {
             {order && <>
               <p className="mt-1 text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleString()} - card ending {order.cardLast4} - {order.domain || order.website}</p>
               <ul className="mt-3 text-sm">{order.items.map(i => <li key={i.variantId} className="flex justify-between"><span>{i.name}{i.variantLabel ? ` - ${i.variantLabel}` : ''} x {i.quantity}</span><span>{money(i.unitPriceCents * i.quantity)}</span></li>)}</ul>
-              <p className="mt-2 flex justify-between border-t pt-2 font-semibold"><span>Total (simulated)</span><span>{money(order.totalCents)}</span></p>
+              <p className="mt-2 flex justify-between border-t pt-2 font-semibold"><span>Total</span><span>{money(order.totalCents)}</span></p>
               {(order.carrier || order.trackingNumber) && <p className="mt-2 text-sm" data-testid={`text-tracking-${saved.id}`}>{order.carrier} {order.trackingNumber} {order.trackingUrl && safeUrl(order.trackingUrl) && <a className="underline" href={order.trackingUrl} target="_blank" rel="noopener noreferrer">Track package</a>}</p>}
               {!isTerminal(order) && <button className="btn btn-sm mt-3" onClick={() => setOpen(open === saved.id ? null : saved.id)} data-testid={`button-verify-${saved.id}`}>{open === saved.id ? 'Hide verification' : 'Continue verification'}</button>}
               {open === saved.id && !isTerminal(order) && <div className="mt-4"><VerificationPanel orderId={saved.id} accessToken={saved.accessToken} initial={order} onUpdate={o => setEntries(p => p.map(x => x.saved.id === saved.id ? { ...x, order: o } : x))} /></div>}

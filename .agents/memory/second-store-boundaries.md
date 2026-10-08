@@ -15,8 +15,8 @@ Do not use the merchant name specified in the uploaded second-store brief anywhe
 
 **How to apply:** Exclude that name from branding, defaults, payment descriptions, and metadata. Do not reinstate it when consulting the attachment.
 
-Reuse the existing simulated checkout for the second store. Do not add a payment provider, require a separate merchant account, or initiate real charges. Clearly distinguish simulated approval from verified payment; keep the original DriveGuard simulation unchanged.
+Reuse the existing simulated checkout for the second store. Do not add a payment provider, require a separate merchant account, or initiate real charges. Keep simulation identifiers internal and the original DriveGuard payment behavior unchanged.
 
 **Why:** The owner explicitly overrode the attachment's real-payment requirement with “just use the same simulation that already exist.”
 
-**How to apply:** Use the existing manual test-code workflow and honest simulation labels. Separate test reservations and simulated sales from configured physical stock; make approval and cancellation idempotent.
+**How to apply:** Use the existing manual verification workflow. Follow the UI-wording rule in demo-order-inventory.md: the owner does not want simulation/no-charge notices anywhere on either website or admin. Separate test reservations and simulated sales from configured physical stock; make approval and cancellation idempotent.

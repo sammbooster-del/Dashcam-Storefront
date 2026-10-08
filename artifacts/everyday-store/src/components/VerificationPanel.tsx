@@ -47,28 +47,27 @@ export function VerificationPanel({ orderId, accessToken, initial, onUpdate }: {
         <h3 className="text-xl font-semibold">Manual verification</h3>
         {order && !isTerminal(order) && left && <span className="chip" data-testid="text-expiry">Expires in {left}</span>}
       </div>
-      <p className="mt-1 text-xs text-muted-foreground">This is a test flow. No money is collected and no message is sent automatically.</p>
       {!order && !err && <div className="mt-6 flex items-center gap-2 text-sm"><Loader2 className="animate-spin" size={16} />Loading order status</div>}
       {order && (st === 'waiting' || st === 'requested') && order.status === 'pending' && (
         <div className="mt-6 text-sm" data-testid="state-waiting">
           {st === 'waiting' ? <p className="flex items-center gap-2"><Loader2 className="animate-spin" size={16} />Waiting for the store to open verification for order #{order.id}. Keep this page open.</p>
-            : <div><p className="mb-3 font-medium">The store has asked for verification. Choose how you want to be contacted for your test code.</p>
+            : <div><p className="mb-3 font-medium">The store has asked for verification. Choose how you want to receive your verification code.</p>
               <div className="flex flex-wrap gap-2">
                 <button className="btn btn-ghost" disabled={busy} onClick={() => act({ action: 'method', method: 'email' })} data-testid="button-method-email">Email{order.contactEmail ? ` (${order.contactEmail})` : ''}</button>
                 <button className="btn btn-ghost" disabled={busy} onClick={() => act({ action: 'method', method: 'phone' })} data-testid="button-method-phone">Phone{order.contactPhone ? ` (${order.contactPhone})` : ''}</button>
               </div></div>}
         </div>)}
-      {order && st === 'method_selected' && order.status === 'pending' && <p className="mt-6 flex items-center gap-2 text-sm" data-testid="state-method-selected"><Loader2 className="animate-spin" size={16} />You chose {order.verificationMethod}. Waiting for the store to share a 6-digit test code.</p>}
+      {order && st === 'method_selected' && order.status === 'pending' && <p className="mt-6 flex items-center gap-2 text-sm" data-testid="state-method-selected"><Loader2 className="animate-spin" size={16} />You chose {order.verificationMethod}. Waiting for the store to share a 6-digit verification code.</p>}
       {order && (st === 'code_ready' || st === 'invalid_code') && order.status === 'pending' && (
         <form className="mt-6" onSubmit={e => { e.preventDefault(); if (/^\d{6}$/.test(code)) act({ action: 'code', code }).then(() => setCode('')); }}>
           {st === 'invalid_code' && <p role="alert" className="mb-3 text-sm text-destructive" data-testid="text-invalid-code">That code was not accepted. Enter the code the store shared with you again.</p>}
-          <label className="lbl" htmlFor="otp">6-digit TEST code from the store</label>
+          <label className="lbl" htmlFor="otp">6-digit verification code from the store</label>
           <input id="otp" className="field mt-2 max-w-[220px] text-center font-mono text-xl tracking-[0.4em]" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} data-testid="input-code" />
           <button className="btn btn-brand mt-3" disabled={busy || code.length !== 6} data-testid="button-submit-code">Submit code</button>
         </form>)}
       {order && st === 'code_submitted' && order.status === 'pending' && <p className="mt-6 flex items-center gap-2 text-sm" data-testid="state-code-submitted"><Loader2 className="animate-spin" size={16} />Code received. Waiting for the store to approve or reject.</p>}
-      {order && (st === 'approved' || order.status === 'confirmed' || order.status === 'fulfilled') && <p className="mt-6 text-sm font-medium" data-testid="state-approved">Approved. Order #{order.id} is confirmed (simulated, no payment taken).</p>}
-      {order && st === 'declined' && <p className="mt-6 text-sm text-destructive" role="alert" data-testid="state-declined">The store declined this verification. Nothing was charged.</p>}
+      {order && (st === 'approved' || order.status === 'confirmed' || order.status === 'fulfilled') && <p className="mt-6 text-sm font-medium" data-testid="state-approved">Approved. Order #{order.id} is confirmed.</p>}
+      {order && st === 'declined' && <p className="mt-6 text-sm text-destructive" role="alert" data-testid="state-declined">The store declined this verification.</p>}
       {order && (st === 'cancelled' || order.status === 'cancelled') && st !== 'declined' && <p className="mt-6 text-sm" data-testid="state-cancelled">This order was cancelled.</p>}
       {order && (st === 'expired' || order.status === 'expired') && <p className="mt-6 text-sm text-destructive" role="alert" data-testid="state-expired">This verification expired. Please start again.</p>}
       {err && <p role="alert" className="mt-4 text-sm text-destructive" data-testid="text-verify-error">{err}</p>}

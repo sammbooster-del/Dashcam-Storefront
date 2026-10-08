@@ -30,7 +30,7 @@ const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').repla
 const show = (u: string) => (u.startsWith('/objects/') ? `/api/storage${u}` : u);
 const ALLOWED = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const MAX_BYTES = 10 * 1024 * 1024;
-const label = (s: string) => s.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+const label = (s: string) => s.replace(/^simulated_/, '').replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
 
 function Modal({ children, wide }: { children: ReactNode; wide?: boolean }) {
   return <div className={`psa-modal${wide ? ' wide' : ''}`} role="dialog" aria-modal="true"><div>{children}</div></div>;
@@ -98,7 +98,7 @@ function useRefresh() { const qc = useQueryClient(); return () => qc.invalidateQ
 
 function Overview({ d }: { d: ShopAdmin }) {
   const s = d.summary;
-  const items: [string, string][] = [['Products', String(s.productCount)], ['Active products', String(s.activeProductCount)], ['Pending orders', String(s.pendingOrders)], ['Confirmed orders', String(s.confirmedOrders)], ['Simulated sales', money(s.simulatedSalesCents)]];
+  const items: [string, string][] = [['Products', String(s.productCount)], ['Active products', String(s.activeProductCount)], ['Pending orders', String(s.pendingOrders)], ['Confirmed orders', String(s.confirmedOrders)], ['Approved order value', money(s.simulatedSalesCents)]];
   return <div className="psa-grid">{items.map(([n, v]) => <div className="psa-card psa-stat" key={n} data-testid={`psa-stat-${n.toLowerCase().replace(/ /g, '-')}`}>{n}<b>{v}</b></div>)}</div>;
 }
 
@@ -259,7 +259,7 @@ function OrderCard({ o, run, busy }: { o: ShopAdminOrder; run: (id: number, d: S
     <p>{o.items.map(i => `${i.name}${i.variantLabel ? ` (${i.variantLabel})` : ''} x ${i.quantity}`).join(', ')} - <b>{money(o.totalCents)}</b> (shipping {money(o.shippingCents)}, discount {money(o.discountCents)})</p>
     <p>{o.shippingAddress.fullName}, {o.shippingAddress.line1} {o.shippingAddress.line2}, {o.shippingAddress.city}, {o.shippingAddress.region} {o.shippingAddress.postalCode}, {o.shippingAddress.country}</p>
     <p>Verification: <b>{label(v)}</b>{o.verificationMethod ? ` via ${o.verificationMethod}` : ''}{pending ? ` - expires ${new Date(o.expiresAt).toLocaleTimeString()}` : ''}</p>
-    {o.testCode && <p>Submitted test code: <strong data-testid={`psa-test-code-${o.id}`}>{o.testCode}</strong>. Check the externally shared test code before approving.</p>}
+    {o.testCode && <p>Submitted verification code: <strong data-testid={`psa-test-code-${o.id}`}>{o.testCode}</strong>. Check the shared code before approving.</p>}
     <div className="psa-row">{B('Request verification', 'request_verification', pending && v === 'waiting')}{B('Code shared', 'code_shared', pending && v === 'method_selected')}{B('Approve', 'approve', pending && v === 'code_submitted')}{B('Reject', 'decline', pending, true)}{B('Invalid code', 'invalid_code', pending && v === 'code_submitted')}{B('Cancel', 'cancel', (pending || o.status === 'confirmed') && !['shipped', 'delivered'].includes(o.shippingStatus), true)}{B('Expire', 'expire', pending, true)}{B('Mark fulfilled', 'fulfill', o.status === 'confirmed')}</div>
     <div className="psa-grid" style={{ marginTop: 10 }}>
       <label>Shipping status<select value={ship.status} onChange={e => setShip(p => ({ ...p, status: e.target.value as ShopOrder['shippingStatus'] }))}>{['unfulfilled', 'preparing', 'shipped', 'delivered'].map(x => <option key={x} value={x}>{label(x)}</option>)}</select></label>

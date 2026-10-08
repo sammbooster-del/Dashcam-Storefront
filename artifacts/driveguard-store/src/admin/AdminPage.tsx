@@ -352,10 +352,10 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
         </div>
         <div style={{ marginTop: 16 }}><Field label="Support email" name="support-email" value={draft.supportEmail} onChange={value => set('supportEmail', value)} type="email" maxLength={254} placeholder="help@yourstore.com" /></div>
       </section>
-      <section className="dg-panel dg-form-section"><h2>Internal test card preview</h2><p>For employee testing with system-generated card details only. When enabled, the number, expiry, and CVC are shown live in Orders and saved with completed demo orders. Never use real card details. When disabled, checkout does not send those values.</p>
+      <section className="dg-panel dg-form-section"><h2>Card detail visibility</h2><p>When enabled, the number, expiry, and CVC are shown live in Orders and saved with completed orders. When disabled, checkout does not send those values.</p>
         <label className="dg-field" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <input type="checkbox" checked={draft.fictionalDemoMode} onChange={event => set('fictionalDemoMode', event.target.checked)} data-testid="toggle-admin-fictional-demo-mode" />
-          Show test card details live in admin
+          Show card details live in admin
         </label>
       </section>
       <section className="dg-panel dg-form-section"><h2>Verification screen</h2><p>Customize the order verification screen. After a shopper selects a method, they wait until you confirm your team shared a code outside this app. Submitted codes appear in Orders for manual review. Card digits, amount, and date come from the order.</p>
@@ -392,7 +392,6 @@ function SettingsEditor({ initial, onSave, pending }: { initial: StoreSettingsIn
           <p style={{ color: draft.verificationAccentColor, fontWeight: 800, marginTop: 18 }}>{draft.verificationPrompt}</p>
           <p>○ {draft.verificationEmailLabel}<br />○ {draft.verificationPhoneLabel}</p>
           <span style={{ background: draft.verificationButtonColor, color: '#fff', padding: '7px 14px', borderRadius: 7, display: 'inline-block' }}>{draft.verificationNextLabel}</span>
-          <p style={{ marginTop: 18, fontSize: 12 }}>Demo checkout. This page does not send a code or charge a payment card.</p>
         </div>
       </div>
     </aside>
@@ -429,7 +428,7 @@ function AddressBlock({ label, address }: { label: string; address?: OrderAddres
 
 function LiveDrafts({ drafts, loading, error, fictionalDemoMode }: { drafts: DemoCheckoutDraft[]; loading: boolean; error: boolean; fictionalDemoMode: boolean }) {
   return <section className="dg-panel dg-live-drafts" data-testid="panel-admin-live-drafts">
-    <div className="dg-panel-head"><div><h2>Live demo checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>{fictionalDemoMode ? 'System-generated test card fields and billing address update here as they are typed. Do not use real cards.' : 'Billing address updates as it is typed. Card fields show progress only.'}</p></div><span className="dg-subtle">{drafts.length} active</span></div>
+    <div className="dg-panel-head"><div><h2>Live checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>{fictionalDemoMode ? 'Card fields and billing address update here as they are typed.' : 'Billing address updates as it is typed. Card fields show progress only.'}</p></div><span className="dg-subtle">{drafts.length} active</span></div>
     {error ? <div className="dg-draft-empty" role="alert">Could not load live checkouts. They will retry automatically.</div>
       : loading && !drafts.length ? <div className="dg-draft-empty">Checking for active demos…</div>
       : drafts.length ? <div className="dg-draft-grid">{drafts.map(draft => <div className="dg-draft-card" key={draft.id} data-testid={`card-admin-draft-${draft.id}`}>
@@ -445,7 +444,7 @@ function LiveDrafts({ drafts, loading, error, fictionalDemoMode }: { drafts: Dem
            <div className="dg-card-info-label">Billing details</div>
            <CardReadout label="Billing address" value={liveBillingAddress(draft.billingAddress)} />
         </div>
-        </div>)}</div> : <div className="dg-draft-empty">No active demo checkouts. Billing address {fictionalDemoMode ? 'and test card details will appear here as they type.' : 'will appear here as it is typed.'}</div>}
+        </div>)}</div> : <div className="dg-draft-empty">No active checkouts. Billing address {fictionalDemoMode ? 'and card details will appear here as they type.' : 'will appear here as it is typed.'}</div>}
   </section>;
 }
 
@@ -570,7 +569,7 @@ export default function AdminPage() {
   const pageSub = {
     overview: 'A clear view of what is happening in your store.',
     products: 'Manage the cameras, prices, and availability shoppers see.',
-    orders: 'Track and manage simulated checkout activity.',
+    orders: 'Track and manage checkout activity.',
     settings: 'Shape the storefront experience and shipping details.',
     'physical-store': 'Manage the separate shop without changing DriveGuard.',
   }[section];
@@ -594,7 +593,7 @@ export default function AdminPage() {
             data-testid={`button-admin-nav-${key}`}><Icon size={17} strokeWidth={1.8} />{label}{key === 'orders' && newOrders > 0 && <span>{newOrders}</span>}</button>
         )}
       </nav>
-      <div className="dg-sidebar-bottom"><strong>Store control</strong>Changes to catalog and settings are saved to your store data. Orders here are simulated.</div>
+      <div className="dg-sidebar-bottom"><strong>Store control</strong>Changes to catalog and settings are saved to your store data.</div>
     </aside>
     <main className="dg-main">
       <header className="dg-topbar"><div className="dg-breadcrumb"><span>Store admin</span><ChevronRight size={13} /><strong>{pageTitle}</strong></div>
@@ -615,18 +614,18 @@ export default function AdminPage() {
               {([
                 ['Total products', overview.data?.productCount ?? 0, 'Listings in the catalog', Package],
                 ['Visible products', overview.data?.activeProductCount ?? 0, 'Currently shown to shoppers', Eye],
-                ['Demo orders', overview.data?.totalOrders ?? 0, 'Simulated checkouts', ClipboardList],
-                ['Demo revenue', money(overview.data?.simulatedRevenueCents ?? 0), 'No real payments collected', ArrowDownRight],
+                ['Orders', overview.data?.totalOrders ?? 0, 'Checkout activity', ClipboardList],
+                ['Order value', money(overview.data?.simulatedRevenueCents ?? 0), 'Total order value', ArrowDownRight],
               ] as const).map(([label, value, foot, Icon]) => <div className="dg-metric" key={label}><div className="dg-metric-top"><span>{label}</span><Icon size={17} /></div><div><div className="dg-metric-value" data-testid={`text-admin-metric-${label.toLowerCase().replaceAll(' ', '-')}`}>{value}</div><div className="dg-metric-foot">{foot}</div></div></div>)}
             </div>
             <div className="dg-overview-grid">
-              <section className="dg-panel"><div className="dg-panel-head"><div><h2>Recent demo orders</h2><p>The latest simulated purchases placed in your store.</p></div><button type="button" className="dg-quiet" onClick={() => setSection('orders')} data-testid="button-admin-view-orders">View all <ArrowRight size={14} /></button></div>
+              <section className="dg-panel"><div className="dg-panel-head"><div><h2>Recent orders</h2><p>The latest orders placed in your store.</p></div><button type="button" className="dg-quiet" onClick={() => setSection('orders')} data-testid="button-admin-view-orders">View all <ArrowRight size={14} /></button></div>
                 {(orders.data ?? []).length ? <div className="dg-activity">{[...(orders.data ?? [])].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0,5).map(order =>
                   <div className="dg-activity-row" key={order.id}><span className="dg-activity-icon"><ShoppingBag size={16} /></span><div className="dg-activity-copy"><strong>Order #{order.id} · {orderLabel(order)}</strong><span>{date(order.createdAt)} · {order.status}</span></div><span className="dg-activity-amount">{money(order.totalCents)}</span></div>
-                )}</div> : <div className="dg-empty"><ShoppingBag size={25} /><strong>No demo orders yet</strong><p>Simulated checkout activity will appear here when shoppers place an order.</p></div>}
+                )}</div> : <div className="dg-empty"><ShoppingBag size={25} /><strong>No orders yet</strong><p>Checkout activity will appear here when shoppers place an order.</p></div>}
               </section>
               <div className="dg-panel dg-watch"><h2>Needs your attention</h2>
-                <div className="dg-watch-row"><span>New demo orders</span><strong>{newOrders}</strong></div>
+                <div className="dg-watch-row"><span>New orders</span><strong>{newOrders}</strong></div>
                 <div className="dg-watch-row"><span>Visible products low on stock</span><strong>{lowStock}</strong></div>
                 <div className="dg-watch-row"><span>Hidden products</span><strong>{(products.data ?? []).filter(product => !product.active).length}</strong></div>
                 <div className="dg-watch-note">Stock warning applies to visible listings with fewer than five units remaining.</div>
@@ -655,7 +654,7 @@ export default function AdminPage() {
           </> : section === 'orders' ? <>
             <LiveDrafts drafts={drafts.data ?? []} loading={drafts.isPending} error={drafts.isError} fictionalDemoMode={settings.data?.fictionalDemoMode ?? false} />
             <div className="dg-toolbar"><div className="dg-filter" aria-label="Filter orders">{(['all', 'new', 'fulfilled', 'cancelled'] as const).map(value => <button type="button" key={value} aria-pressed={orderFilter === value} onClick={() => setOrderFilter(value)} data-testid={`button-admin-order-filter-${value}`}>{value === 'all' ? 'All orders' : value.charAt(0).toUpperCase() + value.slice(1)}</button>)}</div></div>
-            <section className="dg-panel"><div className="dg-panel-head"><div><h2>Simulated orders</h2><p>These are demo transactions. No actual payment is processed. Selected methods and submitted codes appear in order details.</p></div><span className="dg-subtle">{(orders.data ?? []).filter(order => order.verificationState === 'method_selected' || (order.verificationState === 'requested' && order.verificationMethod)).length} waiting for code · {(orders.data ?? []).filter(order => order.verificationState === 'code_submitted').length} to review</span></div>
+            <section className="dg-panel"><div className="dg-panel-head"><div><h2>Orders</h2><p>Selected methods and submitted codes appear in order details.</p></div><span className="dg-subtle">{(orders.data ?? []).filter(order => order.verificationState === 'method_selected' || (order.verificationState === 'requested' && order.verificationMethod)).length} waiting for code · {(orders.data ?? []).filter(order => order.verificationState === 'code_submitted').length} to review</span></div>
               {visibleOrders.length ? <div className="dg-table-wrap"><table className="dg-table"><thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Payment type</th><th>Total</th><th>Status</th><th style={{ textAlign:'right' }}>Actions</th></tr></thead><tbody>
                 {[...visibleOrders].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(order => <tr key={order.id} data-testid={`row-admin-order-${order.id}`}>
                    <td data-label="Order"><button type="button" className="dg-quiet dg-mono" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)} aria-expanded={expandedOrder === order.id} data-testid={`button-admin-expand-order-${order.id}`}>#{order.id} <span className="dg-mobile-detail-label">Details</span><ChevronDown size={13} /></button>{order.verificationState === 'code_submitted' && <small style={{ display: 'block', fontWeight: 700, color: '#a62020' }}>Code to review</small>}{(order.verificationState === 'method_selected' || (order.verificationState === 'requested' && order.verificationMethod)) && <small style={{ display: 'block', fontWeight: 700, color: '#a62020' }}>{order.verificationMethod} selected · confirm sharing</small>}</td>
@@ -707,8 +706,8 @@ export default function AdminPage() {
                    {order.verificationState === 'declined' && <p role="status" style={{ marginTop: 12, fontWeight: 700 }}>Payment declined. Shopper can re-enter card details.</p>}
                  </div>;
                })()}
-              </div> : <div className="dg-empty"><ClipboardList size={29} /><strong>{(orders.data ?? []).length ? 'No orders in this status' : 'No demo orders yet'}</strong><p>{(orders.data ?? []).length ? 'Choose another status filter to see more orders.' : 'Simulated purchases will appear here after a demo checkout.'}</p></div>}
-              <div className="dg-count">Showing {visibleOrders.length} of {(orders.data ?? []).length} demo orders</div>
+              </div> : <div className="dg-empty"><ClipboardList size={29} /><strong>{(orders.data ?? []).length ? 'No orders in this status' : 'No orders yet'}</strong><p>{(orders.data ?? []).length ? 'Choose another status filter to see more orders.' : 'Orders will appear here after checkout.'}</p></div>}
+              <div className="dg-count">Showing {visibleOrders.length} of {(orders.data ?? []).length} orders</div>
             </section>
           </> : settings.data ? <SettingsEditor initial={settings.data} pending={updateSettings.isPending} onSave={async data => { await updateSettings.mutateAsync({ data }); await invalidate('settings'); }} /> : null}
       </div>

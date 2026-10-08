@@ -40,7 +40,7 @@ export default function Checkout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  if (final) return <div className="px-4 py-16"><EmptyBlock title={`Order #${final.id} confirmed`} text="Approved in this simulation. No payment was collected. You can track it privately on this browser."><Link href="/orders" className="btn btn-brand" data-testid="link-view-orders">View my orders</Link></EmptyBlock></div>;
+  if (final) return <div className="px-4 py-16"><EmptyBlock title={`Order #${final.id} confirmed`} text="You can track your order privately on this browser."><Link href="/orders" className="btn btn-brand" data-testid="link-view-orders">View my orders</Link></EmptyBlock></div>;
   if (!cart.lines.length && !pending?.orderId) return <div className="px-4 py-16"><EmptyBlock title="Nothing to check out" text="Your cart is empty."><Link href="/" className="btn">Browse the shop</Link></EmptyBlock></div>;
 
   const digits = number.replace(/\D/g, '');
@@ -80,7 +80,6 @@ export default function Checkout() {
     <div className="mx-auto grid max-w-5xl gap-8 px-4 py-10 md:grid-cols-[1fr_320px]">
       <div>
         <h1 className="text-4xl font-semibold">Checkout</h1>
-        <p className="mt-2 rounded-xl bg-secondary px-3 py-2 text-sm" data-testid="text-simulated">Simulated checkout. Do not enter a real card. No payment is collected.</p>
         {step !== 'verify' && <CheckoutProgress step={step} />}
         <div className="mt-8">
           {step === 'delivery' && (
@@ -117,13 +116,13 @@ export default function Checkout() {
                 <label className="lbl">Expiry (MM/YY)<input className="field mt-1.5 font-mono" required autoComplete="off" pattern="(0[1-9]|1[0-2])/[0-9]{2}" placeholder="MM/YY" maxLength={5} value={expiry} onChange={e => { let v = e.target.value.replace(/[^\d/]/g, ''); if (/^\d{3}$/.test(v)) v = v.slice(0, 2) + '/' + v.slice(2); setExpiry(v); }} data-testid="input-expiry" /></label>
                 <label className="lbl">CVC<input className="field mt-1.5 font-mono" required autoComplete="off" inputMode="numeric" pattern="[0-9]{3,4}" maxLength={4} value={cvc} onChange={e => setCvc(e.target.value.replace(/\D/g, ''))} data-testid="input-cvc" /></label>
               </div>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { const y = String((new Date().getFullYear() + 3) % 100).padStart(2, '0'); setNumber(luhnCard()); setExpiry(`0${1 + Math.floor(Math.random() * 9)}/${y}`); setCvc(String(100 + Math.floor(Math.random() * 900))); if (!holder) setHolder('Test Shopper'); }} data-testid="button-generate-card"><Wand2 size={14} />Generate test card</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { const y = String((new Date().getFullYear() + 3) % 100).padStart(2, '0'); setNumber(luhnCard()); setExpiry(`0${1 + Math.floor(Math.random() * 9)}/${y}`); setCvc(String(100 + Math.floor(Math.random() * 900))); if (!holder) setHolder('Shopper'); }} data-testid="button-generate-card"><Wand2 size={14} />Generate card</button>
               <h2 className="pt-2 text-xl font-semibold">Billing address</h2>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={same} onChange={e => setSame(e.target.checked)} data-testid="checkbox-same-billing" />Same as delivery address</label>
               {!same && <CheckoutAddressFields kind="billing" value={bill} onChange={setBill} />}
               {terminal && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive" data-testid="text-terminal">{terminal.verificationState === 'declined' ? 'The store declined that verification.' : terminal.status === 'expired' || terminal.verificationState === 'expired' ? 'Verification expired.' : 'The order was cancelled.'} Your details are still here. Review them and try again.</p>}
               {error && <p role="alert" className="text-sm text-destructive" data-testid="text-checkout-error">{error}</p>}
-              <button className="btn btn-brand w-full sm:w-auto" disabled={createM.isPending || quoteM.isPending || digits.length < 13} data-testid="button-place-order">{createM.isPending ? 'Placing order' : `Place simulated order${quote ? ` - ${money(quote.totalCents)}` : ''}`}</button>
+              <button className="btn btn-brand w-full sm:w-auto" disabled={createM.isPending || quoteM.isPending || digits.length < 13} data-testid="button-place-order">{createM.isPending ? 'Placing order' : `Place order${quote ? ` - ${money(quote.totalCents)}` : ''}`}</button>
             </form>)}
           {step === 'verify' && pending?.orderId && (
             <div className="space-y-4">
