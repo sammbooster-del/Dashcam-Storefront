@@ -20,3 +20,9 @@ Reuse the existing simulated checkout for the second store. Do not add a payment
 **Why:** The owner explicitly overrode the attachment's real-payment requirement with “just use the same simulation that already exist.”
 
 **How to apply:** Use the existing manual verification workflow. Follow the UI-wording rule in demo-order-inventory.md: the owner does not want simulation/no-charge notices anywhere on either website or admin. Separate test reservations and simulated sales from configured physical stock; make approval and cancellation idempotent.
+
+The owner expects reuse of the camera site's actual payment routes and live-update workflow, not merely similar styling or a separately implemented checkout.
+
+**Why:** The owner explicitly corrected the distinction between copying the checkout and using the same payment routes.
+
+**How to apply:** Prefer a shared checkout integration while preserving each store's catalog, inventory, and order isolation. Exact unmasked card displays may only use predefined synthetic fixtures; never extend collection of arbitrary full payment-card numbers or CVC.
