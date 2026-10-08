@@ -2,6 +2,7 @@ import path from 'path';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
@@ -27,9 +28,33 @@ if (!basePath) {
   );
 }
 
+const canonicalBase = basePath.endsWith('/') ? basePath : `${basePath}/`;
+const redirectBareBase = (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+  const url = req.url ?? '';
+  const queryIndex = url.indexOf('?');
+  const pathname = queryIndex < 0 ? url : url.slice(0, queryIndex);
+  if (canonicalBase !== '/' && pathname === canonicalBase.slice(0, -1) &&
+    (req.method === 'GET' || req.method === 'HEAD')) {
+    res.statusCode = 307;
+    res.setHeader('Location', `${canonicalBase}${queryIndex < 0 ? '' : url.slice(queryIndex)}`);
+    res.end();
+    return;
+  }
+  next();
+};
+
 export default defineConfig({
-  base: basePath,
+  base: canonicalBase,
   plugins: [
+    {
+      name: 'redirect-bare-store-base',
+      configureServer(server) {
+        server.middlewares.use(redirectBareBase);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(redirectBareBase);
+      },
+    },
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
