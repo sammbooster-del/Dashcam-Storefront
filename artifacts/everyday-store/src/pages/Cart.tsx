@@ -4,7 +4,6 @@ import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useGetShopCatalog, useQuoteShopCart } from '@workspace/api-client-react';
 import type { ShopQuote } from '@workspace/api-client-react';
 import { EmptyBlock, ErrorBlock, Skeletons } from '@/components/Layout';
-import { AcceptedCards } from '@/components/AcceptedCards';
 import { errMsg, imgUrl, money, useCart } from '@/lib/shop';
 
 export default function Cart() {
@@ -81,8 +80,6 @@ export default function Cart() {
             {s && s.shippingThresholdCents > 0 && q.shippingCents > 0 && <p className="text-xs text-muted-foreground">Free shipping over {money(s.shippingThresholdCents)}.</p>}
           </dl>
         ) : <div className="mt-5 space-y-2"><div className="h-4 animate-pulse rounded bg-muted" /><div className="h-4 animate-pulse rounded bg-muted" /><div className="h-6 animate-pulse rounded bg-muted" /></div>}
-        <Link href="/checkout" className={`btn btn-brand mt-6 w-full ${!q || qErr ? 'pointer-events-none opacity-50' : ''}`} data-testid="link-checkout">Checkout</Link>
-        <div className="mt-5"><AcceptedCards location="cart" /></div>
       </aside>
     </div>
   );

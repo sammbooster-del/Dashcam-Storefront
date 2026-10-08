@@ -314,6 +314,10 @@ router.get("/storefront", async (_req, res): Promise<void> => {
 });
 
 router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
+  if (req.baseUrl.startsWith("/shop/api") || req.body?.website === "shop") {
+    res.status(410).json({ error: "Checkout has been removed from this store." });
+    return;
+  }
   const params = SaveDemoDraftParams.safeParse(req.params);
   const parsed = SaveDemoDraftBody.safeParse(req.body);
   if (!params.success || !parsed.success ||
@@ -667,7 +671,7 @@ router.get("/admin/me", async (_req, res): Promise<void> => {
 
 router.get("/admin/demo-drafts", async (_req, res): Promise<void> => {
   pruneDemoDrafts();
-  res.json(ListAdminDemoDraftsResponse.parse([...demoDrafts.values()].filter(draft => draft.active !== false).reverse()));
+  res.json(ListAdminDemoDraftsResponse.parse([...demoDrafts.values()].filter(draft => draft.active !== false && draft.website !== "shop").reverse()));
 });
 
 router.get("/admin/overview", async (_req, res): Promise<void> => {

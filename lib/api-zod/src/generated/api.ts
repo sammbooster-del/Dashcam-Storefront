@@ -1587,6 +1587,10 @@ export const QuoteShopCartResponse = zod.object({
 })
 
 
+/**
+ * Checkout has been removed from this store. This endpoint rejects cached clients without creating orders or reserving inventory.
+ * @deprecated
+ */
 
 export const createShopOrderBodyItemsItemQuantityMax = 99;
 
@@ -1665,138 +1669,7 @@ export const CreateShopOrderBody = zod.object({
   "cardLast4": zod.string().regex(createShopOrderBodyCardLast4RegExp)
 })
 
-export const createShopOrderResponseOrderIdMin = 0;
-export const createShopOrderResponseOrderIdMax = 100000000;
-
-export const createShopOrderResponseOrderContactEmailMax = 254;
-
-export const createShopOrderResponseOrderContactPhoneMax = 30;
-
-export const createShopOrderResponseOrderShippingAddressFullNameMax = 100;
-
-export const createShopOrderResponseOrderShippingAddressLine1Max = 150;
-
-export const createShopOrderResponseOrderShippingAddressLine2Max = 150;
-
-export const createShopOrderResponseOrderShippingAddressCityMax = 100;
-
-export const createShopOrderResponseOrderShippingAddressRegionMin = 2;
-export const createShopOrderResponseOrderShippingAddressRegionMax = 80;
-
-export const createShopOrderResponseOrderShippingAddressPostalCodeMin = 3;
-export const createShopOrderResponseOrderShippingAddressPostalCodeMax = 12;
-
-export const createShopOrderResponseOrderBillingAddressFullNameMax = 100;
-
-export const createShopOrderResponseOrderBillingAddressLine1Max = 150;
-
-export const createShopOrderResponseOrderBillingAddressLine2Max = 150;
-
-export const createShopOrderResponseOrderBillingAddressCityMax = 100;
-
-export const createShopOrderResponseOrderBillingAddressRegionMin = 2;
-export const createShopOrderResponseOrderBillingAddressRegionMax = 80;
-
-export const createShopOrderResponseOrderBillingAddressPostalCodeMin = 3;
-export const createShopOrderResponseOrderBillingAddressPostalCodeMax = 12;
-
-export const createShopOrderResponseOrderCardholderNameMax = 100;
-
-export const createShopOrderResponseOrderCardLast4Max = 4;
-
-export const createShopOrderResponseOrderDomainMax = 253;
-
-export const createShopOrderResponseOrderCarrierMax = 100;
-
-export const createShopOrderResponseOrderTrackingNumberMax = 150;
-
-export const createShopOrderResponseOrderTrackingUrlMax = 2048;
-
-export const createShopOrderResponseOrderItemsItemVariantIdMin = 0;
-export const createShopOrderResponseOrderItemsItemVariantIdMax = 100000000;
-
-export const createShopOrderResponseOrderItemsItemProductIdMin = 0;
-export const createShopOrderResponseOrderItemsItemProductIdMax = 100000000;
-
-export const createShopOrderResponseOrderItemsItemNameMax = 150;
-
-export const createShopOrderResponseOrderItemsItemVariantLabelMax = 100;
-
-export const createShopOrderResponseOrderItemsItemUnitPriceCentsMin = 0;
-export const createShopOrderResponseOrderItemsItemUnitPriceCentsMax = 100000000;
-
-export const createShopOrderResponseOrderItemsItemQuantityMin = 0;
-export const createShopOrderResponseOrderItemsItemQuantityMax = 99;
-
-export const createShopOrderResponseOrderSubtotalCentsMin = 0;
-export const createShopOrderResponseOrderSubtotalCentsMax = 2147483647;
-
-export const createShopOrderResponseOrderDiscountCentsMin = 0;
-export const createShopOrderResponseOrderDiscountCentsMax = 2147483647;
-
-export const createShopOrderResponseOrderShippingCentsMin = 0;
-export const createShopOrderResponseOrderShippingCentsMax = 100000000;
-
-export const createShopOrderResponseOrderTotalCentsMin = 0;
-export const createShopOrderResponseOrderTotalCentsMax = 2147483647;
-
-export const createShopOrderResponseAccessTokenMax = 64;
-
-
-
-export const CreateShopOrderResponse = zod.object({
-  "order": zod.object({
-  "id": zod.number().int().min(createShopOrderResponseOrderIdMin).max(createShopOrderResponseOrderIdMax),
-  "createdAt": zod.coerce.date(),
-  "expiresAt": zod.coerce.date(),
-  "status": zod.enum(['pending', 'confirmed', 'cancelled', 'expired', 'fulfilled']),
-  "paymentStatus": zod.enum(['simulated_pending', 'simulated_approved', 'simulated_declined', 'cancelled', 'expired']),
-  "verificationState": zod.enum(['waiting', 'requested', 'method_selected', 'code_ready', 'code_submitted', 'invalid_code', 'approved', 'declined', 'cancelled', 'expired']),
-  "verificationMethod": zod.union([zod.literal('email'),zod.literal('phone'),zod.literal(null)]).nullable(),
-  "contactEmail": zod.string().max(createShopOrderResponseOrderContactEmailMax),
-  "contactPhone": zod.string().max(createShopOrderResponseOrderContactPhoneMax),
-  "shippingAddress": zod.object({
-  "fullName": zod.string().min(1).max(createShopOrderResponseOrderShippingAddressFullNameMax),
-  "line1": zod.string().min(1).max(createShopOrderResponseOrderShippingAddressLine1Max),
-  "line2": zod.string().max(createShopOrderResponseOrderShippingAddressLine2Max),
-  "city": zod.string().min(1).max(createShopOrderResponseOrderShippingAddressCityMax),
-  "region": zod.string().min(createShopOrderResponseOrderShippingAddressRegionMin).max(createShopOrderResponseOrderShippingAddressRegionMax),
-  "postalCode": zod.string().min(createShopOrderResponseOrderShippingAddressPostalCodeMin).max(createShopOrderResponseOrderShippingAddressPostalCodeMax),
-  "country": zod.enum(['US', 'CA'])
-}),
-  "billingAddress": zod.object({
-  "fullName": zod.string().min(1).max(createShopOrderResponseOrderBillingAddressFullNameMax),
-  "line1": zod.string().min(1).max(createShopOrderResponseOrderBillingAddressLine1Max),
-  "line2": zod.string().max(createShopOrderResponseOrderBillingAddressLine2Max),
-  "city": zod.string().min(1).max(createShopOrderResponseOrderBillingAddressCityMax),
-  "region": zod.string().min(createShopOrderResponseOrderBillingAddressRegionMin).max(createShopOrderResponseOrderBillingAddressRegionMax),
-  "postalCode": zod.string().min(createShopOrderResponseOrderBillingAddressPostalCodeMin).max(createShopOrderResponseOrderBillingAddressPostalCodeMax),
-  "country": zod.enum(['US', 'CA'])
-}),
-  "cardType": zod.enum(['credit', 'debit']),
-  "cardholderName": zod.string().max(createShopOrderResponseOrderCardholderNameMax),
-  "cardLast4": zod.string().max(createShopOrderResponseOrderCardLast4Max),
-  "website": zod.enum(['physical-store']),
-  "domain": zod.string().max(createShopOrderResponseOrderDomainMax),
-  "shippingStatus": zod.enum(['unfulfilled', 'preparing', 'shipped', 'delivered']),
-  "carrier": zod.string().max(createShopOrderResponseOrderCarrierMax),
-  "trackingNumber": zod.string().max(createShopOrderResponseOrderTrackingNumberMax),
-  "trackingUrl": zod.string().max(createShopOrderResponseOrderTrackingUrlMax),
-  "items": zod.array(zod.object({
-  "variantId": zod.number().int().min(createShopOrderResponseOrderItemsItemVariantIdMin).max(createShopOrderResponseOrderItemsItemVariantIdMax),
-  "productId": zod.number().int().min(createShopOrderResponseOrderItemsItemProductIdMin).max(createShopOrderResponseOrderItemsItemProductIdMax),
-  "name": zod.string().max(createShopOrderResponseOrderItemsItemNameMax),
-  "variantLabel": zod.string().max(createShopOrderResponseOrderItemsItemVariantLabelMax),
-  "unitPriceCents": zod.number().int().min(createShopOrderResponseOrderItemsItemUnitPriceCentsMin).max(createShopOrderResponseOrderItemsItemUnitPriceCentsMax),
-  "quantity": zod.number().int().min(createShopOrderResponseOrderItemsItemQuantityMin).max(createShopOrderResponseOrderItemsItemQuantityMax)
-})),
-  "subtotalCents": zod.number().int().min(createShopOrderResponseOrderSubtotalCentsMin).max(createShopOrderResponseOrderSubtotalCentsMax),
-  "discountCents": zod.number().int().min(createShopOrderResponseOrderDiscountCentsMin).max(createShopOrderResponseOrderDiscountCentsMax),
-  "shippingCents": zod.number().int().min(createShopOrderResponseOrderShippingCentsMin).max(createShopOrderResponseOrderShippingCentsMax),
-  "totalCents": zod.number().int().min(createShopOrderResponseOrderTotalCentsMin).max(createShopOrderResponseOrderTotalCentsMax)
-}),
-  "accessToken": zod.string().max(createShopOrderResponseAccessTokenMax)
-})
+export const CreateShopOrderResponse = zod.void()
 
 
 

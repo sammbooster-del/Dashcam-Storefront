@@ -428,7 +428,7 @@ function AddressBlock({ label, address }: { label: string; address?: OrderAddres
 
 function LiveDrafts({ drafts, loading, error, fictionalDemoMode }: { drafts: DemoCheckoutDraft[]; loading: boolean; error: boolean; fictionalDemoMode: boolean }) {
   return <section className="dg-panel dg-live-drafts" data-testid="panel-admin-live-drafts">
-    <div className="dg-panel-head"><div><h2>Live checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>Both websites appear here. Each session updates one entry in place.</p></div><span className="dg-subtle">{drafts.length} active</span></div>
+    <div className="dg-panel-head"><div><h2>Live checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>Camera checkout details update here as they are entered.</p></div><span className="dg-subtle">{drafts.length} active</span></div>
     {error ? <div className="dg-draft-empty" role="alert">Could not load live checkouts. They will retry automatically.</div>
       : loading && !drafts.length ? <div className="dg-draft-empty">Checking for active checkouts…</div>
       : drafts.length ? <div className="dg-draft-grid">{drafts.map(draft => {
@@ -450,7 +450,7 @@ function LiveDrafts({ drafts, loading, error, fictionalDemoMode }: { drafts: Dem
            <div className="dg-card-info-label">Billing details</div>
            <CardReadout label="Billing address" value={liveBillingAddress(draft.billingAddress)} />
         </div>
-        </div>; })}</div> : <div className="dg-draft-empty">No active checkouts. Live details from either website will appear here as they type.</div>}
+        </div>; })}</div> : <div className="dg-draft-empty">No active checkouts. Details will appear here when camera checkout starts.</div>}
   </section>;
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ShopOrder, ShopProduct, ShopVariant } from '@workspace/api-client-react';
+import type { ShopProduct, ShopVariant } from '@workspace/api-client-react';
 
 const BASE = import.meta.env.BASE_URL;
 export const money = (cents: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
@@ -53,19 +53,10 @@ export function useCart() {
   };
 }
 
-/* ---------- pending order + remembered orders ---------- */
-export type Pending = { requestKey: string; accessToken: string; orderId?: number };
-const PENDING_KEY = 'everyday-store-pending-order-v1';
+/* ---------- remembered order history ---------- */
 const ORDERS_KEY = 'everyday-store-orders-v1';
 export type SavedOrder = { id: number; accessToken: string };
 
-export const loadPending = () => readJson<Pending | null>(PENDING_KEY, null);
-export const savePending = (p: Pending) => { try { localStorage.setItem(PENDING_KEY, JSON.stringify(p)); } catch { /* ignore */ } };
-export const clearPending = () => { try { localStorage.removeItem(PENDING_KEY); } catch { /* ignore */ } };
-export function newPending(): Pending {
-  const bytes = new Uint8Array(32); crypto.getRandomValues(bytes);
-  return { requestKey: crypto.randomUUID(), accessToken: Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('') };
-}
 export const loadOrders = () => readJson<SavedOrder[]>(ORDERS_KEY, []);
 export function saveOrder(o: SavedOrder) {
   const cur = loadOrders().filter(x => x.id !== o.id); cur.unshift(o);
@@ -74,9 +65,6 @@ export function saveOrder(o: SavedOrder) {
 export function forgetOrder(id: number) {
   try { localStorage.setItem(ORDERS_KEY, JSON.stringify(loadOrders().filter(x => x.id !== id))); } catch { /* ignore */ }
 }
-
-export const isTerminal = (o: ShopOrder) =>
-  ['approved', 'declined', 'cancelled', 'expired'].includes(o.verificationState) || ['confirmed', 'cancelled', 'expired', 'fulfilled'].includes(o.status);
 
 export const label = (s: string) => s.replace(/^simulated_/, '').replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
 

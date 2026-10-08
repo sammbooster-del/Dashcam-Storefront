@@ -48,7 +48,6 @@ import type {
   ShopOrder,
   ShopOrderAccess,
   ShopOrderInput,
-  ShopOrderReceipt,
   ShopOrderUpdate,
   ShopProduct,
   ShopProductInput,
@@ -2380,7 +2379,11 @@ export const getCreateShopOrderUrl = () => {
   return `/api/physical-store/orders`
 }
 
-export const createShopOrder = async (shopOrderInput: ShopOrderInput, options?: Parameters<typeof customFetch>[1]): Promise<ShopOrderReceipt> => {
+/**
+ * Checkout has been removed from this store. This endpoint rejects cached clients without creating orders or reserving inventory.
+ * @deprecated
+ */
+export const createShopOrder = async (shopOrderInput: ShopOrderInput, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -2396,7 +2399,7 @@ export const createShopOrder = async (shopOrderInput: ShopOrderInput, options?: 
     }
     return headers;
   };
-return customFetch<ShopOrderReceipt>(getCreateShopOrderUrl(),
+return customFetch<unknown>(getCreateShopOrderUrl(),
   {
     ...options,
     method: 'POST',
@@ -2411,7 +2414,7 @@ return customFetch<ShopOrderReceipt>(getCreateShopOrderUrl(),
 
 export const getCreateShopOrderMutationKey = () => ['createShopOrder'] as const;
 
-export const getCreateShopOrderMutationOptions = <TError = ErrorType<unknown>,
+export const getCreateShopOrderMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createShopOrder>>, TError,CreateShopOrderMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createShopOrder>>, TError,CreateShopOrderMutationVariables, TContext> => {
 
@@ -2440,10 +2443,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateShopOrderMutationResult = NonNullable<Awaited<ReturnType<typeof createShopOrder>>>
     export type CreateShopOrderMutationBody = BodyType<ShopOrderInput>
-    export type CreateShopOrderMutationError = ErrorType<unknown>
+    export type CreateShopOrderMutationError = ErrorType<void>
     export type CreateShopOrderMutationVariables = {data: BodyType<ShopOrderInput>}
 
-    export const useCreateShopOrder = <TError = ErrorType<unknown>,
+    /**
+ * @deprecated
+ */
+export const useCreateShopOrder = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createShopOrder>>, TError,CreateShopOrderMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createShopOrder>>,

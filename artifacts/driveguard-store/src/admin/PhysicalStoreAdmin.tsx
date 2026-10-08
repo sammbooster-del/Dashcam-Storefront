@@ -229,9 +229,9 @@ function Products({ products, cats }: { products: ShopProduct[]; cats: ShopCateg
 
 function Orders({ orders, domains, onViewExistingOrders }: { orders: ShopAdminOrder[]; domains: string[]; onViewExistingOrders?: () => void }) {
   const refresh = useRefresh(); const upd = useUpdateShopOrder();
-  const [fd, setFd] = useState(''); const [fp, setFp] = useState(''); const [fs, setFs] = useState(''); const [fw, setFw] = useState(''); const [s, setS] = useState('');
+  const [fd, setFd] = useState(''); const [fs, setFs] = useState(''); const [fw, setFw] = useState(''); const [s, setS] = useState('');
   const [err, setErr] = useState('');
-  const list = orders.filter(o => (!fd || o.domain === fd) && (!fp || o.paymentStatus === fp) && (!fs || o.shippingStatus === fs) && (!fw || o.website === fw) && (!s || `${o.id} ${o.contactEmail} ${o.cardholderName}`.toLowerCase().includes(s.toLowerCase())));
+  const list = orders.filter(o => (!fd || o.domain === fd) && (!fs || o.shippingStatus === fs) && (!fw || o.website === fw) && (!s || `${o.id} ${o.contactEmail} ${o.shippingAddress.fullName}`.toLowerCase().includes(s.toLowerCase())));
   const run = (id: number, data: ShopOrderUpdate) => { setErr(''); upd.mutate({ id, data }, { onSuccess: refresh, onError: e => setErr(errText(e)) }); };
   const dset = Array.from(new Set([...domains, ...orders.map(o => o.domain).filter(Boolean)]));
   return <div>
@@ -239,7 +239,6 @@ function Orders({ orders, domains, onViewExistingOrders }: { orders: ShopAdminOr
       <label>Search<input value={s} onChange={e => setS(e.target.value)} placeholder="ID, email, name" data-testid="psa-order-search" /></label>
       <label>Website<select value="physical-store" onChange={e => { if (e.target.value === 'existing') onViewExistingOrders?.(); else setFw(e.target.value); }} data-testid="psa-filter-website"><option value="physical-store">Physical-product store</option>{onViewExistingOrders && <option value="existing">Existing website — DriveGuard</option>}</select></label>
       <label>Domain<select value={fd} onChange={e => setFd(e.target.value)} data-testid="psa-filter-domain"><option value="">All</option>{dset.map(x => <option key={x}>{x}</option>)}</select></label>
-      <label>Payment<select value={fp} onChange={e => setFp(e.target.value)} data-testid="psa-filter-payment"><option value="">All</option>{['simulated_pending', 'simulated_approved', 'simulated_declined', 'cancelled', 'expired'].map(x => <option key={x} value={x}>{label(x)}</option>)}</select></label>
       <label>Shipping<select value={fs} onChange={e => setFs(e.target.value)} data-testid="psa-filter-shipping"><option value="">All</option>{['unfulfilled', 'preparing', 'shipped', 'delivered'].map(x => <option key={x} value={x}>{label(x)}</option>)}</select></label>
     </div>
     {err && <p className="psa-err" role="alert">{err}</p>}
@@ -251,16 +250,14 @@ function Orders({ orders, domains, onViewExistingOrders }: { orders: ShopAdminOr
 function OrderCard({ o, run, busy }: { o: ShopAdminOrder; run: (id: number, d: ShopOrderUpdate) => void; busy: boolean }) {
   const [ship, setShip] = useState({ status: o.shippingStatus, carrier: o.carrier, num: o.trackingNumber, url: o.trackingUrl });
   useEffect(() => setShip({ status: o.shippingStatus, carrier: o.carrier, num: o.trackingNumber, url: o.trackingUrl }), [o.shippingStatus, o.carrier, o.trackingNumber, o.trackingUrl]);
-  const v = o.verificationState; const pending = o.status === 'pending';
+  const pending = o.status === 'pending';
   const B = (text: string, action: ShopOrderUpdate['action'], on: boolean, danger?: boolean) => <button className={`psa-btn sm${danger ? ' danger' : ''}`} disabled={!on || busy} onClick={() => run(o.id, { action })} data-testid={`psa-order-${action}-${o.id}`}>{text}</button>;
   return <div className="psa-card" data-testid={`psa-order-${o.id}`}>
-    <div className="psa-between"><b>Order #{o.id}</b><div className="psa-row"><span className="psa-chip">{o.website === 'physical-store' ? 'Physical store' : o.website}</span><span className="psa-chip">{o.domain || 'no domain'}</span><span className="psa-chip">{label(o.status)}</span><span className="psa-chip">{label(o.paymentStatus)}</span><span className="psa-chip">{label(o.shippingStatus)}</span></div></div>
-    <p>{o.contactEmail} / {o.contactPhone} - {o.cardholderName} ({o.cardType} ending {o.cardLast4}) - {new Date(o.createdAt).toLocaleString()}</p>
+    <div className="psa-between"><b>Order #{o.id}</b><div className="psa-row"><span className="psa-chip">{o.website === 'physical-store' ? 'Physical store' : o.website}</span><span className="psa-chip">{o.domain || 'no domain'}</span><span className="psa-chip">{label(o.status)}</span><span className="psa-chip">{label(o.shippingStatus)}</span></div></div>
+    <p>{o.contactEmail} / {o.contactPhone} - {o.shippingAddress.fullName} - {new Date(o.createdAt).toLocaleString()}</p>
     <p>{o.items.map(i => `${i.name}${i.variantLabel ? ` (${i.variantLabel})` : ''} x ${i.quantity}`).join(', ')} - <b>{money(o.totalCents)}</b> (shipping {money(o.shippingCents)}, discount {money(o.discountCents)})</p>
     <p>{o.shippingAddress.fullName}, {o.shippingAddress.line1} {o.shippingAddress.line2}, {o.shippingAddress.city}, {o.shippingAddress.region} {o.shippingAddress.postalCode}, {o.shippingAddress.country}</p>
-    <p>Verification: <b>{label(v)}</b>{o.verificationMethod ? ` via ${o.verificationMethod}` : ''}{pending ? ` - expires ${new Date(o.expiresAt).toLocaleTimeString()}` : ''}</p>
-    {o.testCode && <p>Submitted verification code: <strong data-testid={`psa-test-code-${o.id}`}>{o.testCode}</strong>. Check the shared code before approving.</p>}
-    <div className="psa-row">{B('Request verification', 'request_verification', pending && v === 'waiting')}{B('Code shared', 'code_shared', pending && v === 'method_selected')}{B('Approve', 'approve', pending && v === 'code_submitted')}{B('Reject', 'decline', pending, true)}{B('Invalid code', 'invalid_code', pending && v === 'code_submitted')}{B('Cancel', 'cancel', (pending || o.status === 'confirmed') && !['shipped', 'delivered'].includes(o.shippingStatus), true)}{B('Expire', 'expire', pending, true)}{B('Mark fulfilled', 'fulfill', o.status === 'confirmed')}</div>
+    <div className="psa-row">{B('Cancel', 'cancel', (pending || o.status === 'confirmed') && !['shipped', 'delivered'].includes(o.shippingStatus), true)}{B('Expire', 'expire', pending, true)}{B('Mark fulfilled', 'fulfill', o.status === 'confirmed')}</div>
     <div className="psa-grid" style={{ marginTop: 10 }}>
       <label>Shipping status<select value={ship.status} onChange={e => setShip(p => ({ ...p, status: e.target.value as ShopOrder['shippingStatus'] }))}>{['unfulfilled', 'preparing', 'shipped', 'delivered'].map(x => <option key={x} value={x}>{label(x)}</option>)}</select></label>
       <label>Carrier<input maxLength={100} value={ship.carrier} onChange={e => setShip(p => ({ ...p, carrier: e.target.value }))} /></label>

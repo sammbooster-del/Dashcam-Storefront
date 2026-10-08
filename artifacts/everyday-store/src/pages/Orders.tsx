@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { useAccessShopOrder } from '@workspace/api-client-react';
 import type { ShopOrder } from '@workspace/api-client-react';
-import { VerificationPanel } from '@/components/VerificationPanel';
 import { EmptyBlock } from '@/components/Layout';
-import { errMsg, forgetOrder, isTerminal, label, loadOrders, money, saveOrder, type SavedOrder } from '@/lib/shop';
+import { errMsg, forgetOrder, label, loadOrders, money, saveOrder, type SavedOrder } from '@/lib/shop';
 
 type Entry = { saved: SavedOrder; order?: ShopOrder; error?: string };
 const safeUrl = (u: string) => /^https?:\/\//i.test(u);
@@ -14,7 +13,6 @@ export default function Orders() {
   const accessRef = useRef(access.mutateAsync); accessRef.current = access.mutateAsync;
   const [entries, setEntries] = useState<Entry[]>(() => loadOrders().map(saved => ({ saved })));
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState<number | null>(null);
   const [id, setId] = useState(''); const [token, setToken] = useState(''); const [formErr, setFormErr] = useState('');
 
   const fetchOne = async (saved: SavedOrder): Promise<Entry> => {
@@ -47,16 +45,14 @@ export default function Orders() {
           <article key={saved.id} className="panel p-5" data-testid={`card-order-${saved.id}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-xl font-semibold">Order #{saved.id}</h2>
-              {order && <div className="flex flex-wrap gap-2"><span className="chip" data-testid={`status-order-${saved.id}`}>{label(order.status)}</span><span className="chip">Payment: {label(order.paymentStatus)}</span><span className="chip">Shipping: {label(order.shippingStatus)}</span></div>}
+              {order && <div className="flex flex-wrap gap-2"><span className="chip" data-testid={`status-order-${saved.id}`}>{label(order.status)}</span><span className="chip">Shipping: {label(order.shippingStatus)}</span></div>}
             </div>
             {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
             {order && <>
-              <p className="mt-1 text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleString()} - card ending {order.cardLast4} - {order.domain || order.website}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleString()} - {order.domain || order.website}</p>
               <ul className="mt-3 text-sm">{order.items.map(i => <li key={i.variantId} className="flex justify-between"><span>{i.name}{i.variantLabel ? ` - ${i.variantLabel}` : ''} x {i.quantity}</span><span>{money(i.unitPriceCents * i.quantity)}</span></li>)}</ul>
               <p className="mt-2 flex justify-between border-t pt-2 font-semibold"><span>Total</span><span>{money(order.totalCents)}</span></p>
               {(order.carrier || order.trackingNumber) && <p className="mt-2 text-sm" data-testid={`text-tracking-${saved.id}`}>{order.carrier} {order.trackingNumber} {order.trackingUrl && safeUrl(order.trackingUrl) && <a className="underline" href={order.trackingUrl} target="_blank" rel="noopener noreferrer">Track package</a>}</p>}
-              {!isTerminal(order) && <button className="btn btn-sm mt-3" onClick={() => setOpen(open === saved.id ? null : saved.id)} data-testid={`button-verify-${saved.id}`}>{open === saved.id ? 'Hide verification' : 'Continue verification'}</button>}
-              {open === saved.id && !isTerminal(order) && <div className="mt-4"><VerificationPanel orderId={saved.id} accessToken={saved.accessToken} initial={order} onUpdate={o => setEntries(p => p.map(x => x.saved.id === saved.id ? { ...x, order: o } : x))} /></div>}
             </>}
             <div className="mt-4 flex flex-wrap gap-3 text-xs">
               <button className="underline" onClick={() => copy(saved.accessToken)} data-testid={`button-copy-token-${saved.id}`}>Copy private token (for another device)</button>

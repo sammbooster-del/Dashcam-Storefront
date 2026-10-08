@@ -37,7 +37,7 @@ Express wallets are previews only: keep Apple Pay and Google Pay clearly marked 
 
 **Why:** The owner explicitly requested future express-payment options without enabling them or changing the current card flow. They rejected plain-text logo substitutes and asked for actual payment-brand artwork. They also want Apple Pay and Google Pay visible throughout relevant storefront payment information, not only in the payment-method chooser.
 
-**How to apply:** Use authentic brand-logo assets, not text or generic wallet icons as substitutes. Do not activate wallet payments or add a real-payment integration without a new request. Coming-soon controls must not submit the card form or launch a payment.
+**How to apply:** Use authentic brand-logo assets, not text or generic wallet icons as substitutes. Do not activate wallet payments or add a real-payment integration without a new request. Coming-soon controls must not submit the card form or launch a payment. This wallet rule now applies to DriveGuard only: the owner's later removal request means Everyday must have no payment logos or controls.
 
 The email and phone choices describe how the team shared a code outside this app. They are not delivery channels operated by the app. The app receives the shopper's submitted code for manual admin review, rather than generating or validating it against an app-issued code.
 

@@ -1,14 +1,14 @@
 import { Router, type Request, type RequestHandler } from "express";
 import { pool } from "@workspace/db";
 import {
-  GetShopCatalogResponse, QuoteShopCartBody, QuoteShopCartResponse, CreateShopOrderBody, CreateShopOrderResponse,
+  GetShopCatalogResponse, QuoteShopCartBody, QuoteShopCartResponse,
   AccessShopOrderParams, AccessShopOrderBody, AccessShopOrderResponse, GetShopAdminResponse,
   SaveShopSettingsBody, CreateShopCategoryBody, UpdateShopCategoryBody, CreateShopProductBody,
   UpdateShopProductBody, SaveShopDomainBody, UpdateShopOrderBody,
 } from "@workspace/api-zod";
 import { requireAdmin, requireSameOriginWrite } from "./store";
 import {
-  ShopError, hash, hostname, transaction, getShopSettings, validShopImages, shopCatalog, orderResponse,
+  ShopError, hostname, transaction, getShopSettings, validShopImages, shopCatalog, orderResponse,
   saveOrder, releaseOrderStock, expireShopOrders, quoteCart, matchesToken, type ShopOrderData,
 } from "../lib/physicalStore";
 
@@ -58,45 +58,19 @@ router.post("/physical-store/quote", handled(async (req, res) => {
   await expireShopOrders();
   res.json(QuoteShopCartResponse.parse(await quoteCart(parsed.data)));
 }));
-router.post("/physical-store/orders", requireSameOriginWrite, handled(async (req, res) => {
-  const parsed = CreateShopOrderBody.strict().safeParse(req.body);
-  if (!parsed.success) { res.status(400).json({ error: "Enter valid contact, delivery, and card details." }); return; }
-  const input = parsed.data;
-  for (const address of [input.shippingAddress, input.billingAddress]) {
-    const validPostal = address.country === "US" ? /^\d{5}(-\d{4})?$/.test(address.postalCode.trim()) : /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/i.test(address.postalCode.trim());
-    if (!validPostal || !address.fullName.trim() || !address.line1.trim() || !address.city.trim() || address.region.trim().length < 2) throw new ShopError(400, "Enter a complete US or Canadian address.");
-  }
-  if (input.contactPhone.replace(/\D/g, "").length < 10 || !input.cardholderName.trim()) throw new ShopError(400, "Enter a valid phone number and cardholder name.");
-  await expireShopOrders();
-  const requestHash = hash(JSON.stringify(input));
-  const result = await transaction(async client => {
-    // Serializes retries of the same checkout before any stock reservation.
-    await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [input.requestKey]);
-    const existing = await client.query("SELECT * FROM shop_orders WHERE request_key=$1 FOR UPDATE", [input.requestKey]);
-    if (existing.rows[0]) {
-      if (existing.rows[0].request_hash !== requestHash || !matchesToken(input.accessToken, existing.rows[0].access_token_hash)) throw new ShopError(409, "This checkout key has already been used.");
-      return orderResponse(existing.rows[0]);
-    }
-    const quote = await quoteCart(input, client, true);
-    for (const item of quote.items) await client.query("UPDATE shop_variants SET reserved=reserved+$1 WHERE id=$2", [item.quantity, item.variantId]);
-    const data: ShopOrderData = {
-      ...quote, status: "pending", paymentStatus: "simulated_pending", verificationState: "waiting", verificationMethod: null,
-      contactEmail: input.contactEmail.trim().toLowerCase(), contactPhone: input.contactPhone.trim(),
-      shippingAddress: input.shippingAddress, billingAddress: input.billingAddress,
-      cardType: input.cardType, cardholderName: input.cardholderName.trim(), cardLast4: input.cardLast4,
-      website: "physical-store", domain: requestHost(req),
-      shippingStatus: "unfulfilled", carrier: "", trackingNumber: "", trackingUrl: "",
-    };
-    const inserted = await client.query("INSERT INTO shop_orders (request_key,request_hash,access_token_hash,data,expires_at) VALUES ($1,$2,$3,$4,NOW()+INTERVAL '30 minutes') RETURNING *", [input.requestKey, requestHash, hash(input.accessToken), JSON.stringify(data)]);
-    return orderResponse(inserted.rows[0]);
-  });
-  res.status(201).json(CreateShopOrderResponse.parse({ order: result, accessToken: input.accessToken }));
-}));
+// Tombstone old checkout URLs so cached clients cannot create new orders.
+router.post("/physical-store/orders", requireSameOriginWrite, (_req, res) => {
+  res.status(410).json({ error: "Checkout has been removed from this store." });
+});
 router.post("/physical-store/orders/:id/access", requireSameOriginWrite, handled(async (req, res) => {
   if (typeof req.body?.accessToken !== "string" || !/^[a-f0-9]{64}$/.test(req.body.accessToken))
     throw new ShopError(404, "Order not found or private access key is incorrect.");
   const params = AccessShopOrderParams.safeParse(req.params), parsed = AccessShopOrderBody.strict().safeParse(req.body);
   if (!params.success || !parsed.success) { res.status(400).json({ error: "Invalid order access." }); return; }
+  if (!["check", "cancel"].includes(parsed.data.action)) {
+    res.status(410).json({ error: "This store no longer supports checkout verification." });
+    return;
+  }
   await expireShopOrders();
   const response = await transaction(async client => {
     const result = await client.query("SELECT * FROM shop_orders WHERE id=$1 FOR UPDATE", [params.data.id]);
@@ -109,18 +83,6 @@ router.post("/physical-store/orders/:id/access", requireSameOriginWrite, handled
         await releaseOrderStock(client, d);
         d.status = "cancelled"; d.paymentStatus = "cancelled"; d.verificationState = "cancelled";
       }
-    } else if (parsed.data.action === "method") {
-      if (!parsed.data.method) throw new ShopError(400, "Choose a method.");
-      if (d.verificationState === "method_selected" && d.verificationMethod === parsed.data.method) return orderResponse(row);
-      if (d.status !== "pending" || d.verificationState !== "requested") throw new ShopError(409, "The verification method cannot be selected yet.");
-      d.verificationMethod = parsed.data.method; d.verificationState = "method_selected";
-    } else if (parsed.data.action === "code") {
-      if (!parsed.data.code) throw new ShopError(400, "Enter the six-digit test code.");
-      if (d.verificationState === "code_submitted") return orderResponse(row);
-      if (d.status !== "pending" || !["code_ready", "invalid_code"].includes(d.verificationState)) throw new ShopError(409, "The team has not confirmed sharing a test code yet.");
-      d.verificationState = "code_submitted";
-      // Test code remains only on the protected admin side, never on public order responses.
-      (d as ShopOrderData & { testCode?: string }).testCode = parsed.data.code;
     }
     await saveOrder(client, row);
     return orderResponse(row);
@@ -252,26 +214,16 @@ router.post("/admin/physical-store/orders/:id", handled(async (req, res) => {
     const row = result.rows[0];
     if (!row) throw new ShopError(404, "Order not found.");
     const d: ShopOrderData = row.data;
-    const transitions = { request_verification: ["waiting", "requested"], code_shared: ["method_selected", "code_ready"], invalid_code: ["code_submitted", "invalid_code"] } as const;
-    if (action in transitions) {
-      const [from, to] = transitions[action as keyof typeof transitions];
-      if (d.verificationState === to) return orderResponse(row);
-      if (d.status !== "pending" || d.verificationState !== from) throw new ShopError(409, "That verification action is not available in the current state.");
-      d.verificationState = to;
-    } else if (action === "approve") {
-      if (d.paymentStatus === "simulated_approved") return orderResponse(row);
-      if (d.status !== "pending" || d.verificationState !== "code_submitted") throw new ShopError(409, "Only submitted test codes can be approved.");
-      for (const item of [...d.items].sort((a, b) => a.variantId - b.variantId))
-        await client.query("UPDATE shop_variants SET reserved=reserved-$1,simulated_sold=simulated_sold+$1 WHERE id=$2", [item.quantity, item.variantId]);
-      d.status = "confirmed"; d.paymentStatus = "simulated_approved"; d.verificationState = "approved";
-    } else if (["cancel", "expire", "decline"].includes(action)) {
+    if (["request_verification", "code_shared", "invalid_code", "approve", "decline"].includes(action)) {
+      throw new ShopError(410, "Checkout has been removed from this store.");
+    } else if (["cancel", "expire"].includes(action)) {
       if (["cancelled", "expired"].includes(d.status)) return orderResponse(row);
       if (d.status === "fulfilled" || ["shipped", "delivered"].includes(d.shippingStatus)) throw new ShopError(409, "A shipped or fulfilled order cannot be cancelled here.");
-      if (action !== "cancel" && d.status !== "pending") throw new ShopError(409, "Only pending orders can be expired or declined.");
+      if (action !== "cancel" && d.status !== "pending") throw new ShopError(409, "Only pending orders can be expired.");
       await releaseOrderStock(client, d);
       d.status = action === "expire" ? "expired" : "cancelled";
-      d.paymentStatus = action === "decline" ? "simulated_declined" : action === "expire" ? "expired" : "cancelled";
-      d.verificationState = action === "decline" ? "declined" : action === "expire" ? "expired" : "cancelled";
+      d.paymentStatus = action === "expire" ? "expired" : "cancelled";
+      d.verificationState = action === "expire" ? "expired" : "cancelled";
     } else if (action === "fulfill") {
       if (d.status === "fulfilled") return orderResponse(row);
       if (d.status !== "confirmed" || d.paymentStatus !== "simulated_approved") throw new ShopError(409, "Only approved orders can be fulfilled.");

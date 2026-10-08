@@ -58,19 +58,14 @@
     "/physical-store/orders": {
       "post": {
         "operationId": "createShopOrder",
+        "deprecated": true,
+        "description": "Checkout has been removed from this store. This endpoint rejects cached clients without creating orders or reserving inventory.",
         "tags": [
           "physical-store"
         ],
         "responses": {
-          "201": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShopOrderReceipt"
-                }
-              }
-            }
+          "410": {
+            "description": "Checkout has been removed from this store."
           }
         },
         "requestBody": {

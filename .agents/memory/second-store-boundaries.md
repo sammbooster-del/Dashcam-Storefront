@@ -21,19 +21,19 @@ Do not use the merchant name specified in the uploaded second-store brief anywhe
 
 **How to apply:** Exclude that name from branding, defaults, payment descriptions, and metadata. Do not reinstate it when consulting the attachment.
 
-Reuse the existing simulated checkout for the second store. Do not add a payment provider, require a separate merchant account, or initiate real charges. Keep simulation identifiers internal and the original DriveGuard payment behavior unchanged.
+The Everyday shop must have no payment or checkout experience, payment-brand logos, or customer verification controls. Keep browsing and cart selection, preserve existing order records, and leave the original DriveGuard checkout unchanged.
 
-**Why:** The owner explicitly overrode the attachment's real-payment requirement with “just use the same simulation that already exist.”
+**Why:** After rejecting the separately implemented shop checkout, the owner explicitly said to remove everything about payment from the shop. This supersedes the earlier request to reuse the simulation.
 
-**How to apply:** Use the existing manual verification workflow. Follow the UI-wording rule in demo-order-inventory.md: the owner does not want simulation/no-charge notices anywhere on either website or admin. Separate test reservations and simulated sales from configured physical stock; make approval and cancellation idempotent.
+**How to apply:** Do not restore shop checkout, wallets, card fields, or verification without an explicit new request. Old shop checkout URLs must not revive the removed flow or create new reservations. Preserve order history and existing cancellation/fulfillment maintenance rather than deleting audit records.
 
-The owner expects reuse of the camera site's actual payment routes and live-update workflow, not merely similar styling or a separately implemented checkout.
+If the owner explicitly requests shop checkout again, their expectation is reuse of the camera site's actual payment routes and live-update workflow, not merely similar styling or a separately implemented checkout.
 
 **Why:** The owner explicitly corrected the distinction between copying the checkout and using the same payment routes.
 
 **How to apply:** Prefer a shared checkout integration while preserving each store's catalog, inventory, and order isolation. Exact unmasked displays may use verified synthetic values issued by the owner's external server, not only a hard-coded fixture list; never extend collection of arbitrary full payment-card numbers or CVC.
 
-The owner uses the two sites one at a time and wants one shared live-checkout view, with updates replacing the same session entry rather than producing duplicate entries or panels.
+While both sites had checkout, the owner used the two sites one at a time and wanted one shared live-checkout view, with updates replacing the same session entry rather than producing duplicate entries or panels. Shop live-checkout publishing is now outside the requested scope because its checkout was removed.
 
 **Why:** The owner explicitly requested a single live entry for both websites.
 

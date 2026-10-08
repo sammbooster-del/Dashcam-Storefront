@@ -9,9 +9,8 @@ import Home from '@/pages/Home';
 import Category from '@/pages/Category';
 import Product from '@/pages/Product';
 import Cart from '@/pages/Cart';
-import Checkout from '@/pages/Checkout';
 import Orders from '@/pages/Orders';
-import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
+import { Redirect, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } } });
 
@@ -24,7 +23,7 @@ function Router() {
           <Route path="/category/:slug" component={Category} />
           <Route path="/product/:slug" component={Product} />
           <Route path="/cart" component={Cart} />
-          <Route path="/checkout" component={Checkout} />
+          <Route path="/checkout"><Redirect to="/cart" /></Route>
           <Route path="/orders" component={Orders} />
           <Route component={NotFound} />
         </Switch>

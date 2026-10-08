@@ -3,7 +3,6 @@ import { Link, useLocation } from 'wouter';
 import { Package, ShoppingBag } from 'lucide-react';
 import { useGetShopCatalog } from '@workspace/api-client-react';
 import { imgUrl, useCart } from '@/lib/shop';
-import { AcceptedCards } from '@/components/AcceptedCards';
 
 export function Layout({ children }: { children: ReactNode }) {
   const { data } = useGetShopCatalog();
@@ -37,7 +36,6 @@ export function Layout({ children }: { children: ReactNode }) {
           <span className="display text-base text-foreground">{brand}</span>
           {s?.supportEmail && <span>Questions: {s.supportEmail}</span>}
         </div>
-        <div className="mx-auto mt-6 max-w-6xl px-4"><AcceptedCards location="footer" /></div>
       </footer>
     </div>
   );

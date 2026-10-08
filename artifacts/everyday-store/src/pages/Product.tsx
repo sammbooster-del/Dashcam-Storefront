@@ -3,7 +3,6 @@ import { Link, useParams } from 'wouter';
 import { Minus, Plus } from 'lucide-react';
 import { useGetShopCatalog } from '@workspace/api-client-react';
 import { EmptyBlock, ErrorBlock, Skeletons } from '@/components/Layout';
-import { AcceptedCards } from '@/components/AcceptedCards';
 import { activeVariants, imgUrl, money, useCart } from '@/lib/shop';
 import { useToast } from '@/hooks/use-toast';
 
@@ -48,7 +47,6 @@ export default function Product() {
           </div>
           <button className="btn btn-brand" disabled={!v || room <= 0} onClick={() => { if (!v) return; const n = Math.min(qty, room); cart.add(v.id, n, v.availableStock); setQty(1); toast({ title: 'Added to cart', description: `${p.name}${variants.length > 1 ? ` - ${v.label}` : ''} x ${n}` }); }} data-testid="button-add-to-cart">{room <= 0 && v && v.availableStock > 0 ? 'Max quantity in cart' : v && v.availableStock <= 0 ? 'Sold out' : 'Add to cart'}</button>
         </div>
-        <div className="mt-6"><AcceptedCards location="product" /></div>
       </div>
     </div>
   );
