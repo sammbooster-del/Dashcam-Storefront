@@ -25,4 +25,4 @@ The owner expects reuse of the camera site's actual payment routes and live-upda
 
 **Why:** The owner explicitly corrected the distinction between copying the checkout and using the same payment routes.
 
-**How to apply:** Prefer a shared checkout integration while preserving each store's catalog, inventory, and order isolation. Exact unmasked card displays may only use predefined synthetic fixtures; never extend collection of arbitrary full payment-card numbers or CVC.
+**How to apply:** Prefer a shared checkout integration while preserving each store's catalog, inventory, and order isolation. Exact unmasked displays may use verified synthetic values issued by the owner's external server, not only a hard-coded fixture list; never extend collection of arbitrary full payment-card numbers or CVC.
