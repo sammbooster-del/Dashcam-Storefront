@@ -4,6 +4,6 @@
 - [Checkout path and cart visibility](checkout-cart-visibility.md) — Keep products visible on mobile; Buy now skips cart navigation and opens delivery.
 - [Checkout arrival alert](checkout-arrival-alert.md) — Use a repeating Pushover notification, not a phone call, for the start of delivery entry.
 - [Payment brand asset contrast](payment-brand-assets.md) — Google Pay’s light/dark SVG names refer to the button background, not the lettering color.
-- [Second-store boundaries](second-store-boundaries.md) — Preserve DriveGuard; Everyday is now catalog/cart-only with no checkout or payment features.
+- [Second-store boundaries](second-store-boundaries.md) — Shop checkout must plug into DriveGuard’s existing UI/backend, not a separate implementation; preserve DriveGuard and records.
 - [Catalog package management](catalog-package-management.md) — Adding catalog dependencies can rewrite workspace policy comments and pin existing ranges; preserve both.
 - [Preview path verification](preview-path-verification.md) — Test the exact preview-bar path; the screenshot helper may use a different trailing-slash form.
