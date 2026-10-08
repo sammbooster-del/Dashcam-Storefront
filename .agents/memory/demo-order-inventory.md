@@ -27,6 +27,12 @@ Do not show simulation, demo, test-flow or no-payment/no-charge notices in eithe
 
 **How to apply:** Remove these notices from footers, carts, checkout, verification, confirmation, order history, and admin summaries. Keep disabled Apple Pay/Google Pay controls marked Coming soon; do not claim actual funds were collected or enable live payments.
 
+Do not add Generate card buttons or equivalent card-generation controls to either storefront.
+
+**Why:** The owner explicitly asked to remove every Generate card button. Keeping the internal checkout mode does not authorize adding generation controls to its UI.
+
+**How to apply:** Preserve manual card entry and the existing checkout flow; do not replace the removed button with another autofill or card-generation control.
+
 Express wallets are previews only: keep Apple Pay and Google Pay clearly marked Coming soon and disabled. Only the existing card checkout should be usable.
 
 **Why:** The owner explicitly requested future express-payment options without enabling them or changing the current card flow. They rejected plain-text logo substitutes and asked for actual payment-brand artwork. They also want Apple Pay and Google Pay visible throughout relevant storefront payment information, not only in the payment-method chooser.

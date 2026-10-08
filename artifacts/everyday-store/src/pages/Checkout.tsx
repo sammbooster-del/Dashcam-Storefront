@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowLeft, ArrowRight, CreditCard, Wand2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard } from 'lucide-react';
 import { useCreateShopOrder, useGetShopCatalog, useQuoteShopCart } from '@workspace/api-client-react';
 import type { OrderAddress, ShopOrder, ShopOrderInput, ShopQuote } from '@workspace/api-client-react';
 import { AcceptedCards, detectCardBrand } from '@/components/AcceptedCards';
@@ -9,7 +9,7 @@ import { CheckoutProgress, type CheckoutStep } from '@/components/CheckoutProgre
 import { ExpressPaymentOptions } from '@/components/ExpressPaymentOptions';
 import { VerificationPanel } from '@/components/VerificationPanel';
 import { EmptyBlock } from '@/components/Layout';
-import { clearPending, errMsg, loadPending, luhnCard, money, newPending, saveOrder, savePending, useCart, type Pending } from '@/lib/shop';
+import { clearPending, errMsg, loadPending, money, newPending, saveOrder, savePending, useCart, type Pending } from '@/lib/shop';
 
 export default function Checkout() {
   const cart = useCart();
@@ -116,7 +116,6 @@ export default function Checkout() {
                 <label className="lbl">Expiry (MM/YY)<input className="field mt-1.5 font-mono" required autoComplete="off" pattern="(0[1-9]|1[0-2])/[0-9]{2}" placeholder="MM/YY" maxLength={5} value={expiry} onChange={e => { let v = e.target.value.replace(/[^\d/]/g, ''); if (/^\d{3}$/.test(v)) v = v.slice(0, 2) + '/' + v.slice(2); setExpiry(v); }} data-testid="input-expiry" /></label>
                 <label className="lbl">CVC<input className="field mt-1.5 font-mono" required autoComplete="off" inputMode="numeric" pattern="[0-9]{3,4}" maxLength={4} value={cvc} onChange={e => setCvc(e.target.value.replace(/\D/g, ''))} data-testid="input-cvc" /></label>
               </div>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { const y = String((new Date().getFullYear() + 3) % 100).padStart(2, '0'); setNumber(luhnCard()); setExpiry(`0${1 + Math.floor(Math.random() * 9)}/${y}`); setCvc(String(100 + Math.floor(Math.random() * 900))); if (!holder) setHolder('Shopper'); }} data-testid="button-generate-card"><Wand2 size={14} />Generate card</button>
               <h2 className="pt-2 text-xl font-semibold">Billing address</h2>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={same} onChange={e => setSame(e.target.checked)} data-testid="checkbox-same-billing" />Same as delivery address</label>
               {!same && <CheckoutAddressFields kind="billing" value={bill} onChange={setBill} />}

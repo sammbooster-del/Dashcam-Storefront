@@ -80,9 +80,3 @@ export const isTerminal = (o: ShopOrder) =>
 
 export const label = (s: string) => s.replace(/^simulated_/, '').replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
 
-export function luhnCard() {
-  const d = [4, 2, 4, 2]; while (d.length < 15) d.push(Math.floor(Math.random() * 10));
-  let sum = 0; d.slice().reverse().forEach((n, i) => { let x = n; if (i % 2 === 0) { x *= 2; if (x > 9) x -= 9; } sum += x; });
-  d.push((10 - (sum % 10)) % 10);
-  return d.join('').replace(/(\d{4})(?=\d)/g, '$1 ');
-}
