@@ -9,6 +9,12 @@ The second website is a general physical-product store, not skincare-only. Reuse
 
 **How to apply:** Add isolated store capabilities and domain-to-website selection without migrating or overwriting the original product system.
 
+Both checkout experiences are intended only for the owner and their team, using externally generated test details; there are no real clients or intended public customers.
+
+**Why:** The owner repeatedly clarified that this is an internal team-testing setup, not a customer-facing commerce launch.
+
+**How to apply:** Do not ask the owner to reconfirm internal use or suggest a public customer launch. Distinguish intended internal use from technically enforced access restrictions; never claim the app is access-restricted without verifying that. Internal intent does not authorize unrestricted capture of real payment credentials.
+
 Do not use the merchant name specified in the uploaded second-store brief anywhere. That part of the attachment was explicitly withdrawn by the owner's subsequent instruction.
 
 **Why:** The latest owner instruction overrides the attachment's merchant-description requirement.
