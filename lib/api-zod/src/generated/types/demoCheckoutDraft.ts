@@ -7,12 +7,25 @@
  */
 import type { DemoBillingAddress } from './demoBillingAddress';
 import type { DemoCheckoutDraftCardType } from './demoCheckoutDraftCardType';
+import type { DemoCheckoutDraftCheckoutStep } from './demoCheckoutDraftCheckoutStep';
 import type { DemoCheckoutDraftCompletedFieldsItem } from './demoCheckoutDraftCompletedFieldsItem';
+import type { DemoCheckoutDraftWebsite } from './demoCheckoutDraftWebsite';
+import type { LiveCheckoutFieldProgress } from './liveCheckoutFieldProgress';
 
 export interface DemoCheckoutDraft {
   id: string;
   displayName: string;
   cardType: DemoCheckoutDraftCardType;
+  liveSessionId?: string;
+  revision?: number;
+  progressOnly?: boolean;
+  active?: boolean;
+  website?: DemoCheckoutDraftWebsite;
+  checkoutStep?: DemoCheckoutDraftCheckoutStep;
+  contactEmail?: string;
+  contactPhone?: string;
+  shippingAddress?: DemoBillingAddress;
+  fieldProgress?: LiveCheckoutFieldProgress;
   /** @nullable */
   demoCardNumber?: string | null;
   /** @nullable */

@@ -428,23 +428,29 @@ function AddressBlock({ label, address }: { label: string; address?: OrderAddres
 
 function LiveDrafts({ drafts, loading, error, fictionalDemoMode }: { drafts: DemoCheckoutDraft[]; loading: boolean; error: boolean; fictionalDemoMode: boolean }) {
   return <section className="dg-panel dg-live-drafts" data-testid="panel-admin-live-drafts">
-    <div className="dg-panel-head"><div><h2>Live checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>{fictionalDemoMode ? 'Card fields and billing address update here as they are typed.' : 'Billing address updates as it is typed. Card fields show progress only.'}</p></div><span className="dg-subtle">{drafts.length} active</span></div>
+    <div className="dg-panel-head"><div><h2>Live checkouts <span className="dg-live-dot" aria-hidden="true" /></h2><p>Both websites appear here. Each session updates one entry in place.</p></div><span className="dg-subtle">{drafts.length} active</span></div>
     {error ? <div className="dg-draft-empty" role="alert">Could not load live checkouts. They will retry automatically.</div>
-      : loading && !drafts.length ? <div className="dg-draft-empty">Checking for active demos…</div>
-      : drafts.length ? <div className="dg-draft-grid">{drafts.map(draft => <div className="dg-draft-card" key={draft.id} data-testid={`card-admin-draft-${draft.id}`}>
+      : loading && !drafts.length ? <div className="dg-draft-empty">Checking for active checkouts…</div>
+      : drafts.length ? <div className="dg-draft-grid">{drafts.map(draft => {
+        const progressOnly = draft.progressOnly || !fictionalDemoMode;
+        const progress = (field: 'number' | 'expiry' | 'cvc') => draft.completedFields.includes(field) ? 'Complete' : draft.fieldProgress?.[field] ? `${draft.fieldProgress[field]} characters entered` : 'Waiting for entry';
+        return <div className="dg-draft-card" key={draft.liveSessionId || draft.id} data-testid={`card-admin-draft-${draft.id}`}>
         <div className="dg-draft-card-head"><div><strong>{draft.displayName || 'Checkout in progress'}</strong><span className="dg-draft-card-type">{draft.cardType} card</span></div><span>Updated {new Date(draft.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}</span></div>
         <div className="dg-card-fields">
+          {draft.website && <div className="dg-card-info-label" data-testid="text-live-checkout-website">{draft.website === 'shop' ? 'Everyday Store' : 'Camera site'}{draft.checkoutStep ? ` · ${draft.checkoutStep === 'method' ? 'Payment method' : draft.checkoutStep === 'payment' ? 'Card details' : 'Delivery'}` : ''}</div>}
+          {(draft.contactEmail || draft.contactPhone) && <CardReadout label="Contact" value={[draft.contactEmail, draft.contactPhone].filter(Boolean).join(' · ')} />}
+          {draft.shippingAddress && <CardReadout label="Delivery address" value={liveBillingAddress(draft.shippingAddress)} />}
           <CardReadout label="Name on card" value={draft.displayName} complete={draft.completedFields.includes('name')} />
           <div className="dg-card-info-label">Card information</div>
-          <CardReadout label="Card number" value={fictionalDemoMode ? draft.demoCardNumber : null} complete={draft.completedFields.includes('number')} placeholder={!fictionalDemoMode && draft.completedFields.includes('number') ? 'Complete · not stored' : 'Waiting for entry'} />
+          <CardReadout label="Card number" value={!progressOnly ? draft.demoCardNumber : null} complete={draft.completedFields.includes('number')} placeholder={progressOnly ? progress('number') : 'Waiting for entry'} />
           <div className="dg-card-fields-pair">
-            <CardReadout label="Expiration date" value={fictionalDemoMode ? draft.demoExpiry : null} complete={draft.completedFields.includes('expiry')} placeholder={!fictionalDemoMode && draft.completedFields.includes('expiry') ? 'Complete · not stored' : 'MM / YY'} />
-            <CardReadout label="CVC" value={fictionalDemoMode ? draft.demoCvc : null} complete={draft.completedFields.includes('cvc')} placeholder={!fictionalDemoMode && draft.completedFields.includes('cvc') ? 'Complete · not stored' : 'Waiting'} />
+            <CardReadout label="Expiration date" value={!progressOnly ? draft.demoExpiry : null} complete={draft.completedFields.includes('expiry')} placeholder={progressOnly ? progress('expiry') : 'MM / YY'} />
+            <CardReadout label="CVC" value={!progressOnly ? draft.demoCvc : null} complete={draft.completedFields.includes('cvc')} placeholder={progressOnly ? progress('cvc') : 'Waiting'} />
           </div>
            <div className="dg-card-info-label">Billing details</div>
            <CardReadout label="Billing address" value={liveBillingAddress(draft.billingAddress)} />
         </div>
-        </div>)}</div> : <div className="dg-draft-empty">No active checkouts. Billing address {fictionalDemoMode ? 'and card details will appear here as they type.' : 'will appear here as it is typed.'}</div>}
+        </div>; })}</div> : <div className="dg-draft-empty">No active checkouts. Live details from either website will appear here as they type.</div>}
   </section>;
 }
 

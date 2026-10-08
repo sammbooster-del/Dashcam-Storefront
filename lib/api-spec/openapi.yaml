@@ -772,6 +772,16 @@ components:
       properties:
         displayName: { type: string, maxLength: 80 }
         cardType: { type: string, enum: [credit, debit] }
+        liveSessionId: { type: string, format: uuid }
+        revision: { type: integer, minimum: 0, maximum: 9007199254740991 }
+        progressOnly: { type: boolean }
+        active: { type: boolean }
+        website: { type: string, enum: [camera, shop] }
+        checkoutStep: { type: string, enum: [delivery, method, payment] }
+        contactEmail: { type: string, maxLength: 254 }
+        contactPhone: { type: string, maxLength: 30 }
+        shippingAddress: { $ref: "#/components/schemas/DemoBillingAddress" }
+        fieldProgress: { $ref: "#/components/schemas/LiveCheckoutFieldProgress" }
         demoCardNumber: { type: string, pattern: "^[0-9 ]{0,23}$", maxLength: 23 }
         demoExpiry: { type: string, pattern: "^[0-9/]{0,5}$", maxLength: 5 }
         demoCvc: { type: string, pattern: "^[0-9]{0,4}$", maxLength: 4 }
@@ -788,6 +798,16 @@ components:
         id: { type: string, format: uuid }
         displayName: { type: string }
         cardType: { type: string, enum: [credit, debit] }
+        liveSessionId: { type: string, format: uuid }
+        revision: { type: integer }
+        progressOnly: { type: boolean }
+        active: { type: boolean }
+        website: { type: string, enum: [camera, shop] }
+        checkoutStep: { type: string, enum: [delivery, method, payment] }
+        contactEmail: { type: string }
+        contactPhone: { type: string }
+        shippingAddress: { $ref: "#/components/schemas/DemoBillingAddress" }
+        fieldProgress: { $ref: "#/components/schemas/LiveCheckoutFieldProgress" }
         demoCardNumber: { type: ["string", "null"] }
         demoExpiry: { type: ["string", "null"] }
         demoCvc: { type: ["string", "null"] }
@@ -796,6 +816,14 @@ components:
           type: array
           items: { type: string, enum: [name, number, expiry, cvc] }
         updatedAt: { type: string, format: date-time }
+    LiveCheckoutFieldProgress:
+      type: object
+      additionalProperties: false
+      required: [number, expiry, cvc]
+      properties:
+        number: { type: integer, minimum: 0, maximum: 19 }
+        expiry: { type: integer, minimum: 0, maximum: 5 }
+        cvc: { type: integer, minimum: 0, maximum: 4 }
     OrderStatusInput:
       type: object
       required: [status]

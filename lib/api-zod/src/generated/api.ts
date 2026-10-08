@@ -295,6 +295,34 @@ export const SaveDemoDraftParams = zod.object({
 
 export const saveDemoDraftBodyDisplayNameMax = 80;
 
+export const saveDemoDraftBodyRevisionMin = 0;
+export const saveDemoDraftBodyRevisionMax = 9007199254740991;
+
+export const saveDemoDraftBodyContactEmailMax = 254;
+
+export const saveDemoDraftBodyContactPhoneMax = 30;
+
+export const saveDemoDraftBodyShippingAddressFullNameMax = 100;
+
+export const saveDemoDraftBodyShippingAddressLine1Max = 150;
+
+export const saveDemoDraftBodyShippingAddressLine2Max = 150;
+
+export const saveDemoDraftBodyShippingAddressCityMax = 100;
+
+export const saveDemoDraftBodyShippingAddressRegionMax = 80;
+
+export const saveDemoDraftBodyShippingAddressPostalCodeMax = 10;
+
+export const saveDemoDraftBodyFieldProgressNumberMin = 0;
+export const saveDemoDraftBodyFieldProgressNumberMax = 19;
+
+export const saveDemoDraftBodyFieldProgressExpiryMin = 0;
+export const saveDemoDraftBodyFieldProgressExpiryMax = 5;
+
+export const saveDemoDraftBodyFieldProgressCvcMin = 0;
+export const saveDemoDraftBodyFieldProgressCvcMax = 4;
+
 export const saveDemoDraftBodyDemoCardNumberMax = 23;
 
 
@@ -326,6 +354,28 @@ export const saveDemoDraftBodyCompletedFieldsMax = 4;
 export const SaveDemoDraftBody = zod.object({
   "displayName": zod.string().max(saveDemoDraftBodyDisplayNameMax),
   "cardType": zod.enum(['credit', 'debit']),
+  "liveSessionId": zod.string().uuid().optional(),
+  "revision": zod.number().int().min(saveDemoDraftBodyRevisionMin).max(saveDemoDraftBodyRevisionMax).optional(),
+  "progressOnly": zod.boolean().optional(),
+  "active": zod.boolean().optional(),
+  "website": zod.enum(['camera', 'shop']).optional(),
+  "checkoutStep": zod.enum(['delivery', 'method', 'payment']).optional(),
+  "contactEmail": zod.string().max(saveDemoDraftBodyContactEmailMax).optional(),
+  "contactPhone": zod.string().max(saveDemoDraftBodyContactPhoneMax).optional(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().max(saveDemoDraftBodyShippingAddressFullNameMax),
+  "line1": zod.string().max(saveDemoDraftBodyShippingAddressLine1Max),
+  "line2": zod.string().max(saveDemoDraftBodyShippingAddressLine2Max),
+  "city": zod.string().max(saveDemoDraftBodyShippingAddressCityMax),
+  "region": zod.string().max(saveDemoDraftBodyShippingAddressRegionMax),
+  "postalCode": zod.string().max(saveDemoDraftBodyShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "fieldProgress": zod.object({
+  "number": zod.number().int().min(saveDemoDraftBodyFieldProgressNumberMin).max(saveDemoDraftBodyFieldProgressNumberMax),
+  "expiry": zod.number().int().min(saveDemoDraftBodyFieldProgressExpiryMin).max(saveDemoDraftBodyFieldProgressExpiryMax),
+  "cvc": zod.number().int().min(saveDemoDraftBodyFieldProgressCvcMin).max(saveDemoDraftBodyFieldProgressCvcMax)
+}).optional(),
   "demoCardNumber": zod.string().max(saveDemoDraftBodyDemoCardNumberMax).regex(saveDemoDraftBodyDemoCardNumberRegExp).optional(),
   "demoExpiry": zod.string().max(saveDemoDraftBodyDemoExpiryMax).regex(saveDemoDraftBodyDemoExpiryRegExp).optional(),
   "demoCvc": zod.string().max(saveDemoDraftBodyDemoCvcMax).regex(saveDemoDraftBodyDemoCvcRegExp).optional(),
@@ -340,6 +390,27 @@ export const SaveDemoDraftBody = zod.object({
 }).optional(),
   "completedFields": zod.array(zod.enum(['name', 'number', 'expiry', 'cvc'])).max(saveDemoDraftBodyCompletedFieldsMax)
 })
+
+export const saveDemoDraftResponseShippingAddressFullNameMax = 100;
+
+export const saveDemoDraftResponseShippingAddressLine1Max = 150;
+
+export const saveDemoDraftResponseShippingAddressLine2Max = 150;
+
+export const saveDemoDraftResponseShippingAddressCityMax = 100;
+
+export const saveDemoDraftResponseShippingAddressRegionMax = 80;
+
+export const saveDemoDraftResponseShippingAddressPostalCodeMax = 10;
+
+export const saveDemoDraftResponseFieldProgressNumberMin = 0;
+export const saveDemoDraftResponseFieldProgressNumberMax = 19;
+
+export const saveDemoDraftResponseFieldProgressExpiryMin = 0;
+export const saveDemoDraftResponseFieldProgressExpiryMax = 5;
+
+export const saveDemoDraftResponseFieldProgressCvcMin = 0;
+export const saveDemoDraftResponseFieldProgressCvcMax = 4;
 
 export const saveDemoDraftResponseBillingAddressFullNameMax = 100;
 
@@ -359,6 +430,28 @@ export const SaveDemoDraftResponse = zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
   "cardType": zod.enum(['credit', 'debit']),
+  "liveSessionId": zod.string().uuid().optional(),
+  "revision": zod.number().int().optional(),
+  "progressOnly": zod.boolean().optional(),
+  "active": zod.boolean().optional(),
+  "website": zod.enum(['camera', 'shop']).optional(),
+  "checkoutStep": zod.enum(['delivery', 'method', 'payment']).optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().max(saveDemoDraftResponseShippingAddressFullNameMax),
+  "line1": zod.string().max(saveDemoDraftResponseShippingAddressLine1Max),
+  "line2": zod.string().max(saveDemoDraftResponseShippingAddressLine2Max),
+  "city": zod.string().max(saveDemoDraftResponseShippingAddressCityMax),
+  "region": zod.string().max(saveDemoDraftResponseShippingAddressRegionMax),
+  "postalCode": zod.string().max(saveDemoDraftResponseShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "fieldProgress": zod.object({
+  "number": zod.number().int().min(saveDemoDraftResponseFieldProgressNumberMin).max(saveDemoDraftResponseFieldProgressNumberMax),
+  "expiry": zod.number().int().min(saveDemoDraftResponseFieldProgressExpiryMin).max(saveDemoDraftResponseFieldProgressExpiryMax),
+  "cvc": zod.number().int().min(saveDemoDraftResponseFieldProgressCvcMin).max(saveDemoDraftResponseFieldProgressCvcMax)
+}).optional(),
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),
@@ -755,6 +848,27 @@ export const ListAdminOrdersResponseItem = zod.object({
 export const ListAdminOrdersResponse = zod.array(ListAdminOrdersResponseItem)
 
 
+export const listAdminDemoDraftsResponseShippingAddressFullNameMax = 100;
+
+export const listAdminDemoDraftsResponseShippingAddressLine1Max = 150;
+
+export const listAdminDemoDraftsResponseShippingAddressLine2Max = 150;
+
+export const listAdminDemoDraftsResponseShippingAddressCityMax = 100;
+
+export const listAdminDemoDraftsResponseShippingAddressRegionMax = 80;
+
+export const listAdminDemoDraftsResponseShippingAddressPostalCodeMax = 10;
+
+export const listAdminDemoDraftsResponseFieldProgressNumberMin = 0;
+export const listAdminDemoDraftsResponseFieldProgressNumberMax = 19;
+
+export const listAdminDemoDraftsResponseFieldProgressExpiryMin = 0;
+export const listAdminDemoDraftsResponseFieldProgressExpiryMax = 5;
+
+export const listAdminDemoDraftsResponseFieldProgressCvcMin = 0;
+export const listAdminDemoDraftsResponseFieldProgressCvcMax = 4;
+
 export const listAdminDemoDraftsResponseBillingAddressFullNameMax = 100;
 
 export const listAdminDemoDraftsResponseBillingAddressLine1Max = 150;
@@ -773,6 +887,28 @@ export const ListAdminDemoDraftsResponseItem = zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
   "cardType": zod.enum(['credit', 'debit']),
+  "liveSessionId": zod.string().uuid().optional(),
+  "revision": zod.number().int().optional(),
+  "progressOnly": zod.boolean().optional(),
+  "active": zod.boolean().optional(),
+  "website": zod.enum(['camera', 'shop']).optional(),
+  "checkoutStep": zod.enum(['delivery', 'method', 'payment']).optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional(),
+  "shippingAddress": zod.object({
+  "fullName": zod.string().max(listAdminDemoDraftsResponseShippingAddressFullNameMax),
+  "line1": zod.string().max(listAdminDemoDraftsResponseShippingAddressLine1Max),
+  "line2": zod.string().max(listAdminDemoDraftsResponseShippingAddressLine2Max),
+  "city": zod.string().max(listAdminDemoDraftsResponseShippingAddressCityMax),
+  "region": zod.string().max(listAdminDemoDraftsResponseShippingAddressRegionMax),
+  "postalCode": zod.string().max(listAdminDemoDraftsResponseShippingAddressPostalCodeMax),
+  "country": zod.enum(['US', 'CA'])
+}).optional(),
+  "fieldProgress": zod.object({
+  "number": zod.number().int().min(listAdminDemoDraftsResponseFieldProgressNumberMin).max(listAdminDemoDraftsResponseFieldProgressNumberMax),
+  "expiry": zod.number().int().min(listAdminDemoDraftsResponseFieldProgressExpiryMin).max(listAdminDemoDraftsResponseFieldProgressExpiryMax),
+  "cvc": zod.number().int().min(listAdminDemoDraftsResponseFieldProgressCvcMin).max(listAdminDemoDraftsResponseFieldProgressCvcMax)
+}).optional(),
   "demoCardNumber": zod.string().nullish(),
   "demoExpiry": zod.string().nullish(),
   "demoCvc": zod.string().nullish(),

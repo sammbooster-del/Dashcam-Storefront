@@ -5,3 +5,4 @@
 - [Checkout arrival alert](checkout-arrival-alert.md) — Use a repeating Pushover notification, not a phone call, for the start of delivery entry.
 - [Payment brand asset contrast](payment-brand-assets.md) — Google Pay’s light/dark SVG names refer to the button background, not the lettering color.
 - [Second-store boundaries](second-store-boundaries.md) — Preserve DriveGuard, isolate the new general-product store, and disregard the merchant name in the uploaded brief.
+- [Catalog package management](catalog-package-management.md) — Adding catalog dependencies can rewrite workspace policy comments and pin existing ranges; preserve both.

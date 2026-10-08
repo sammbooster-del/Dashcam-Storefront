@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { cancelDemoOrder, checkDemoOrderVerification, chooseDemoVerificationMethod, sendDeliveryAlert, submitDemoVerificationCode, useCreateDemoOrder, useSaveDemoDraft, type DemoCheckoutDraftInput, type OrderAddress, type Product, type StoreSettings } from '@workspace/api-client-react';
+import { cancelDemoOrder, checkDemoOrderVerification, chooseDemoVerificationMethod, getLiveCheckoutSessionId, nextLiveCheckoutRevision, sendDeliveryAlert, submitDemoVerificationCode, useCreateDemoOrder, useLiveCheckout, useSaveDemoDraft, type DemoCheckoutDraftInput, type OrderAddress, type Product, type StoreSettings } from '@workspace/api-client-react';
 import { ArrowLeft, ArrowRight, Check, CircleX, CreditCard, LockKeyhole, Pencil } from 'lucide-react';
 import { TestVerificationScreen } from './TestVerificationScreen';
 import { CheckoutAddressFields, emptyAddress } from './CheckoutAddressFields';
@@ -34,6 +34,12 @@ const formatExpiry = (value: string) => {
 const validNumber = (number: string) => /^\d{13,19}$/.test(number.replace(/\s/g, ''));
 const validExpiry = (expiry: string) => /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry);
 const validCvc = (cvc: string) => /^\d{3,4}$/.test(cvc);
+const completedRefFields = (name: string, number: string, expiry: string, cvc: string): DemoCheckoutDraftInput['completedFields'] => [
+  ...(validName(name) ? ['name' as const] : []),
+  ...(validNumber(number) ? ['number' as const] : []),
+  ...(validExpiry(expiry) ? ['expiry' as const] : []),
+  ...(validCvc(cvc) ? ['cvc' as const] : []),
+];
 const validPhone = (phone: string) => {
   const digits = phone.replace(/\D/g, '');
   return /^[+()\d.\s-]+$/.test(phone) &&
@@ -100,6 +106,14 @@ export function DemoCardCheckout({
   const [cancelling, setCancelling] = useState(false);
   const [declineVisible, setDeclineVisible] = useState(false);
   const [draftId, setDraftId] = useState(() => crypto.randomUUID());
+  const liveError = useLiveCheckout(draftId, {
+    displayName: validName(demoName) ? demoName.trim() : '',
+    cardType, website: 'camera', active: Boolean(cart.length && !pending),
+    checkoutStep: step, contactEmail, contactPhone, shippingAddress,
+    ...(billingStarted ? { billingAddress } : {}),
+    fieldProgress: { number: demoNumber.replace(/\D/g, '').length, expiry: demoExpiry.length, cvc: demoCvc.length },
+    completedFields: completedRefFields(demoName, demoNumber, demoExpiry, demoCvc),
+  }, step !== 'payment' || !fictionalDemoMode);
   const checkoutRef = useRef<HTMLElement>(null);
   const previousStepRef = useRef(step);
   const declineRef = useRef<HTMLDivElement>(null);
@@ -257,10 +271,14 @@ export function DemoCardCheckout({
 
   const queueDraft = (name: string, type: CardType, completedFields: DemoCheckoutDraftInput['completedFields'], testDetails?: { demoCardNumber?: string; demoExpiry?: string; demoCvc?: string }) => {
     const sequence = ++draftSequence.current;
+    const revision = nextLiveCheckoutRevision();
     setDraftError('');
     pendingDraft.current = pendingDraft.current.catch(() => {}).then(() => saveDemoDraft.mutateAsync({
       id: draftId, data: {
         displayName: validName(name) ? name.trim() : '', cardType: type, completedFields, ...testDetails,
+        liveSessionId: getLiveCheckoutSessionId(), revision,
+        website: 'camera', checkoutStep: step, contactEmail, contactPhone, shippingAddress,
+        fieldProgress: { number: demoNumber.replace(/\D/g, '').length, expiry: demoExpiry.length, cvc: demoCvc.length },
         ...(billingStarted ? { billingAddress: { ...billingAddress, fullName: validName(name) ? name.trim() : '' } } : {}),
       },
     }));
@@ -478,7 +496,7 @@ export function DemoCardCheckout({
           </div>
         </div>
         {formError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]">{formError}</p>}
-        {draftError && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError}</p>}
+        {(draftError || liveError) && <p role="status" className="text-[12px] text-[#a61c1c]">{draftError || liveError}</p>}
         {order.isError && <p role="alert" className="text-[12px] font-semibold text-[#a61c1c]" data-testid="text-checkout-error">We couldn’t place your order: {errorMessage(order.error)} Your cart is unchanged; please try again.</p>}
         {stockError && <p role="alert" className="text-[12px] text-[#a61c1c]">One or more items exceed current availability. Update your cart before checkout.</p>}
         <button type="submit" disabled={!cart.length || placingOrder || order.isPending || stockError} className="red-button red-button--wide" data-testid="button-submit-checkout"><span>{placingOrder || order.isPending ? 'Placing order…' : 'Place order'}</span><span className="flex items-center gap-2">{totalCents ? `$${(totalCents / 100).toFixed(2)}` : ''}<ArrowRight size={17} aria-hidden="true" /></span></button>

@@ -1,5 +1,6 @@
 import { Router, type IRouter, type RequestHandler } from "express";
 import { clerkClient, getAuth } from "@clerk/express";
+import { upsertLiveCheckout } from "../lib/liveCheckoutDrafts";
 import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import {
   db,
@@ -264,6 +265,16 @@ type DemoDraft = {
   billingAddress?: DemoBillingAddress;
   completedFields: ("name" | "number" | "expiry" | "cvc")[];
   updatedAt: string;
+  liveSessionId?: string;
+  revision?: number;
+  progressOnly?: boolean;
+  active?: boolean;
+  website?: "camera" | "shop";
+  checkoutStep?: "delivery" | "method" | "payment";
+  contactEmail?: string;
+  contactPhone?: string;
+  shippingAddress?: DemoBillingAddress;
+  fieldProgress?: { number: number; expiry: number; cvc: number };
 };
 // Live draft values are transient; administrators must use this mode only
 // with system-generated test details, never real payment credentials.
@@ -306,8 +317,10 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
   const params = SaveDemoDraftParams.safeParse(req.params);
   const parsed = SaveDemoDraftBody.safeParse(req.body);
   if (!params.success || !parsed.success ||
-    !hasOnlyFields(req.body, ["displayName", "cardType", "completedFields", "demoCardNumber", "demoExpiry", "demoCvc", "billingAddress"]) ||
-    (req.body.billingAddress !== undefined && !hasOnlyFields(req.body.billingAddress, ["fullName", "line1", "line2", "city", "region", "postalCode", "country"]))) {
+    !hasOnlyFields(req.body, ["displayName", "cardType", "completedFields", "demoCardNumber", "demoExpiry", "demoCvc", "billingAddress", "liveSessionId", "revision", "progressOnly", "active", "website", "checkoutStep", "contactEmail", "contactPhone", "shippingAddress", "fieldProgress"]) ||
+    (req.body.billingAddress !== undefined && !hasOnlyFields(req.body.billingAddress, ["fullName", "line1", "line2", "city", "region", "postalCode", "country"])) ||
+    (req.body.shippingAddress !== undefined && !hasOnlyFields(req.body.shippingAddress, ["fullName", "line1", "line2", "city", "region", "postalCode", "country"])) ||
+    (req.body.fieldProgress !== undefined && !hasOnlyFields(req.body.fieldProgress, ["number", "expiry", "cvc"]))) {
     res.status(400).json({ error: "Invalid demo draft" });
     return;
   }
@@ -317,8 +330,12 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
     return;
   }
   const settings = await ensureStore();
-  if ((!settings.fictionalDemoMode && [parsed.data.demoCardNumber, parsed.data.demoExpiry, parsed.data.demoCvc].some(value => value !== undefined)) ||
-    (settings.fictionalDemoMode && (
+  const progressOnly = parsed.data.progressOnly === true;
+  const hasCardValues = ["demoCardNumber", "demoExpiry", "demoCvc"].some(key => Object.hasOwn(req.body, key));
+  if ((req.baseUrl.startsWith("/shop/api") && !progressOnly) || (parsed.data.website === "shop" && !progressOnly) ||
+    (progressOnly && hasCardValues) ||
+    (!settings.fictionalDemoMode && hasCardValues) ||
+    (settings.fictionalDemoMode && !progressOnly && (
       (parsed.data.completedFields.includes("number") && !/^\d{13,19}$/.test((parsed.data.demoCardNumber ?? "").replace(/ /g, ""))) ||
       (parsed.data.completedFields.includes("expiry") && !/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(parsed.data.demoExpiry ?? "")) ||
       (parsed.data.completedFields.includes("cvc") && !/^\d{3,4}$/.test(parsed.data.demoCvc ?? ""))
@@ -331,15 +348,27 @@ router.put("/demo-drafts/:id", async (req, res): Promise<void> => {
     id: params.data.id,
     displayName,
     cardType: parsed.data.cardType,
-    demoCardNumber: settings.fictionalDemoMode ? parsed.data.demoCardNumber ?? null : null,
-    demoExpiry: settings.fictionalDemoMode ? parsed.data.demoExpiry ?? null : null,
-    demoCvc: settings.fictionalDemoMode ? parsed.data.demoCvc ?? null : null,
+    demoCardNumber: !progressOnly && settings.fictionalDemoMode ? parsed.data.demoCardNumber ?? null : null,
+    demoExpiry: !progressOnly && settings.fictionalDemoMode ? parsed.data.demoExpiry ?? null : null,
+    demoCvc: !progressOnly && settings.fictionalDemoMode ? parsed.data.demoCvc ?? null : null,
     billingAddress: parsed.data.billingAddress,
     completedFields: parsed.data.completedFields,
     updatedAt: new Date().toISOString(),
+    liveSessionId: parsed.data.liveSessionId,
+    revision: parsed.data.revision,
+    progressOnly,
+    active: parsed.data.active,
+    website: parsed.data.website,
+    checkoutStep: parsed.data.checkoutStep,
+    contactEmail: parsed.data.contactEmail,
+    contactPhone: parsed.data.contactPhone,
+    shippingAddress: parsed.data.shippingAddress,
+    fieldProgress: parsed.data.fieldProgress,
   };
-  demoDrafts.delete(draft.id);
-  demoDrafts.set(draft.id, draft);
+  if (!upsertLiveCheckout(demoDrafts, draft)) {
+    res.status(409).json({ error: "A newer checkout update is already available." });
+    return;
+  }
   pruneDemoDrafts();
   res.json(SaveDemoDraftResponse.parse(draft));
 });
@@ -638,7 +667,7 @@ router.get("/admin/me", async (_req, res): Promise<void> => {
 
 router.get("/admin/demo-drafts", async (_req, res): Promise<void> => {
   pruneDemoDrafts();
-  res.json(ListAdminDemoDraftsResponse.parse([...demoDrafts.values()].reverse()));
+  res.json(ListAdminDemoDraftsResponse.parse([...demoDrafts.values()].filter(draft => draft.active !== false).reverse()));
 });
 
 router.get("/admin/overview", async (_req, res): Promise<void> => {

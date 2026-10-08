@@ -525,6 +525,23 @@ export const DemoCheckoutDraftInputCardType = {
   debit: 'debit',
 } as const;
 
+export type DemoCheckoutDraftInputWebsite = typeof DemoCheckoutDraftInputWebsite[keyof typeof DemoCheckoutDraftInputWebsite];
+
+
+export const DemoCheckoutDraftInputWebsite = {
+  camera: 'camera',
+  shop: 'shop',
+} as const;
+
+export type DemoCheckoutDraftInputCheckoutStep = typeof DemoCheckoutDraftInputCheckoutStep[keyof typeof DemoCheckoutDraftInputCheckoutStep];
+
+
+export const DemoCheckoutDraftInputCheckoutStep = {
+  delivery: 'delivery',
+  method: 'method',
+  payment: 'payment',
+} as const;
+
 export type DemoCheckoutDraftInputCompletedFieldsItem = typeof DemoCheckoutDraftInputCompletedFieldsItem[keyof typeof DemoCheckoutDraftInputCompletedFieldsItem];
 
 
@@ -535,10 +552,44 @@ export const DemoCheckoutDraftInputCompletedFieldsItem = {
   cvc: 'cvc',
 } as const;
 
+export interface LiveCheckoutFieldProgress {
+  /**
+     * @minimum 0
+     * @maximum 19
+     */
+  number: number;
+  /**
+     * @minimum 0
+     * @maximum 5
+     */
+  expiry: number;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  cvc: number;
+}
+
 export interface DemoCheckoutDraftInput {
   /** @maxLength 80 */
   displayName: string;
   cardType: DemoCheckoutDraftInputCardType;
+  liveSessionId?: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  revision?: number;
+  progressOnly?: boolean;
+  active?: boolean;
+  website?: DemoCheckoutDraftInputWebsite;
+  checkoutStep?: DemoCheckoutDraftInputCheckoutStep;
+  /** @maxLength 254 */
+  contactEmail?: string;
+  /** @maxLength 30 */
+  contactPhone?: string;
+  shippingAddress?: DemoBillingAddress;
+  fieldProgress?: LiveCheckoutFieldProgress;
   /**
      * @maxLength 23
      * @pattern ^[0-9 ]{0,23}$
@@ -567,6 +618,23 @@ export const DemoCheckoutDraftCardType = {
   debit: 'debit',
 } as const;
 
+export type DemoCheckoutDraftWebsite = typeof DemoCheckoutDraftWebsite[keyof typeof DemoCheckoutDraftWebsite];
+
+
+export const DemoCheckoutDraftWebsite = {
+  camera: 'camera',
+  shop: 'shop',
+} as const;
+
+export type DemoCheckoutDraftCheckoutStep = typeof DemoCheckoutDraftCheckoutStep[keyof typeof DemoCheckoutDraftCheckoutStep];
+
+
+export const DemoCheckoutDraftCheckoutStep = {
+  delivery: 'delivery',
+  method: 'method',
+  payment: 'payment',
+} as const;
+
 export type DemoCheckoutDraftCompletedFieldsItem = typeof DemoCheckoutDraftCompletedFieldsItem[keyof typeof DemoCheckoutDraftCompletedFieldsItem];
 
 
@@ -581,6 +649,16 @@ export interface DemoCheckoutDraft {
   id: string;
   displayName: string;
   cardType: DemoCheckoutDraftCardType;
+  liveSessionId?: string;
+  revision?: number;
+  progressOnly?: boolean;
+  active?: boolean;
+  website?: DemoCheckoutDraftWebsite;
+  checkoutStep?: DemoCheckoutDraftCheckoutStep;
+  contactEmail?: string;
+  contactPhone?: string;
+  shippingAddress?: DemoBillingAddress;
+  fieldProgress?: LiveCheckoutFieldProgress;
   /** @nullable */
   demoCardNumber?: string | null;
   /** @nullable */

@@ -32,3 +32,9 @@ The owner expects reuse of the camera site's actual payment routes and live-upda
 **Why:** The owner explicitly corrected the distinction between copying the checkout and using the same payment routes.
 
 **How to apply:** Prefer a shared checkout integration while preserving each store's catalog, inventory, and order isolation. Exact unmasked displays may use verified synthetic values issued by the owner's external server, not only a hard-coded fixture list; never extend collection of arbitrary full payment-card numbers or CVC.
+
+The owner uses the two sites one at a time and wants one shared live-checkout view, with updates replacing the same session entry rather than producing duplicate entries or panels.
+
+**Why:** The owner explicitly requested a single live entry for both websites.
+
+**How to apply:** Group by browser session rather than store or per-order nonce; keep order identifiers separate so deduplication does not break order idempotency. Browser storage shares an identity across same-origin storefront paths, not unrelated custom domains.

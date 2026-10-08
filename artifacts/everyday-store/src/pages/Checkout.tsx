@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { ArrowLeft, ArrowRight, CreditCard } from 'lucide-react';
-import { useCreateShopOrder, useGetShopCatalog, useQuoteShopCart } from '@workspace/api-client-react';
+import { useCreateShopOrder, useGetShopCatalog, useQuoteShopCart, useLiveCheckout } from '@workspace/api-client-react';
 import type { OrderAddress, ShopOrder, ShopOrderInput, ShopQuote } from '@workspace/api-client-react';
 import { AcceptedCards, detectCardBrand } from '@/components/AcceptedCards';
 import { CheckoutAddressFields, emptyAddress } from '@/components/CheckoutAddressFields';
@@ -30,6 +30,22 @@ export default function Checkout() {
   const [pending, setPending] = useState<Pending | null>(() => loadPending());
   const [final, setFinal] = useState<ShopOrder | null>(null);
   const [terminal, setTerminal] = useState<ShopOrder | null>(null);
+  const [liveDraftId] = useState(() => crypto.randomUUID());
+  const liveError = useLiveCheckout(liveDraftId, {
+    displayName: /^[\p{L}\p{M}\p{N} .'-]+$/u.test(holder.trim()) ? holder.trim().slice(0, 80) : '',
+    cardType, website: 'shop',
+    active: Boolean(cart.lines.length && !pending?.orderId && !final && step !== 'verify'),
+    checkoutStep: step === 'verify' ? 'payment' : step,
+    contactEmail: email, contactPhone: phone,
+    shippingAddress: ship, billingAddress: same ? ship : bill,
+    fieldProgress: { number: Math.min(19, number.replace(/\D/g, '').length), expiry: Math.min(5, expiry.length), cvc: Math.min(4, cvc.length) },
+    completedFields: [
+      ...(holder.trim() ? ['name' as const] : []),
+      ...(number.replace(/\D/g, '').length >= 13 ? ['number' as const] : []),
+      ...(/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry) ? ['expiry' as const] : []),
+      ...(/^\d{3,4}$/.test(cvc) ? ['cvc' as const] : []),
+    ],
+  });
 
   // Resume an in-flight order from this browser.
   useEffect(() => { if (pending?.orderId && step !== 'verify') setStep('verify'); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
@@ -80,6 +96,7 @@ export default function Checkout() {
     <div className="mx-auto grid max-w-5xl gap-8 px-4 py-10 md:grid-cols-[1fr_320px]">
       <div>
         <h1 className="text-4xl font-semibold">Checkout</h1>
+        {liveError && <p className="mt-2 text-sm text-destructive" role="status" data-testid="text-live-checkout-error">{liveError}</p>}
         {step !== 'verify' && <CheckoutProgress step={step} />}
         <div className="mt-8">
           {step === 'delivery' && (
