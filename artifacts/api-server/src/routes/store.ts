@@ -166,7 +166,7 @@ async function validateProductImageUrls(urls: string[]): Promise<boolean> {
   return true;
 }
 
-const requireAdmin: RequestHandler = async (req, res, next) => {
+export const requireAdmin: RequestHandler = async (req, res, next) => {
   const userId = getAuth(req).userId;
   if (!userId) {
     res.status(401).json({ error: "Sign in required" });
@@ -193,7 +193,7 @@ const requireAdmin: RequestHandler = async (req, res, next) => {
 
 // Browser admin writes must originate from the same storefront. API reads and
 // Clerk's own proxy remain unaffected; cross-origin credentialed CORS is off.
-const requireSameOriginWrite: RequestHandler = (req, res, next) => {
+export const requireSameOriginWrite: RequestHandler = (req, res, next) => {
   if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") {
     next();
     return;

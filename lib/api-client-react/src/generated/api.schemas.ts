@@ -605,3 +605,771 @@ export interface OrderStatusInput {
   status: OrderStatusInputStatus;
 }
 
+export type ShopAddressCountry = typeof ShopAddressCountry[keyof typeof ShopAddressCountry];
+
+
+export const ShopAddressCountry = {
+  US: 'US',
+  CA: 'CA',
+} as const;
+
+export interface ShopAddress {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  fullName: string;
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  line1: string;
+  /** @maxLength 150 */
+  line2: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  city: string;
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  region: string;
+  /**
+     * @minLength 3
+     * @maxLength 12
+     */
+  postalCode: string;
+  country: ShopAddressCountry;
+}
+
+export interface ShopSettings {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  brandName: string;
+  /** @maxLength 2048 */
+  logoUrl: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  accentColor: string;
+  /** @maxLength 1000 */
+  description: string;
+  /** @maxLength 150 */
+  heroTitle: string;
+  /** @maxLength 2048 */
+  heroImageUrl: string;
+  /** @maxLength 254 */
+  supportEmail: string;
+  /**
+     * @minimum 0
+     * @maximum 1000000
+     */
+  shippingCents: number;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  shippingThresholdCents: number;
+  /** @maxLength 40 */
+  discountCode: string;
+  /**
+     * @minimum 0
+     * @maximum 90
+     */
+  discountPercent: number;
+}
+
+export interface ShopCategoryInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  /**
+     * @maxLength 100
+     * @pattern ^[a-z0-9]+(?:-[a-z0-9]+)*$
+     */
+  slug: string;
+  /** @maxLength 1000 */
+  description: string;
+  /** @maxLength 2048 */
+  imageUrl: string;
+  active: boolean;
+}
+
+export interface ShopCategory {
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  id: number;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  /**
+     * @maxLength 100
+     * @pattern ^[a-z0-9]+(?:-[a-z0-9]+)*$
+     */
+  slug: string;
+  /** @maxLength 1000 */
+  description: string;
+  /** @maxLength 2048 */
+  imageUrl: string;
+  active: boolean;
+}
+
+export interface ShopVariantInput {
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  id?: number;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  label: string;
+  /** @maxLength 100 */
+  sku: string;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  priceCents: number;
+  /**
+     * @minimum 0
+     * @maximum 1000000
+     */
+  stock: number;
+  active: boolean;
+}
+
+export interface ShopVariant {
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  id: number;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  productId: number;
+  /** @maxLength 100 */
+  label: string;
+  /** @maxLength 100 */
+  sku: string;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  priceCents: number;
+  /**
+     * @minimum 0
+     * @maximum 1000000
+     */
+  stock: number;
+  /**
+     * @minimum 0
+     * @maximum 1000000
+     */
+  availableStock: number;
+  active: boolean;
+}
+
+export interface ShopProductInput {
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  name: string;
+  /**
+     * @maxLength 100
+     * @pattern ^[a-z0-9]+(?:-[a-z0-9]+)*$
+     */
+  slug: string;
+  /** @maxLength 5000 */
+  description: string;
+  /** @nullable */
+  categoryId: number | null;
+  /**
+     * @maxItems 15
+     * @items.maxLength 2048
+     */
+  imageUrls: string[];
+  active: boolean;
+  featured: boolean;
+  /**
+     * @minItems 1
+     * @maxItems 30
+     */
+  variants: ShopVariantInput[];
+}
+
+export interface ShopProduct {
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  id: number;
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  name: string;
+  /**
+     * @maxLength 100
+     * @pattern ^[a-z0-9]+(?:-[a-z0-9]+)*$
+     */
+  slug: string;
+  /** @maxLength 5000 */
+  description: string;
+  /** @nullable */
+  categoryId: number | null;
+  /**
+     * @maxItems 15
+     * @items.maxLength 2048
+     */
+  imageUrls: string[];
+  active: boolean;
+  featured: boolean;
+  variants: ShopVariant[];
+}
+
+export interface ShopCatalog {
+  settings: ShopSettings;
+  categories: ShopCategory[];
+  products: ShopProduct[];
+}
+
+export interface ShopCartItem {
+  /** @minimum 1 */
+  variantId: number;
+  /**
+     * @minimum 1
+     * @maximum 99
+     */
+  quantity: number;
+}
+
+export interface ShopQuoteInput {
+  /**
+     * @minItems 1
+     * @maxItems 100
+     */
+  items: ShopCartItem[];
+  /** @maxLength 40 */
+  discountCode?: string;
+}
+
+export interface ShopOrderItem {
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  variantId: number;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  productId: number;
+  /** @maxLength 150 */
+  name: string;
+  /** @maxLength 100 */
+  variantLabel: string;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  unitPriceCents: number;
+  /**
+     * @minimum 0
+     * @maximum 99
+     */
+  quantity: number;
+}
+
+export interface ShopQuote {
+  items: ShopOrderItem[];
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  subtotalCents: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  discountCents: number;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  shippingCents: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  totalCents: number;
+}
+
+export type ShopOrderInputCardType = typeof ShopOrderInputCardType[keyof typeof ShopOrderInputCardType];
+
+
+export const ShopOrderInputCardType = {
+  credit: 'credit',
+  debit: 'debit',
+} as const;
+
+export interface ShopOrderInput {
+  /**
+     * @minItems 1
+     * @maxItems 100
+     */
+  items: ShopCartItem[];
+  /** @maxLength 40 */
+  discountCode?: string;
+  requestKey: string;
+  /** @pattern ^[a-f0-9]{64}$ */
+  accessToken: string;
+  /** @maxLength 254 */
+  contactEmail: string;
+  /** @maxLength 30 */
+  contactPhone: string;
+  shippingAddress: ShopAddress;
+  billingAddress: ShopAddress;
+  cardType: ShopOrderInputCardType;
+  /** @maxLength 100 */
+  cardholderName: string;
+  /** @pattern ^[0-9]{4}$ */
+  cardLast4: string;
+}
+
+export type ShopOrderStatus = typeof ShopOrderStatus[keyof typeof ShopOrderStatus];
+
+
+export const ShopOrderStatus = {
+  pending: 'pending',
+  confirmed: 'confirmed',
+  cancelled: 'cancelled',
+  expired: 'expired',
+  fulfilled: 'fulfilled',
+} as const;
+
+export type ShopOrderPaymentStatus = typeof ShopOrderPaymentStatus[keyof typeof ShopOrderPaymentStatus];
+
+
+export const ShopOrderPaymentStatus = {
+  simulated_pending: 'simulated_pending',
+  simulated_approved: 'simulated_approved',
+  simulated_declined: 'simulated_declined',
+  cancelled: 'cancelled',
+  expired: 'expired',
+} as const;
+
+export type ShopOrderVerificationState = typeof ShopOrderVerificationState[keyof typeof ShopOrderVerificationState];
+
+
+export const ShopOrderVerificationState = {
+  waiting: 'waiting',
+  requested: 'requested',
+  method_selected: 'method_selected',
+  code_ready: 'code_ready',
+  code_submitted: 'code_submitted',
+  invalid_code: 'invalid_code',
+  approved: 'approved',
+  declined: 'declined',
+  cancelled: 'cancelled',
+  expired: 'expired',
+} as const;
+
+/**
+ * @nullable
+ */
+export type ShopOrderVerificationMethod = typeof ShopOrderVerificationMethod[keyof typeof ShopOrderVerificationMethod] | null;
+
+
+export const ShopOrderVerificationMethod = {
+  email: 'email',
+  phone: 'phone',
+} as const;
+
+export type ShopOrderCardType = typeof ShopOrderCardType[keyof typeof ShopOrderCardType];
+
+
+export const ShopOrderCardType = {
+  credit: 'credit',
+  debit: 'debit',
+} as const;
+
+export type ShopOrderWebsite = typeof ShopOrderWebsite[keyof typeof ShopOrderWebsite];
+
+
+export const ShopOrderWebsite = {
+  'physical-store': 'physical-store',
+} as const;
+
+export type ShopOrderShippingStatus = typeof ShopOrderShippingStatus[keyof typeof ShopOrderShippingStatus];
+
+
+export const ShopOrderShippingStatus = {
+  unfulfilled: 'unfulfilled',
+  preparing: 'preparing',
+  shipped: 'shipped',
+  delivered: 'delivered',
+} as const;
+
+export interface ShopOrder {
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  id: number;
+  createdAt: string;
+  expiresAt: string;
+  status: ShopOrderStatus;
+  paymentStatus: ShopOrderPaymentStatus;
+  verificationState: ShopOrderVerificationState;
+  /** @nullable */
+  verificationMethod: ShopOrderVerificationMethod;
+  /** @maxLength 254 */
+  contactEmail: string;
+  /** @maxLength 30 */
+  contactPhone: string;
+  shippingAddress: ShopAddress;
+  billingAddress: ShopAddress;
+  cardType: ShopOrderCardType;
+  /** @maxLength 100 */
+  cardholderName: string;
+  /** @maxLength 4 */
+  cardLast4: string;
+  website: ShopOrderWebsite;
+  /** @maxLength 253 */
+  domain: string;
+  shippingStatus: ShopOrderShippingStatus;
+  /** @maxLength 100 */
+  carrier: string;
+  /** @maxLength 150 */
+  trackingNumber: string;
+  /** @maxLength 2048 */
+  trackingUrl: string;
+  items: ShopOrderItem[];
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  subtotalCents: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  discountCents: number;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  shippingCents: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  totalCents: number;
+}
+
+export interface ShopOrderReceipt {
+  order: ShopOrder;
+  /** @maxLength 64 */
+  accessToken: string;
+}
+
+export type ShopOrderAccessAction = typeof ShopOrderAccessAction[keyof typeof ShopOrderAccessAction];
+
+
+export const ShopOrderAccessAction = {
+  check: 'check',
+  method: 'method',
+  code: 'code',
+  cancel: 'cancel',
+} as const;
+
+export type ShopOrderAccessMethod = typeof ShopOrderAccessMethod[keyof typeof ShopOrderAccessMethod];
+
+
+export const ShopOrderAccessMethod = {
+  email: 'email',
+  phone: 'phone',
+} as const;
+
+export interface ShopOrderAccess {
+  /** @pattern ^[a-f0-9]{64}$ */
+  accessToken: string;
+  action: ShopOrderAccessAction;
+  method?: ShopOrderAccessMethod;
+  /** @pattern ^[0-9]{6}$ */
+  code?: string;
+}
+
+export type ShopOrderUpdateAction = typeof ShopOrderUpdateAction[keyof typeof ShopOrderUpdateAction];
+
+
+export const ShopOrderUpdateAction = {
+  request_verification: 'request_verification',
+  code_shared: 'code_shared',
+  approve: 'approve',
+  decline: 'decline',
+  invalid_code: 'invalid_code',
+  cancel: 'cancel',
+  expire: 'expire',
+  fulfill: 'fulfill',
+  update_shipping: 'update_shipping',
+} as const;
+
+export type ShopOrderUpdateShippingStatus = typeof ShopOrderUpdateShippingStatus[keyof typeof ShopOrderUpdateShippingStatus];
+
+
+export const ShopOrderUpdateShippingStatus = {
+  unfulfilled: 'unfulfilled',
+  preparing: 'preparing',
+  shipped: 'shipped',
+  delivered: 'delivered',
+} as const;
+
+export interface ShopOrderUpdate {
+  action: ShopOrderUpdateAction;
+  shippingStatus?: ShopOrderUpdateShippingStatus;
+  /** @maxLength 100 */
+  carrier?: string;
+  /** @maxLength 150 */
+  trackingNumber?: string;
+  /** @maxLength 2048 */
+  trackingUrl?: string;
+}
+
+export type ShopDomainInputWebsiteType = typeof ShopDomainInputWebsiteType[keyof typeof ShopDomainInputWebsiteType];
+
+
+export const ShopDomainInputWebsiteType = {
+  existing: 'existing',
+  'physical-store': 'physical-store',
+} as const;
+
+export interface ShopDomainInput {
+  /**
+     * @minLength 3
+     * @maxLength 253
+     */
+  hostname: string;
+  websiteType: ShopDomainInputWebsiteType;
+}
+
+export type ShopDomainWebsiteType = typeof ShopDomainWebsiteType[keyof typeof ShopDomainWebsiteType];
+
+
+export const ShopDomainWebsiteType = {
+  existing: 'existing',
+  'physical-store': 'physical-store',
+} as const;
+
+export interface ShopDomain {
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  id: number;
+  /**
+     * @minLength 3
+     * @maxLength 253
+     */
+  hostname: string;
+  websiteType: ShopDomainWebsiteType;
+}
+
+export interface ShopSummary {
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  productCount: number;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  activeProductCount: number;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  pendingOrders: number;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  confirmedOrders: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  simulatedSalesCents: number;
+}
+
+export type ShopAdminOrderStatus = typeof ShopAdminOrderStatus[keyof typeof ShopAdminOrderStatus];
+
+
+export const ShopAdminOrderStatus = {
+  pending: 'pending',
+  confirmed: 'confirmed',
+  cancelled: 'cancelled',
+  expired: 'expired',
+  fulfilled: 'fulfilled',
+} as const;
+
+export type ShopAdminOrderPaymentStatus = typeof ShopAdminOrderPaymentStatus[keyof typeof ShopAdminOrderPaymentStatus];
+
+
+export const ShopAdminOrderPaymentStatus = {
+  simulated_pending: 'simulated_pending',
+  simulated_approved: 'simulated_approved',
+  simulated_declined: 'simulated_declined',
+  cancelled: 'cancelled',
+  expired: 'expired',
+} as const;
+
+export type ShopAdminOrderVerificationState = typeof ShopAdminOrderVerificationState[keyof typeof ShopAdminOrderVerificationState];
+
+
+export const ShopAdminOrderVerificationState = {
+  waiting: 'waiting',
+  requested: 'requested',
+  method_selected: 'method_selected',
+  code_ready: 'code_ready',
+  code_submitted: 'code_submitted',
+  invalid_code: 'invalid_code',
+  approved: 'approved',
+  declined: 'declined',
+  cancelled: 'cancelled',
+  expired: 'expired',
+} as const;
+
+/**
+ * @nullable
+ */
+export type ShopAdminOrderVerificationMethod = typeof ShopAdminOrderVerificationMethod[keyof typeof ShopAdminOrderVerificationMethod] | null;
+
+
+export const ShopAdminOrderVerificationMethod = {
+  email: 'email',
+  phone: 'phone',
+} as const;
+
+export type ShopAdminOrderCardType = typeof ShopAdminOrderCardType[keyof typeof ShopAdminOrderCardType];
+
+
+export const ShopAdminOrderCardType = {
+  credit: 'credit',
+  debit: 'debit',
+} as const;
+
+export type ShopAdminOrderWebsite = typeof ShopAdminOrderWebsite[keyof typeof ShopAdminOrderWebsite];
+
+
+export const ShopAdminOrderWebsite = {
+  'physical-store': 'physical-store',
+} as const;
+
+export type ShopAdminOrderShippingStatus = typeof ShopAdminOrderShippingStatus[keyof typeof ShopAdminOrderShippingStatus];
+
+
+export const ShopAdminOrderShippingStatus = {
+  unfulfilled: 'unfulfilled',
+  preparing: 'preparing',
+  shipped: 'shipped',
+  delivered: 'delivered',
+} as const;
+
+export interface ShopAdminOrder {
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  id: number;
+  createdAt: string;
+  expiresAt: string;
+  status: ShopAdminOrderStatus;
+  paymentStatus: ShopAdminOrderPaymentStatus;
+  verificationState: ShopAdminOrderVerificationState;
+  /** @nullable */
+  verificationMethod: ShopAdminOrderVerificationMethod;
+  /** @maxLength 254 */
+  contactEmail: string;
+  /** @maxLength 30 */
+  contactPhone: string;
+  shippingAddress: ShopAddress;
+  billingAddress: ShopAddress;
+  cardType: ShopAdminOrderCardType;
+  /** @maxLength 100 */
+  cardholderName: string;
+  /** @maxLength 4 */
+  cardLast4: string;
+  website: ShopAdminOrderWebsite;
+  /** @maxLength 253 */
+  domain: string;
+  shippingStatus: ShopAdminOrderShippingStatus;
+  /** @maxLength 100 */
+  carrier: string;
+  /** @maxLength 150 */
+  trackingNumber: string;
+  /** @maxLength 2048 */
+  trackingUrl: string;
+  items: ShopOrderItem[];
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  subtotalCents: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  discountCents: number;
+  /**
+     * @minimum 0
+     * @maximum 100000000
+     */
+  shippingCents: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  totalCents: number;
+  /** @nullable */
+  testCode?: string | null;
+}
+
+export interface ShopAdmin {
+  settings: ShopSettings;
+  categories: ShopCategory[];
+  products: ShopProduct[];
+  orders: ShopAdminOrder[];
+  domains: ShopDomain[];
+  summary: ShopSummary;
+}
+
+export type WebsiteResolutionWebsiteType = typeof WebsiteResolutionWebsiteType[keyof typeof WebsiteResolutionWebsiteType];
+
+
+export const WebsiteResolutionWebsiteType = {
+  existing: 'existing',
+  'physical-store': 'physical-store',
+} as const;
+
+export interface WebsiteResolution {
+  websiteType: WebsiteResolutionWebsiteType;
+  /** @maxLength 100 */
+  previewPath: string;
+  configured: boolean;
+}
+

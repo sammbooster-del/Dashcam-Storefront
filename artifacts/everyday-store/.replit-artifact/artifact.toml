@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/shop/"
+title = "Everyday Store"
+description = "A separate general physical-product store with its own catalog, categories, variants, simulated checkout and private order tracking, managed through the existing DriveGuard administrator."
+version = "1.0.0"
+id = "artifacts/everyday-store"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/shop/" ]
+localPort = 20581
+
+[services.development]
+run = "pnpm --filter @workspace/everyday-store run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/everyday-store", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/everyday-store/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20581"
+BASE_PATH = "/shop/"

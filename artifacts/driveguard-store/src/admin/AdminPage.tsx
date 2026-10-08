@@ -32,8 +32,9 @@ import {
   ShoppingBag, Trash2, X,
 } from 'lucide-react';
 import './AdminPage.css';
+import { PhysicalStoreAdmin } from './PhysicalStoreAdmin';
 
-type Section = 'overview' | 'products' | 'orders' | 'settings';
+type Section = 'overview' | 'products' | 'orders' | 'settings' | 'physical-store';
 type ProductDraft = Omit<ProductInput, 'priceCents' | 'stock'> & { price: string; stock: string };
 type SettingsDraft = Omit<StoreSettingsInput, 'shippingThresholdCents' | 'shippingCents'> & { shippingThreshold: string; shipping: string };
 type Deletion = { kind: 'product' | 'order'; id: number; name: string };
@@ -451,6 +452,7 @@ function LiveDrafts({ drafts, loading, error, fictionalDemoMode }: { drafts: Dem
 export default function AdminPage() {
   const queryClient = useQueryClient();
   const [section, setSection] = useState<Section>('overview');
+  const [physicalInitialTab, setPhysicalInitialTab] = useState<'overview' | 'orders'>('overview');
   const [notice, setNotice] = useState<Notice | null>(null);
   const [editor, setEditor] = useState<Product | null | undefined>(undefined);
   const [deletion, setDeletion] = useState<Deletion | null>(null);
@@ -564,12 +566,13 @@ export default function AdminPage() {
   const visibleOrders = useMemo(() => (orders.data ?? []).filter(order => orderFilter === 'all' || order.status === orderFilter), [orders.data, orderFilter]);
   const newOrders = (orders.data ?? []).filter(order => order.status === 'new').length;
   const lowStock = (products.data ?? []).filter(product => product.active && product.stock < 5).length;
-  const pageTitle = { overview: 'Overview', products: 'Products', orders: 'Orders', settings: 'Store settings' }[section];
+  const pageTitle = { overview: 'Overview', products: 'Products', orders: 'Orders', settings: 'Store settings', 'physical-store': 'Physical-product store' }[section];
   const pageSub = {
     overview: 'A clear view of what is happening in your store.',
     products: 'Manage the cameras, prices, and availability shoppers see.',
     orders: 'Track and manage simulated checkout activity.',
     settings: 'Shape the storefront experience and shipping details.',
+    'physical-store': 'Manage the separate shop without changing DriveGuard.',
   }[section];
   const pendingDelete = deleteProduct.isPending || deleteOrder.isPending;
   const failure = section === 'overview' ? overview.isError : section === 'products' ? products.isError : section === 'orders' ? orders.isError : settings.isError;
@@ -585,6 +588,7 @@ export default function AdminPage() {
           ['products', Boxes, 'Products'],
           ['orders', ShoppingBag, 'Orders'],
           ['settings', Settings2, 'Store settings'],
+          ['physical-store', ShoppingBag, 'Physical-product store'],
         ] as const).map(([key, Icon, label]) =>
           <button key={key} type="button" aria-current={section === key ? 'page' : undefined} onClick={() => { setSection(key); setNotice(null); }}
             data-testid={`button-admin-nav-${key}`}><Icon size={17} strokeWidth={1.8} />{label}{key === 'orders' && newOrders > 0 && <span>{newOrders}</span>}</button>
@@ -597,12 +601,13 @@ export default function AdminPage() {
         <div className="dg-top-right"><span className="dg-live-dot" /> Management workspace <span className="dg-avatar">DG</span></div>
       </header>
       <div className="dg-content">
-        <div className="dg-page-heading"><div><p className="dg-eyebrow">DriveGuard / Management</p><h1>{pageTitle}</h1><p>{pageSub}</p></div>
+        <div className="dg-page-heading"><div><p className="dg-eyebrow">{section === 'physical-store' ? 'Physical-product store' : 'DriveGuard'} / Management</p><h1>{pageTitle}</h1><p>{pageSub}</p></div>
           {section === 'products' ? <button className="dg-primary" type="button" onClick={() => setEditor(null)} data-testid="button-admin-add-product"><Plus size={16} /> Add product</button>
             : section === 'overview' ? <button type="button" className="dg-secondary" onClick={() => { setNotice(null); void refresh(); }} disabled={refreshing} data-testid="button-admin-refresh"><RefreshCw size={15} /> {refreshing ? 'Refreshing…' : 'Refresh data'}</button> : null}
         </div>
         {notice && <div className={`dg-notice ${notice.type === 'success' ? 'success' : ''}`} role={notice.type === 'error' ? 'alert' : 'status'} data-testid="status-admin-notice"><span>{notice.text}</span><button type="button" onClick={() => setNotice(null)} aria-label="Dismiss message" data-testid="button-admin-dismiss-notice"><X size={15} /></button></div>}
-        {loading ? <div className="dg-panel" style={{ padding: 25 }} aria-label="Loading admin data" data-testid="status-admin-loading"><div className="dg-skeleton" style={{ width: '30%', height: 25, marginBottom: 25 }} /><div className="dg-skeleton" style={{ height: 64, marginBottom: 12 }} /><div className="dg-skeleton" style={{ height: 64, marginBottom: 12 }} /><div className="dg-skeleton" style={{ height: 64 }} /></div>
+        {section === 'orders' && <label style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>Website<select aria-label="Order website" value="existing" onChange={event => { if (event.target.value === 'physical-store') { setPhysicalInitialTab('orders'); setSection('physical-store'); } }}><option value="existing">Existing website — DriveGuard</option><option value="physical-store">Physical-product store</option></select></label>}
+        {section === 'physical-store' ? <PhysicalStoreAdmin initialTab={physicalInitialTab} onViewExistingOrders={() => setSection('orders')} /> : loading ? <div className="dg-panel" style={{ padding: 25 }} aria-label="Loading admin data" data-testid="status-admin-loading"><div className="dg-skeleton" style={{ width: '30%', height: 25, marginBottom: 25 }} /><div className="dg-skeleton" style={{ height: 64, marginBottom: 12 }} /><div className="dg-skeleton" style={{ height: 64, marginBottom: 12 }} /><div className="dg-skeleton" style={{ height: 64 }} /></div>
           : failure ? <div className="dg-panel dg-empty" role="alert" data-testid="status-admin-load-error"><CircleAlert size={28} /><strong>We couldn't load {pageTitle.toLowerCase()}.</strong><p>Check your connection and try again. Your changes have not been lost.</p><button type="button" className="dg-secondary" onClick={() => { void refresh(); }} data-testid="button-admin-retry"><RefreshCw size={14} /> Try again</button></div>
           : section === 'overview' ? <>
             <LiveDrafts drafts={drafts.data ?? []} loading={drafts.isPending} error={drafts.isError} fictionalDemoMode={settings.data?.fictionalDemoMode ?? false} />

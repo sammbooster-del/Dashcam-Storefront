@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { seedShop, expireShopOrders } from "./lib/physicalStore";
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +15,12 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+await seedShop();
+const shopExpiryTimer = setInterval(() => {
+  expireShopOrders().catch(error => logger.error({ err: error }, "Could not expire simulated store reservations"));
+}, 60_000);
+shopExpiryTimer.unref();
 
 app.listen(port, (err) => {
   if (err) {

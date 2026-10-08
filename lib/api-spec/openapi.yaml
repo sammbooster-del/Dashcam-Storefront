@@ -466,6 +466,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoOrder"
+  /physical-store/catalog:
+    $ref: "./physical-store.yaml#/paths/~1physical-store~1catalog"
+  /physical-store/quote:
+    $ref: "./physical-store.yaml#/paths/~1physical-store~1quote"
+  /physical-store/orders:
+    $ref: "./physical-store.yaml#/paths/~1physical-store~1orders"
+  /physical-store/orders/{id}/access:
+    $ref: "./physical-store.yaml#/paths/~1physical-store~1orders~1{id}~1access"
+  /website-resolution:
+    $ref: "./physical-store.yaml#/paths/~1website-resolution"
+  /admin/physical-store:
+    $ref: "./physical-store.yaml#/paths/~1admin~1physical-store"
+  /admin/physical-store/settings:
+    $ref: "./physical-store.yaml#/paths/~1admin~1physical-store~1settings"
+  /admin/physical-store/categories:
+    $ref: "./physical-store.yaml#/paths/~1admin~1physical-store~1categories"
+  /admin/physical-store/categories/{id}:
+    $ref: "./physical-store.yaml#/paths/~1admin~1physical-store~1categories~1{id}"
+  /admin/physical-store/products:
+    $ref: "./physical-store.yaml#/paths/~1admin~1physical-store~1products"
+  /admin/physical-store/products/{id}:
+    $ref: "./physical-store.yaml#/paths/~1admin~1physical-store~1products~1{id}"
+  /admin/physical-store/domains:
+    $ref: "./physical-store.yaml#/paths/~1admin~1physical-store~1domains"
+  /admin/physical-store/domains/{id}:
+    $ref: "./physical-store.yaml#/paths/~1admin~1physical-store~1domains~1{id}"
+  /admin/physical-store/orders/{id}:
+    $ref: "./physical-store.yaml#/paths/~1admin~1physical-store~1orders~1{id}"
 components:
   schemas:
     DeliveryAlertInput:

@@ -1,0 +1,1718 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Physical store",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/physical-store/catalog": {
+      "get": {
+        "operationId": "getShopCatalog",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopCatalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/physical-store/quote": {
+      "post": {
+        "operationId": "quoteShopCart",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopQuote"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShopQuoteInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/physical-store/orders": {
+      "post": {
+        "operationId": "createShopOrder",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopOrderReceipt"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShopOrderInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/physical-store/orders/{id}/access": {
+      "post": {
+        "operationId": "accessShopOrder",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopOrder"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShopOrderAccess"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/website-resolution": {
+      "get": {
+        "operationId": "resolveWebsite",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebsiteResolution"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/physical-store": {
+      "get": {
+        "operationId": "getShopAdmin",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopAdmin"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/physical-store/settings": {
+      "put": {
+        "operationId": "saveShopSettings",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopSettings"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShopSettings"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/physical-store/categories": {
+      "post": {
+        "operationId": "createShopCategory",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopCategory"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShopCategoryInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/physical-store/categories/{id}": {
+      "put": {
+        "operationId": "updateShopCategory",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopCategory"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShopCategoryInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteShopCategory",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/admin/physical-store/products": {
+      "post": {
+        "operationId": "createShopProduct",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopProduct"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShopProductInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/physical-store/products/{id}": {
+      "put": {
+        "operationId": "updateShopProduct",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopProduct"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShopProductInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteShopProduct",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/admin/physical-store/domains": {
+      "put": {
+        "operationId": "saveShopDomain",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopDomain"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShopDomainInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/physical-store/domains/{id}": {
+      "delete": {
+        "operationId": "deleteShopDomain",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/admin/physical-store/orders/{id}": {
+      "post": {
+        "operationId": "updateShopOrder",
+        "tags": [
+          "physical-store"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopOrder"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShopOrderUpdate"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ShopAddress": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fullName",
+          "line1",
+          "line2",
+          "city",
+          "region",
+          "postalCode",
+          "country"
+        ],
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "line1": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1
+          },
+          "line2": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "region": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2
+          },
+          "postalCode": {
+            "type": "string",
+            "maxLength": 12,
+            "minLength": 3
+          },
+          "country": {
+            "type": "string",
+            "enum": [
+              "US",
+              "CA"
+            ]
+          }
+        }
+      },
+      "ShopSettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "brandName",
+          "logoUrl",
+          "accentColor",
+          "description",
+          "heroTitle",
+          "heroImageUrl",
+          "supportEmail",
+          "shippingCents",
+          "shippingThresholdCents",
+          "discountCode",
+          "discountPercent"
+        ],
+        "properties": {
+          "brandName": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1
+          },
+          "logoUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "accentColor": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "heroTitle": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "heroImageUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "supportEmail": {
+            "type": "string",
+            "maxLength": 254
+          },
+          "shippingCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "shippingThresholdCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "discountCode": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "discountPercent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 90
+          }
+        }
+      },
+      "ShopCategoryInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "slug",
+          "description",
+          "imageUrl",
+          "active"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "imageUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ShopCategory": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "description",
+          "imageUrl",
+          "active"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "imageUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ShopVariantInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "label",
+          "sku",
+          "priceCents",
+          "stock",
+          "active"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "sku": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "priceCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "stock": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ShopVariant": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "productId",
+          "label",
+          "sku",
+          "priceCents",
+          "stock",
+          "availableStock",
+          "active"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "productId": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "sku": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "priceCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "stock": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "availableStock": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ShopProductInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "slug",
+          "description",
+          "categoryId",
+          "imageUrls",
+          "active",
+          "featured",
+          "variants"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 5000
+          },
+          "categoryId": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "imageUrls": {
+            "type": "array",
+            "maxItems": 15,
+            "items": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopVariantInput"
+            },
+            "minItems": 1,
+            "maxItems": 30
+          }
+        }
+      },
+      "ShopProduct": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "description",
+          "categoryId",
+          "imageUrls",
+          "active",
+          "featured",
+          "variants"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 5000
+          },
+          "categoryId": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "imageUrls": {
+            "type": "array",
+            "maxItems": 15,
+            "items": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopVariant"
+            }
+          }
+        }
+      },
+      "ShopCatalog": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "settings",
+          "categories",
+          "products"
+        ],
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/ShopSettings"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopCategory"
+            }
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopProduct"
+            }
+          }
+        }
+      },
+      "ShopCartItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variantId",
+          "quantity"
+        ],
+        "properties": {
+          "variantId": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99
+          }
+        }
+      },
+      "ShopQuoteInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopCartItem"
+            },
+            "minItems": 1,
+            "maxItems": 100
+          },
+          "discountCode": {
+            "type": "string",
+            "maxLength": 40
+          }
+        }
+      },
+      "ShopOrderItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variantId",
+          "productId",
+          "name",
+          "variantLabel",
+          "unitPriceCents",
+          "quantity"
+        ],
+        "properties": {
+          "variantId": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "productId": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "variantLabel": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "unitPriceCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99
+          }
+        }
+      },
+      "ShopQuote": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "subtotalCents",
+          "discountCents",
+          "shippingCents",
+          "totalCents"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopOrderItem"
+            }
+          },
+          "subtotalCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "discountCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "shippingCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        }
+      },
+      "ShopOrderInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "requestKey",
+          "accessToken",
+          "contactEmail",
+          "contactPhone",
+          "shippingAddress",
+          "billingAddress",
+          "cardType",
+          "cardholderName",
+          "cardLast4"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopCartItem"
+            },
+            "minItems": 1,
+            "maxItems": 100
+          },
+          "discountCode": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "requestKey": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accessToken": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "contactEmail": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "contactPhone": {
+            "type": "string",
+            "maxLength": 30
+          },
+          "shippingAddress": {
+            "$ref": "#/components/schemas/ShopAddress"
+          },
+          "billingAddress": {
+            "$ref": "#/components/schemas/ShopAddress"
+          },
+          "cardType": {
+            "type": "string",
+            "enum": [
+              "credit",
+              "debit"
+            ]
+          },
+          "cardholderName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "cardLast4": {
+            "type": "string",
+            "pattern": "^[0-9]{4}$"
+          }
+        }
+      },
+      "ShopOrder": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "createdAt",
+          "expiresAt",
+          "status",
+          "paymentStatus",
+          "verificationState",
+          "verificationMethod",
+          "contactEmail",
+          "contactPhone",
+          "shippingAddress",
+          "billingAddress",
+          "cardType",
+          "cardholderName",
+          "cardLast4",
+          "website",
+          "domain",
+          "shippingStatus",
+          "carrier",
+          "trackingNumber",
+          "trackingUrl",
+          "items",
+          "subtotalCents",
+          "discountCents",
+          "shippingCents",
+          "totalCents"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "cancelled",
+              "expired",
+              "fulfilled"
+            ]
+          },
+          "paymentStatus": {
+            "type": "string",
+            "enum": [
+              "simulated_pending",
+              "simulated_approved",
+              "simulated_declined",
+              "cancelled",
+              "expired"
+            ]
+          },
+          "verificationState": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "requested",
+              "method_selected",
+              "code_ready",
+              "code_submitted",
+              "invalid_code",
+              "approved",
+              "declined",
+              "cancelled",
+              "expired"
+            ]
+          },
+          "verificationMethod": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "email",
+              "phone",
+              null
+            ]
+          },
+          "contactEmail": {
+            "type": "string",
+            "maxLength": 254
+          },
+          "contactPhone": {
+            "type": "string",
+            "maxLength": 30
+          },
+          "shippingAddress": {
+            "$ref": "#/components/schemas/ShopAddress"
+          },
+          "billingAddress": {
+            "$ref": "#/components/schemas/ShopAddress"
+          },
+          "cardType": {
+            "type": "string",
+            "enum": [
+              "credit",
+              "debit"
+            ]
+          },
+          "cardholderName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "cardLast4": {
+            "type": "string",
+            "maxLength": 4
+          },
+          "website": {
+            "type": "string",
+            "enum": [
+              "physical-store"
+            ]
+          },
+          "domain": {
+            "type": "string",
+            "maxLength": 253
+          },
+          "shippingStatus": {
+            "type": "string",
+            "enum": [
+              "unfulfilled",
+              "preparing",
+              "shipped",
+              "delivered"
+            ]
+          },
+          "carrier": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "trackingNumber": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "trackingUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopOrderItem"
+            }
+          },
+          "subtotalCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "discountCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "shippingCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        }
+      },
+      "ShopOrderReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "order",
+          "accessToken"
+        ],
+        "properties": {
+          "order": {
+            "$ref": "#/components/schemas/ShopOrder"
+          },
+          "accessToken": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      },
+      "ShopOrderAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "accessToken",
+          "action"
+        ],
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "check",
+              "method",
+              "code",
+              "cancel"
+            ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "email",
+              "phone"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$"
+          }
+        }
+      },
+      "ShopOrderUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "request_verification",
+              "code_shared",
+              "approve",
+              "decline",
+              "invalid_code",
+              "cancel",
+              "expire",
+              "fulfill",
+              "update_shipping"
+            ]
+          },
+          "shippingStatus": {
+            "type": "string",
+            "enum": [
+              "unfulfilled",
+              "preparing",
+              "shipped",
+              "delivered"
+            ]
+          },
+          "carrier": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "trackingNumber": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "trackingUrl": {
+            "type": "string",
+            "maxLength": 2048
+          }
+        }
+      },
+      "ShopDomainInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hostname",
+          "websiteType"
+        ],
+        "properties": {
+          "hostname": {
+            "type": "string",
+            "maxLength": 253,
+            "minLength": 3
+          },
+          "websiteType": {
+            "type": "string",
+            "enum": [
+              "existing",
+              "physical-store"
+            ]
+          }
+        }
+      },
+      "ShopDomain": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "hostname",
+          "websiteType"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "hostname": {
+            "type": "string",
+            "maxLength": 253,
+            "minLength": 3
+          },
+          "websiteType": {
+            "type": "string",
+            "enum": [
+              "existing",
+              "physical-store"
+            ]
+          }
+        }
+      },
+      "ShopSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "productCount",
+          "activeProductCount",
+          "pendingOrders",
+          "confirmedOrders",
+          "simulatedSalesCents"
+        ],
+        "properties": {
+          "productCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "activeProductCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "pendingOrders": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "confirmedOrders": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "simulatedSalesCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        }
+      },
+      "ShopAdmin": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "settings",
+          "categories",
+          "products",
+          "orders",
+          "domains",
+          "summary"
+        ],
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/ShopSettings"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopCategory"
+            }
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopProduct"
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopAdminOrder"
+            }
+          },
+          "domains": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopDomain"
+            }
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ShopSummary"
+          }
+        }
+      },
+      "WebsiteResolution": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "websiteType",
+          "previewPath",
+          "configured"
+        ],
+        "properties": {
+          "websiteType": {
+            "type": "string",
+            "enum": [
+              "existing",
+              "physical-store"
+            ]
+          },
+          "previewPath": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "configured": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ShopAdminOrder": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "createdAt",
+          "expiresAt",
+          "status",
+          "paymentStatus",
+          "verificationState",
+          "verificationMethod",
+          "contactEmail",
+          "contactPhone",
+          "shippingAddress",
+          "billingAddress",
+          "cardType",
+          "cardholderName",
+          "cardLast4",
+          "website",
+          "domain",
+          "shippingStatus",
+          "carrier",
+          "trackingNumber",
+          "trackingUrl",
+          "items",
+          "subtotalCents",
+          "discountCents",
+          "shippingCents",
+          "totalCents"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "cancelled",
+              "expired",
+              "fulfilled"
+            ]
+          },
+          "paymentStatus": {
+            "type": "string",
+            "enum": [
+              "simulated_pending",
+              "simulated_approved",
+              "simulated_declined",
+              "cancelled",
+              "expired"
+            ]
+          },
+          "verificationState": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "requested",
+              "method_selected",
+              "code_ready",
+              "code_submitted",
+              "invalid_code",
+              "approved",
+              "declined",
+              "cancelled",
+              "expired"
+            ]
+          },
+          "verificationMethod": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "email",
+              "phone",
+              null
+            ]
+          },
+          "contactEmail": {
+            "type": "string",
+            "maxLength": 254
+          },
+          "contactPhone": {
+            "type": "string",
+            "maxLength": 30
+          },
+          "shippingAddress": {
+            "$ref": "#/components/schemas/ShopAddress"
+          },
+          "billingAddress": {
+            "$ref": "#/components/schemas/ShopAddress"
+          },
+          "cardType": {
+            "type": "string",
+            "enum": [
+              "credit",
+              "debit"
+            ]
+          },
+          "cardholderName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "cardLast4": {
+            "type": "string",
+            "maxLength": 4
+          },
+          "website": {
+            "type": "string",
+            "enum": [
+              "physical-store"
+            ]
+          },
+          "domain": {
+            "type": "string",
+            "maxLength": 253
+          },
+          "shippingStatus": {
+            "type": "string",
+            "enum": [
+              "unfulfilled",
+              "preparing",
+              "shipped",
+              "delivered"
+            ]
+          },
+          "carrier": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "trackingNumber": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "trackingUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopOrderItem"
+            }
+          },
+          "subtotalCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "discountCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "shippingCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "testCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

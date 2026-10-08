@@ -15,8 +15,8 @@ Do not use the merchant name specified in the uploaded second-store brief anywhe
 
 **How to apply:** Exclude that name from branding, defaults, payment descriptions, and metadata. Do not reinstate it when consulting the attachment.
 
-Reuse an existing, confirmed real-payment integration; do not add another provider or require a separate merchant account without changed instructions. Do not initiate real payment tests without approval. Manual test-code approval is not proof of payment.
+Reuse the existing simulated checkout for the second store. Do not add a payment provider, require a separate merchant account, or initiate real charges. Clearly distinguish simulated approval from verified payment; keep the original DriveGuard simulation unchanged.
 
-**Why:** The owner requires real, verified payments for the new store while forbidding simulated payment confirmations and unapproved provider changes.
+**Why:** The owner explicitly overrode the attachment's real-payment requirement with “just use the same simulation that already exist.”
 
-**How to apply:** Resolve any missing payment integration before promising a working paid checkout. Payment settlement and stock changes must rely on authenticated, idempotent payment confirmation.
+**How to apply:** Use the existing manual test-code workflow and honest simulation labels. Separate test reservations and simulated sales from configured physical stock; make approval and cancellation idempotent.

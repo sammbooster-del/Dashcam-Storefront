@@ -40,5 +40,6 @@ app.use(
 );
 
 app.use("/api", router);
+app.use("/shop/api", router);
 
 export default app;
